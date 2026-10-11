@@ -1,0 +1,166 @@
+---
+title: "ResFinance — Intelligent Finance on ResilientDB"
+document_type: "Product, systems, implementation, and research plan"
+status: "Review draft"
+scope: "BTC, ETH, and SOL"
+persistent_storage: "Apache ResilientDB only"
+source_pdf: "/Users/haseebrahman/Downloads/ResFinance.pdf"
+---
+
+# ResFinance — Intelligent Finance on ResilientDB
+
+> Two-page product, systems, and research plan | BTC + ETH + SOL | One persistent database
+
+## 1. Four core pain points - each makes one technology necessary
+
+| Pain point | Required technology | Why it is necessary |
+|---|---|---|
+| Fragmented Financial State | **ResilientDB** | Budgeting, expenses, shared balances, savings, and recommendations usually live in separate apps. ResilientDB becomes the shared source of truth, recording each meaningful event once and reflecting it across Personal Finance, Groups, and Crypto AI. |
+| Manual & Error-Prone Settlement | **Smart Contracts** | Bill splitting is more than arithmetic: participants, shares, receivables/payables, and settlement status must stay consistent. Smart contracts enforce the rules and `OPEN -> PARTIALLY SETTLED -> SETTLED` transitions, then update personal finance correctly. |
+| Weak User Ownership of Transactions | **ResVault** | Payments and settlements should not be silently executed by a central backend. ResVault provides wallet-linked identity and user-controlled signing, so each payment or contract action is explicitly approved and remains auditable. |
+| Disconnected Savings & Crypto Decisions | **Our ML Model** | Savings tools rarely turn real affordability into investment decisions. The model uses actual/projected savings, Smart Savings Insights, market + sentiment + on-chain signals, adaptive gating, and MSPCIFormer to produce a risk-aware BTC/ETH/SOL portfolio. |
+
+## 2. Product integration gap
+
+| Reference workflow | What it does | How ResFinance closes the gap |
+|---|---|---|
+| Budgeting apps | Track spending, goals, and monthly savings. | Savings becomes live input to Smart Savings Insights and the crypto portfolio engine. |
+| Split-bill apps | Track who owes whom and support settlement. | One signed settlement updates group state, the shared ledger, and personal finance. |
+| Crypto platforms | Show markets and support asset transactions. | Affordability + three-source forecasts + risk profile -> explainable BTC/ETH/SOL allocation. |
+
+## 3. REST API architecture and single-storage design
+
+```text
+React / TypeScript Frontend
+Personal Finance | Groups & Payments | Crypto AI
+                       |
+                       v
+FastAPI REST API
+Auth + business rules + finance, groups, market, forecast,
+risk, portfolio, and scenario endpoints
+                       |
+                       v
++------------------+  +------------------+  +------------------+
+| Finance Service  |  | Groups Service   |  | Crypto AI Service|
++------------------+  +------------------+  +------------------+
+                       |
+                       v
++----------------------+----------------------+------------------+
+| Apache ResilientDB   | ResVault             | Smart Contracts  |
++----------------------+----------------------+------------------+
+```
+
+### Service responsibilities
+
+| Service | Responsibilities |
+|---|---|
+| Finance Service | Income, expenses, budgets, savings, and receivables/payables. |
+| Groups Service | Splits, obligations, wallet approvals, and settlement state. |
+| Crypto AI Service | BTC/ETH/SOL data, forecasts, risk, and optimized portfolios. |
+
+### Core infrastructure
+
+| Component | Role |
+|---|---|
+| Apache ResilientDB | The only persistent layer for application events, market history, features, forecasts, models, and recommendations. |
+| ResVault | Wallet identity, user-controlled keys, signing, and explicit approvals. |
+| Smart Contracts | Deterministic split, obligation, and settlement state transitions. |
+
+### Storage rule
+
+Apache ResilientDB is the only persistent database for application and ML/crypto data. Python with Pandas, Polars, and NumPy may process data in memory, but no Parquet or DuckDB persistence is used.
+
+### Online deployment
+
+React and FastAPI services connect to a cloud-hosted/self-hosted ResilientDB cluster. ResVault and smart contracts remain part of the deployed workflow.
+
+## 4. Five-phase implementation plan
+
+### Phase 1 - Finance Foundation + Shared Ledger
+
+Build wallet-linked profiles, income, expenses, budgets, receivables/payables, and actual/projected monthly savings. ResilientDB stores all financially meaningful events and the derived personal finance view.
+
+### Phase 2 - Groups, ResVault + Smart Contracts
+
+Add equal/unequal splits, payer/share logic, reimbursements, and settlement. ResVault signs actions; smart contracts manage obligations and status transitions; settlement updates Personal Finance.
+
+### Phase 3 - BTC/ETH/SOL Data + REST AI Service
+
+Ingest historical/live market, sentiment/NLP, and on-chain data for BTC, ETH, and SOL only. Persist raw data, features, and metadata in ResilientDB; use Pandas/Polars in memory; expose REST endpoints.
+
+### Phase 4 - Research-Grade Forecasting Engine
+
+Train baselines, implement MSPCIFormer, and add adaptive gating across market, sentiment, and on-chain inputs. Use walk-forward evaluation and ablations against market-only and fixed-weight fusion.
+
+### Phase 5 - Risk Profiling, Portfolio Optimization, Full Integration + Deployment
+
+Combine forecasted returns, uncertainty, realized risk/covariance, liquidity, and downside risk with a continuous user risk score. Generate explainable BTC/ETH/SOL weights, backtest, integrate the full journey, and deploy application services with a cloud-hosted/self-hosted ResilientDB cluster.
+
+## 5. Forecasting research: 2 papers + 1 novelty
+
+### Paper 1 - MSPCIFormer
+
+**Citation:** Zhao, Crane & Bezbradica (2026)
+
+Base multi-scale Transformer architecture for cryptocurrency forecasting.
+
+### Paper 2 - Gurgul et al.
+
+**Citation:** Gurgul et al. (2025)
+
+Motivates multimodal inputs from markets, blockchain/on-chain data, and sentiment/news NLP.
+
+### Our novelty - Adaptive Multi-Source Fusion/Gating
+
+Dynamically weights market, sentiment, and on-chain information before forecasting.
+
+**Model output:** Expected return, upside probability, and forecast interval. The model is evaluated with walk-forward tests and source/fusion ablations.
+
+## 6. Crypto AI behavior
+
+### V1 scope: BTC + ETH + SOL only
+
+The v1 cryptocurrency universe contains exactly three assets: Bitcoin, Ethereum, and Solana.
+
+### Default capital = monthly savings
+
+Actual/projected savings opens as the initial portfolio amount.
+
+### Smart Savings Insights
+
+Explains realistic ways to increase investable surplus from spending history and recurring patterns.
+
+### Analyze Another Amount
+
+Runs a separate what-if amount without changing Personal Finance or the saved financial record.
+
+## 7. End-to-end user story
+
+1. **Connect** - Alex connects ResVault; the wallet becomes the signing identity.
+2. **Track** - Income, expenses, and budgets create a live personal finance view.
+3. **Split** - Alex pays a group bill; shares become obligations and receivables.
+4. **Settle** - Friends sign payments; the contract updates group and ledger state.
+5. **Save** - Updated actual/projected savings flows to Crypto AI by default.
+6. **Improve** - Smart Savings Insights suggests practical ways to save more.
+7. **Explore** - Alex reviews BTC, ETH, and SOL data and three-source signals.
+8. **Forecast** - Adaptive gating + MSPCIFormer produces research-grade forecasts.
+9. **Assess** - A questionnaire creates a continuous risk score and constraints.
+10. **Build** - The optimizer converts forecasts + risk into BTC/ETH/SOL weights.
+11. **Override** - Analyze Another Amount runs a what-if without altering savings.
+12. **Monitor** - Forecasts, risk, and allocations refresh; provenance stays auditable.
+
+### Complete product story
+
+Earn -> Spend -> Split -> Settle -> Update Personal Finance -> Save -> Improve Savings -> Explore BTC/ETH/SOL -> Forecast -> Assess Risk -> Build Portfolio -> Monitor.
+
+The ledger stays shared and auditable; Analyze Another Amount remains an isolated scenario.
+
+## Research core
+
+- MSPCIFormer (2026)
+- Gurgul et al. (2025)
+- Adaptive Multi-Source Fusion/Gating
+
+## Deployment summary
+
+React + FastAPI services with a cloud-hosted/self-hosted ResilientDB cluster.
