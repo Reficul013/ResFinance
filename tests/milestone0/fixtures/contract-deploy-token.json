@@ -1,0 +1,7 @@
+{
+  "command": "deploy",
+  "contract_path": "/data/resfinance-token-0.8.28.json",
+  "contract_name": "token.sol:Token",
+  "contract_address": "0x67c6697351ff4aec29cdbaabf2fbe3467cc254f8",
+  "init_params": "1000"
+}

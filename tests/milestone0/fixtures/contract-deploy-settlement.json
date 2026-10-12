@@ -1,0 +1,7 @@
+{
+  "command": "deploy",
+  "contract_path": "/data/resfinance-settlement-spike-0.8.28.json",
+  "contract_name": "blockchain/contracts/SettlementSpike.sol:SettlementSpike",
+  "contract_address": "0x1be8e78d765a2e63339fc99a66320db73158a35a",
+  "init_params": ""
+}

@@ -1,0 +1,285 @@
+diff --git a/executor/contract/executor/contract_executor.cpp b/executor/contract/executor/contract_executor.cpp
+index 62a4698..284a9d9 100644
+--- a/executor/contract/executor/contract_executor.cpp
++++ b/executor/contract/executor/contract_executor.cpp
+@@ -26,7 +26,7 @@ namespace contract {
+ 
+ ContractTransactionManager::ContractTransactionManager(Storage* storage)
+     : contract_manager_(std::make_unique<ContractManager>(storage)),
+-      address_manager_(std::make_unique<AddressManager>()) {}
++      address_manager_(std::make_unique<AddressManager>(storage)) {}
+ 
+ std::unique_ptr<std::string> ContractTransactionManager::ExecuteData(
+     const std::string& client_request) {
+diff --git a/executor/contract/manager/BUILD b/executor/contract/manager/BUILD
+index 6ba19cc..b03fbfd 100644
+--- a/executor/contract/manager/BUILD
++++ b/executor/contract/manager/BUILD
+@@ -59,6 +59,7 @@ cc_library(
+     hdrs = ["address_manager.h"],
+     deps = [
+         ":utils",
++        "//chain/storage",
+         "//common:comm",
+     ],
+ )
+diff --git a/executor/contract/manager/address_manager.cpp b/executor/contract/manager/address_manager.cpp
+index ca589f2..0ba5063 100644
+--- a/executor/contract/manager/address_manager.cpp
++++ b/executor/contract/manager/address_manager.cpp
+@@ -26,20 +26,41 @@
+ namespace resdb {
+ namespace contract {
+ 
++namespace {
++
++std::string AccountKey(const Address& address) {
++  return "rescontract:account:" + AddressManager::AddressToHex(address);
++}
++
++}  // namespace
++
+ Address AddressManager::CreateRandomAddress() {
+   std::vector<uint8_t> raw(20);
+   std::generate(raw.begin(), raw.end(), []() { return rand(); });
+   Address address = eevm::from_big_endian(raw.data(), raw.size());
+   users_.insert(address);
++  if (storage_ != nullptr) {
++    storage_->SetValue(AccountKey(address), "1");
++  }
+   return address;
+ }
+ 
+ void AddressManager::AddExternalAddress(const Address& address) {
+-  users_.insert(address);  // New method implementation
++  users_.insert(address);
++  if (storage_ != nullptr) {
++    storage_->SetValue(AccountKey(address), "1");
++  }
+ }
+ 
+ bool AddressManager::Exist(const Address& address) {
+-  return users_.find(address) != users_.end();
++  if (users_.find(address) != users_.end()) {
++    return true;
++  }
++  if (storage_ != nullptr && storage_->GetValue(AccountKey(address)) == "1") {
++    users_.insert(address);
++    return true;
++  }
++  return false;
+ }
+ 
+ Address AddressManager::CreateContractAddress(const Address& owner) {
+diff --git a/executor/contract/manager/address_manager.h b/executor/contract/manager/address_manager.h
+index 14ae798..1125671 100644
+--- a/executor/contract/manager/address_manager.h
++++ b/executor/contract/manager/address_manager.h
+@@ -21,6 +21,7 @@
+ 
+ #include <set>
+ 
++#include "chain/storage/storage.h"
+ #include "executor/contract/manager/utils.h"
+ 
+ namespace resdb {
+@@ -28,7 +29,7 @@ namespace contract {
+ 
+ class AddressManager {
+  public:
+-  AddressManager() {}
++  explicit AddressManager(Storage* storage = nullptr) : storage_(storage) {}
+ 
+   // Create an address holding a 20 byte value
+   Address CreateRandomAddress();
+@@ -41,6 +42,7 @@ class AddressManager {
+ 
+  private:
+   std::set<Address> users_;
++  Storage* storage_;
+ };
+ 
+ }  // namespace contract
+diff --git a/executor/contract/manager/contract_manager.cpp b/executor/contract/manager/contract_manager.cpp
+index e2515a3..59555f3 100644
+--- a/executor/contract/manager/contract_manager.cpp
++++ b/executor/contract/manager/contract_manager.cpp
+@@ -36,18 +36,29 @@ void AppendArgToInput(std::vector<uint8_t>& code, const std::string& arg) {
+   AppendArgToInput(code, eevm::to_uint256(arg));
+ }
+ 
+-ContractManager::ContractManager(Storage* storage) {
++ContractManager::ContractManager(Storage* storage) : storage_(storage) {
+   gs_ = std::make_unique<GlobalState>(storage);
+ }
+ 
+ std::string ContractManager::GetFuncAddress(const Address& contract_address,
+                                             const std::string& func_name) {
+-  return func_address_[contract_address][func_name];
++  std::string& cached = func_address_[contract_address][func_name];
++  if (!cached.empty()) {
++    return cached;
++  }
++  cached = storage_->GetValue("rescontract:function:" +
++                              AddressManager::AddressToHex(contract_address) +
++                              ":" + func_name);
++  return cached;
+ }
+ 
+ void ContractManager::SetFuncAddress(const Address& contract_address,
+                                      const FuncInfo& func) {
+   func_address_[contract_address][func.func_name()] = func.hash();
++  storage_->SetValue("rescontract:function:" +
++                         AddressManager::AddressToHex(contract_address) + ":" +
++                         func.func_name(),
++                     func.hash());
+ }
+ 
+ Address ContractManager::DeployContract(const Address& owner_address,
+@@ -67,6 +78,9 @@ Address ContractManager::DeployContract(const Address& owner_address,
+     if (result.ok()) {
+       // set the initialized class context code.
+       contract.acc.set_code(std::move(*result));
++      storage_->SetValue(
++          "rescontract:code:" + AddressManager::AddressToHex(contract_address),
++          eevm::to_hex_string(contract.acc.get_code()));
+ 
+       for (const auto& info : deploy_info.func_info()) {
+         SetFuncAddress(contract_address, info);
+@@ -94,6 +108,14 @@ absl::StatusOr<eevm::AccountState> ContractManager::GetContract(
+ absl::StatusOr<std::string> ContractManager::ExecContract(
+     const Address& caller_address, const Address& contract_address,
+     const Params& func_param) {
++  if (!gs_->Exists(contract_address)) {
++    const std::string runtime_code = storage_->GetValue(
++        "rescontract:code:" + AddressManager::AddressToHex(contract_address));
++    if (runtime_code.empty()) {
++      return absl::InvalidArgumentError("Contract not exist.");
++    }
++    gs_->create(contract_address, 0u, eevm::to_bytes(runtime_code));
++  }
+   std::string func_addr =
+       GetFuncAddress(contract_address, func_param.func_name());
+   if (func_addr.empty()) {
+diff --git a/executor/contract/manager/contract_manager.h b/executor/contract/manager/contract_manager.h
+index 5543801..0662063 100644
+--- a/executor/contract/manager/contract_manager.h
++++ b/executor/contract/manager/contract_manager.h
+@@ -59,6 +59,7 @@ class ContractManager {
+       const std::vector<uint8_t>& func_para);
+ 
+  private:
++  Storage* storage_;
+   std::unique_ptr<GlobalState> gs_;
+   std::map<Address, std::map<std::string, std::string>> func_address_;
+ };
+diff --git a/service/contract/BUILD b/service/contract/BUILD
+index d2f5baf..a31573f 100644
+--- a/service/contract/BUILD
++++ b/service/contract/BUILD
+@@ -22,7 +22,7 @@ cc_binary(
+     name = "contract_service",
+     srcs = ["contract_service.cpp"],
+     deps = [
+-        "//chain/storage:memory_db",
++        "//chain/storage:leveldb",
+         "//executor/contract/executor:contract_executor",
+         "//platform/config:resdb_config_utils",
+         "//platform/consensus/ordering/pbft:consensus_manager_pbft",
+diff --git a/service/contract/contract_service.cpp b/service/contract/contract_service.cpp
+index b1f1072..dcf9a3e 100644
+--- a/service/contract/contract_service.cpp
++++ b/service/contract/contract_service.cpp
+@@ -19,7 +19,7 @@
+ 
+ #include <glog/logging.h>
+ 
+-#include "chain/storage/memory_db.h"
++#include "chain/storage/leveldb.h"
+ #include "executor/contract/executor/contract_executor.h"
+ #include "platform/config/resdb_config_utils.h"
+ #include "platform/consensus/ordering/pbft/consensus_manager_pbft.h"
+@@ -63,10 +63,12 @@ int main(int argc, char** argv) {
+       GenerateResDBConfig(config_file, private_key_file, cert_file);
+   ResConfigData config_data = config->GetConfigData();
+ 
+-  std::unique_ptr<resdb::Storage> memory_db = resdb::storage::NewMemoryDB();
++  std::string db_path = std::to_string(config->GetSelfInfo().port()) + "_contract_db/";
++  std::unique_ptr<resdb::Storage> contract_db =
++      resdb::storage::NewResLevelDB(db_path, config_data.leveldb_info());
+   auto server = CustomGenerateResDBServer<ConsensusManagerPBFT>(
+       config_file, private_key_file, cert_file,
+-      std::make_unique<ContractTransactionManager>(memory_db.get()),
++      std::make_unique<ContractTransactionManager>(contract_db.get()),
+       logging_dir);
+ 
+   server->Run();
+diff --git a/service/kv/BUILD b/service/kv/BUILD
+index 3a34c8b..461b131 100644
+--- a/service/kv/BUILD
++++ b/service/kv/BUILD
+@@ -35,8 +35,6 @@ cc_binary(
+         "//common:comm",
+         "//proto/kv:kv_cc_proto",
+         "//chain/storage:memory_db",
+-        "//chain/storage:duckdb_storage",
+-        "//chain/storage/proto:duckdb_config_cc_proto",
+ 	] + select({
+         "//chain/storage/setting:enable_leveldb_setting": ["//chain/storage:leveldb"],
+         "//conditions:default": [],
+diff --git a/service/kv/kv_service.cpp b/service/kv/kv_service.cpp
+index c7c18b4..6e450c4 100644
+--- a/service/kv/kv_service.cpp
++++ b/service/kv/kv_service.cpp
+@@ -24,8 +24,6 @@
+ #include <string>
+ 
+ #include "chain/storage/memory_db.h"
+-#include "chain/storage/duckdb.h"
+-#include "chain/storage/proto/duckdb_config.pb.h"
+ #include "executor/kv/kv_executor.h"
+ #include "platform/config/resdb_config_utils.h"
+ #include "platform/statistic/stats.h"
+@@ -44,17 +42,11 @@ void SignalHandler(int sig_num) {
+ 
+ void ShowUsage() {
+   printf("<config> <private_key> <cert_file> "
+-         "[--enable_duckdb] [--duckdb_path=<path>] "
+          "[--grafana_port=<port> | <grafana_port>]\n");
+ }
+ 
+ std::unique_ptr<Storage> NewStorage(const std::string& db_path,
+                                     const ResConfigData& config_data) {
+-  if (config_data.has_duckdb_info()) {
+-    const auto& duckdb_info = config_data.duckdb_info();
+-    LOG(INFO) << "use duckdb storage, path=" << duckdb_info.path();
+-    return NewDuckDB(duckdb_info.path(), duckdb_info);
+-  }
+ #ifdef ENABLE_LEVELDB
+   LOG(INFO) << "use leveldb storage.";
+   return NewResLevelDB(db_path, config_data.leveldb_info());
+@@ -84,12 +76,7 @@ int main(int argc, char** argv) {
+ 
+   for (int i = 4; i < argc; ++i) {
+     std::string arg = argv[i];
+-    if (arg == "--enable_duckdb") {
+-      config_data.mutable_duckdb_info();
+-    } else if (arg.rfind("--duckdb_path=", 0) == 0) {
+-      config_data.mutable_duckdb_info()->set_path(
+-          arg.substr(std::string("--duckdb_path=").size()));
+-    } else if (arg.rfind("--grafana_port=", 0) == 0) {
++    if (arg.rfind("--grafana_port=", 0) == 0) {
+       grafana_port = arg.substr(std::string("--grafana_port=").size());
+     } else if (grafana_port.empty() &&
+                std::all_of(arg.begin(), arg.end(),
+@@ -111,10 +98,6 @@ int main(int argc, char** argv) {
+   }
+ 
+   std::string db_path = std::to_string(config->GetSelfInfo().port()) + "_db/";
+-  if (config_data.has_duckdb_info() &&
+-      config_data.duckdb_info().path().empty()) {
+-    config_data.mutable_duckdb_info()->set_path(db_path + "duckdb.db");
+-  }
+   LOG(ERROR) << "db path:" << db_path;
+ 
+   auto server = GenerateResDBServer(

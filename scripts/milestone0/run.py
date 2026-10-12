@@ -9,6 +9,7 @@ from typing import cast
 
 from scripts.milestone0.gates import (
     GateResult,
+    Status,
     aggregate_status,
     audit_resvault,
     chunk_round_trip,
@@ -16,13 +17,28 @@ from scripts.milestone0.gates import (
     inspect_upstream,
     load_lock,
     scan_forbidden_persistence,
+    sha256_file,
     validate_assets,
 )
 from scripts.milestone0.providers import probe_providers
 
+ATTESTED_GATE_NAMES = (
+    "1-resilientdb-kv-durability-replica-loss",
+    "2-resilientdb-100mb-artifact",
+    "3-rescontract-lifecycle",
+    "4-signed-settlement-saga",
+    "5-resvault-key-isolation",
+)
+VALID_STATUSES: frozenset[str] = frozenset({"pass", "fail", "blocked", "partial"})
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run ResFinance Milestone 0 checks")
+    parser.add_argument(
+        "--attestation",
+        type=Path,
+        help="sanitized local real-stack attestation; defaults to the checked record",
+    )
     parser.add_argument(
         "--upstream",
         type=Path,
@@ -53,9 +69,45 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def load_attested_gates(path: Path) -> tuple[dict[str, object], list[GateResult]]:
+    with path.open(encoding="utf-8") as handle:
+        attestation = json.load(handle)
+    if not isinstance(attestation, dict) or attestation.get("schema_version") != 1:
+        raise ValueError("unsupported local attestation schema")
+    values = attestation.get("gates")
+    if not isinstance(values, list):
+        raise ValueError("local attestation gates must be a list")
+    results: list[GateResult] = []
+    for value in values:
+        if not isinstance(value, dict):
+            raise ValueError("local attestation gate must be an object")
+        gate = value.get("gate")
+        status = value.get("status")
+        summary = value.get("summary")
+        evidence = value.get("evidence")
+        if not isinstance(gate, str) or not isinstance(summary, str):
+            raise ValueError("local attestation gate name and summary must be strings")
+        if not isinstance(status, str) or status not in VALID_STATUSES:
+            raise ValueError(f"invalid local attestation gate status: {status!r}")
+        if not isinstance(evidence, dict):
+            raise ValueError("local attestation gate evidence must be an object")
+        results.append(
+            GateResult(
+                gate=gate,
+                status=cast(Status, status),
+                summary=summary,
+                evidence=cast(dict[str, object], evidence),
+            )
+        )
+    if tuple(result.gate for result in results) != ATTESTED_GATE_NAMES:
+        raise ValueError("local attestation must contain gates 1 through 5 exactly once")
+    return attestation, results
+
+
 def main() -> int:
     args = parse_args()
     repo = Path(__file__).resolve().parents[2]
+    attestation_path = args.attestation or repo / "config/milestone0-local-attestation.json"
     lock = load_lock(repo / "config/milestone0-lock.json")
     period = lock["research_period"]
     if not isinstance(period, dict):
@@ -79,46 +131,33 @@ def main() -> int:
         else {"period": period, "network_probes": "not-requested"}
     )
 
+    attestation, attested_results = load_attested_gates(attestation_path)
+    if attestation.get("upstream_commit") != resilientdb["commit"]:
+        raise ValueError("local attestation upstream commit does not match lock")
+    local_container = lock.get("local_container")
+    if not isinstance(local_container, dict):
+        raise ValueError("local_container lock entry must be an object")
+    if local_container.get("upstream_commit") != resilientdb["commit"]:
+        raise ValueError("local container upstream commit does not match source pin")
+    if attestation.get("image_digest") != local_container.get("image_digest"):
+        raise ValueError("local attestation image digest does not match lock")
+    if attestation.get("patch_sha256") != local_container.get("patch_sha256"):
+        raise ValueError("local attestation patch digest does not match lock")
+    patch_value = local_container.get("patch")
+    if not isinstance(patch_value, str):
+        raise ValueError("local container patch path must be a string")
+    patch_path = repo / patch_value
+    if sha256_file(patch_path) != local_container.get("patch_sha256"):
+        raise ValueError("checked ResilientDB patch digest does not match lock")
+
     results = [
-        GateResult(
-            "1-resilientdb-kv-durability-replica-loss",
-            "blocked",
-            "Real four-replica execution is required and has not run.",
-            {"docker_available": docker_available},
-        ),
-        GateResult(
-            "2-resilientdb-100mb-artifact",
-            "partial",
-            "Local 256 KiB chunk reconstruction passed; ResilientDB persistence is pending.",
-            local_blob,
-        ),
-        GateResult(
-            "3-rescontract-lifecycle",
-            "blocked",
-            "Compile/deploy/execute/query/restart requires the real pinned stack.",
-            {"docker_available": docker_available, "solc_available": solc_available},
-        ),
-        GateResult(
-            "4-signed-settlement-saga",
-            "blocked",
-            (
-                "REST, signed intent, ResContract, and finance-event integration "
-                "is not yet executable."
-            ),
-            {"dependency_gates": [1, 3, 5]},
-        ),
-        GateResult(
-            "5-resvault-key-isolation",
-            wallet.status,
-            wallet.summary,
-            wallet.evidence,
-        ),
+        *attested_results,
         GateResult(
             "6-provider-availability-provenance",
             "partial",
             (
-                "Boundary probes are available; full-period acquisition and terms "
-                "review remain pending."
+                "Full-period prices are proven; bounded GDELT extraction and provider "
+                "permission closure remain pending."
             ),
             provider_evidence,
         ),
@@ -135,6 +174,14 @@ def main() -> int:
         "generated_at_utc": datetime.now(UTC).isoformat(),
         "overall_status": overall,
         "source_check": source.to_dict(),
+        "local_attestation": {
+            "path": str(attestation_path),
+            "sha256": sha256_file(attestation_path),
+            "official_resvault_audit": wallet.to_dict(),
+            "local_blob_control": local_blob,
+            "docker_detected_on_path": docker_available,
+            "solc_detected_on_path": solc_available,
+        },
         "environment": environment,
         "gates": [result.to_dict() for result in results],
     }

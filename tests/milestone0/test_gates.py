@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 
 from scripts.milestone0.gates import (
@@ -12,6 +14,8 @@ from scripts.milestone0.gates import (
     scan_forbidden_persistence,
     validate_assets,
 )
+from scripts.milestone0.providers import summarize_coin_metrics_period
+from scripts.milestone0.run import ATTESTED_GATE_NAMES, load_attested_gates
 
 
 class AssetBoundaryTests(unittest.TestCase):
@@ -92,6 +96,106 @@ class PersistencePolicyTests(unittest.TestCase):
             (source / "repository.py").write_text("import sqlite3\n", encoding="utf-8")
             result = scan_forbidden_persistence(repo)
         self.assertEqual(result.status, "fail")
+
+
+class ProviderCoverageTests(unittest.TestCase):
+    def test_complete_three_asset_daily_period_is_detected(self) -> None:
+        body = {
+            "data": [
+                {"asset": asset, "time": day, "PriceUSD": "1.0"}
+                for asset in ("btc", "eth", "sol")
+                for day in (
+                    "2020-04-10T00:00:00.000000000Z",
+                    "2020-04-11T00:00:00.000000000Z",
+                )
+            ]
+        }
+
+        summary = summarize_coin_metrics_period(
+            body, start=date(2020, 4, 10), end=date(2020, 4, 11)
+        )
+
+        self.assertTrue(summary["complete"])
+        self.assertEqual(summary["row_count"], 6)
+
+    def test_null_or_missing_asset_day_is_incomplete(self) -> None:
+        body = {
+            "data": [
+                {"asset": "btc", "time": "2020-04-10T00:00:00Z", "PriceUSD": None},
+                {"asset": "eth", "time": "2020-04-10T00:00:00Z", "PriceUSD": "1"},
+            ]
+        }
+
+        summary = summarize_coin_metrics_period(
+            body, start=date(2020, 4, 10), end=date(2020, 4, 10)
+        )
+
+        self.assertFalse(summary["complete"])
+
+    def test_duplicate_row_cannot_hide_a_missing_day(self) -> None:
+        body = {
+            "data": [
+                {"asset": "btc", "time": "2020-04-10T00:00:00Z", "PriceUSD": "1"},
+                {"asset": "btc", "time": "2020-04-10T12:00:00Z", "PriceUSD": "1"},
+                {"asset": "eth", "time": "2020-04-10T00:00:00Z", "PriceUSD": "1"},
+                {"asset": "eth", "time": "2020-04-11T00:00:00Z", "PriceUSD": "1"},
+                {"asset": "sol", "time": "2020-04-10T00:00:00Z", "PriceUSD": "1"},
+                {"asset": "sol", "time": "2020-04-11T00:00:00Z", "PriceUSD": "1"},
+            ]
+        }
+
+        summary = summarize_coin_metrics_period(
+            body, start=date(2020, 4, 10), end=date(2020, 4, 11)
+        )
+
+        self.assertFalse(summary["complete"])
+        btc = summary["assets"]["btc"]
+        self.assertEqual(btc["duplicate_date_count"], 1)
+        self.assertEqual(btc["missing_date_count"], 1)
+
+
+class LocalAttestationTests(unittest.TestCase):
+    def _write_attestation(self, directory: str, *, status: str = "pass") -> Path:
+        path = Path(directory) / "attestation.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "gates": [
+                        {
+                            "gate": gate,
+                            "status": status,
+                            "summary": "verified",
+                            "evidence": {},
+                        }
+                        for gate in ATTESTED_GATE_NAMES
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        return path
+
+    def test_exact_gate_set_and_valid_status_are_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            _, results = load_attested_gates(self._write_attestation(directory))
+
+        self.assertEqual(tuple(result.gate for result in results), ATTESTED_GATE_NAMES)
+
+    def test_unknown_status_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._write_attestation(directory, status="unknown")
+            with self.assertRaisesRegex(ValueError, "invalid.*status"):
+                load_attested_gates(path)
+
+    def test_duplicate_or_missing_gate_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._write_attestation(directory)
+            value = json.loads(path.read_text(encoding="utf-8"))
+            value["gates"][-1]["gate"] = ATTESTED_GATE_NAMES[0]
+            path.write_text(json.dumps(value), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "exactly once"):
+                load_attested_gates(path)
 
 
 if __name__ == "__main__":

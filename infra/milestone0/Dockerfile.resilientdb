@@ -1,0 +1,24 @@
+ARG BASE_IMAGE=resfinance/resilientdb-base:4de5cb4
+FROM ${BASE_IMAGE}
+
+ARG RESILIENTDB_COMMIT
+ARG RESFINANCE_PATCH_SHA256
+
+LABEL org.opencontainers.image.source="https://github.com/apache/incubator-resilientdb" \
+      org.opencontainers.image.revision="${RESILIENTDB_COMMIT}" \
+      org.resfinance.milestone0.patch-sha256="${RESFINANCE_PATCH_SHA256}"
+
+WORKDIR /app
+COPY . /app
+
+# Build only the persistence and contract surfaces exercised by the Milestone 0
+# gates. Removing the unused DuckDB edge from KV keeps the ARM64 build within the
+# local Docker memory budget; LevelDB remains the sole persistent store.
+RUN bazel build --define enable_leveldb=True \
+      //service/kv:kv_service \
+      //service/tools/kv/api_tools:kv_service_tools \
+      //service/contract:contract_service \
+      //service/tools/contract/api_tools:contract_tools \
+      //tools:certificate_tools
+
+ENTRYPOINT ["/bin/bash"]

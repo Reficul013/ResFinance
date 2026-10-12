@@ -25,10 +25,20 @@
     "source_commit_attestation": null,
     "status": "not-approved-for-gates"
   },
+  "local_container": {
+    "reference": "resfinance/resilientdb:4de5cb4-m0",
+    "platform": "linux/arm64",
+    "image_digest": "sha256:5a639ec02a654aa4fec3e2ecba7a151f93c8acdd6319e187696b0c3417f206f8",
+    "upstream_commit": "4de5cb43686276ace4307f44839a1de920ab524a",
+    "patch": "patches/resilientdb/0001-milestone0-persistent-kv-and-contract.patch",
+    "patch_sha256": "d1be8733736b0bc0dc3d8df525e16a29e4b7bb18345071d52ba5e9e9b20594b2",
+    "status": "approved-for-local-milestone0-gates"
+  },
   "toolchain": {
     "python": "3.13.2",
     "node": "22.14.0",
-    "solc": "0.8.28"
+    "solc": "0.8.28",
+    "solc_sha256": "81515b0e53deaa266d549545ccaac0a5a96e6d4e8201c77f673b2c710976d9ea"
   },
   "models": {
     "assistant": {

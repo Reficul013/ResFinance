@@ -4,7 +4,7 @@ Status: Approved planning baseline for local implementation; cloud deployment is
 
 Last reviewed: 2026-10-12
 
-Implementation status: Milestone 0 in progress; mandatory feasibility gates remain incomplete
+Implementation status: Milestone 0 in progress; local ecosystem gates pass and provider gate 6 remains open
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
@@ -232,7 +232,7 @@ Data adapters:
 - GDELT GKG historical tone/coverage and DOC API live news metadata; do not persist full copyrighted articles.
 - `facebook/bart-large-mnli`, pinned by model revision and hash, for supplemental bullish/bearish/neutral headline classification.
 
-The adapters retain source URL/query, retrieval time, provider revision, license metadata, row counts, checksums, availability time, and missingness. Official references: [Coin Metrics API v4](https://docs.coinmetrics.io/api/v4/), [CoinGecko API](https://www.coingecko.com/en/api), [DefiLlama API](https://api-docs.defillama.com/), and [GDELT DOC 2.0](https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/).
+The adapters retain source URL/query, retrieval time, provider revision, license metadata, row counts, checksums, availability time, and missingness. Official references: [Coin Metrics API v4](https://docs.coinmetrics.io/api/v4/), [CoinGecko API](https://www.coingecko.com/en/api), [DefiLlama API](https://api-docs.defillama.com/), and [GDELT DOC 2.0](https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/). The current coverage and permission disposition is maintained in [`provider-terms-review.md`](provider-terms-review.md); conditional or blocked sources are not production-approved merely because a probe succeeds.
 
 Research dataset V1:
 
@@ -301,7 +301,7 @@ Cloud deployment is not part of the current feasibility gate. If deployment work
 Go/no-go validation must prove:
 
 1. Commit, get, prefix range, history/version, restart durability, and one-replica failure behavior.
-2. A 100 MB checkpoint can be persisted in 256 KiB chunks and reconstructed with identical SHA-256.
+2. A 100 MB checkpoint can be persisted as 256 KiB logical chunks and reconstructed with identical SHA-256. A CLI-based spike may segment each logical chunk into transport-safe records (64 KiB was required by the local process argument limit); the production adapter must preserve the logical manifest and prove its selected binary or segmented transport.
 3. A Solidity contract can be compiled, deployed, executed, queried, and restarted on the pinned stack.
 4. A signed ResVault settlement travels through REST, passes backend verification, changes contract state, and produces a ResilientDB finance event.
 5. The browser page, network traffic, server, and logs never receive a private key or seed.
@@ -312,9 +312,13 @@ Go/no-go validation must prove:
 
 ### Milestone 0 — Architecture and feasibility gate
 
+Milestone 0 implementations are narrow, disposable feasibility spikes unless a later milestone explicitly adopts them. They must exercise the real pinned boundaries and preserve every security and storage invariant, but they do not need the complete product UI, domain breadth, or operational hardening assigned to later milestones. Passing a spike proves that the dependency can support the planned design; it does not replace the maintainable implementation or tests required by Milestones 1–8.
+
 - Populate the root `AGENTS.md` and add reviewed architecture, feasibility, REST-contract, security, and research-protocol documents.
 - Pin the ResilientDB, ResContract, ResVault, compiler, Python, Node, and model revisions.
 - Audit the pinned official ResVault implementation and record whether unchanged upstream use, a minimal fork, or a substantial documented hardening effort is warranted.
+- Build a reproducible local ResilientDB artifact from the pinned source and use it for the real-stack gates; an unattested public image is insufficient.
+- Implement only the minimum secure signing and REST-to-contract-to-event vertical slice needed to prove the signed-settlement boundary. No spike may expose a private key, bypass intent verification, or introduce substitute persistence.
 - Run all seven go/no-go tests above.
 - Produce a signed decision record for any local fork or compatibility patch.
 

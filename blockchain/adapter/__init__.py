@@ -1,0 +1,1 @@
+"""Private ResContract gateway adapters."""

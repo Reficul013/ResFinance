@@ -3,6 +3,14 @@ name = "resfinance"
 version = "0.0.0"
 description = "ResFinance local implementation and feasibility harness"
 requires-python = ">=3.13,<3.14"
+dependencies = [
+  "cryptography==50.0.2",
+  "fastapi==0.143.0",
+  "rfc8785==0.1.4",
+]
+
+[project.optional-dependencies]
+test = ["httpx==0.28.1"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -19,4 +27,4 @@ select = ["B", "E", "F", "I", "UP"]
 [tool.mypy]
 python_version = "3.13"
 strict = true
-files = ["scripts/milestone0"]
+files = ["scripts/milestone0", "server/app", "blockchain/adapter", "blockchain/wallet"]

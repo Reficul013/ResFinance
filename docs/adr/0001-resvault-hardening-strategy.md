@@ -12,7 +12,7 @@ ResFinance requires ResVault identity and explicit approval for contract-affecti
 
 ## Decision
 
-Maintain a substantial hardened ResVault implementation based on the pinned Apache source. Preserve recognizable ResVault behavior and ecosystem compatibility, but replace the unsafe signing bridge and key-storage/unlock design. The implementation will remain separate from application code, maintain an auditable patch history, and rebase only through explicit upstream review.
+Maintain a substantial hardened ResVault-compatible implementation. Preserve recognizable ResVault behavior and ecosystem compatibility, but do not inherit the unsafe signing bridge or key-storage/unlock design merely to retain source similarity. Reuse of safe pinned-upstream components is allowed only after review; either a documented hardening fork or a compatible redesign must maintain an auditable history and accept upstream changes only through explicit review.
 
 The hardened implementation must:
 
@@ -28,7 +28,7 @@ The hardened implementation must:
 - ResVault remains part of the product; the audit does not remove wallet-dependent scope.
 - Milestone 2 is larger than a minimal patch and needs extension-specific security tests and upstream-diff review.
 - The unmodified official extension is prohibited for ResFinance signing.
-- Until hardening passes, the signed-settlement and key-isolation feasibility gates remain unsatisfied.
+- The disposable Milestone 0 signing boundary may unblock feasibility and other wallet-dependent implementation while the persistent browser extension is completed; it cannot satisfy Milestone 2 acceptance or be shipped as the wallet.
 
 ## Rejected alternatives
 

@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-12T20:28:47Z",
+  "scope": "local-linux-arm64-feasibility-only",
+  "upstream_commit": "4de5cb43686276ace4307f44839a1de920ab524a",
+  "image_digest": "sha256:5a639ec02a654aa4fec3e2ecba7a151f93c8acdd6319e187696b0c3417f206f8",
+  "patch_sha256": "d1be8733736b0bc0dc3d8df525e16a29e4b7bb18345071d52ba5e9e9b20594b2",
+  "gates": [
+    {
+      "gate": "1-resilientdb-kv-durability-replica-loss",
+      "status": "pass",
+      "summary": "Four local replicas passed KV, OCC history/range, restart durability, and one-replica-loss reads/writes.",
+      "evidence": {
+        "replica_count": 4,
+        "persistent_backend": "leveldb",
+        "full_restart_readback": true,
+        "one_replica_stopped_read_write": true,
+        "version_history": [1, 2],
+        "versioned_prefix_range_key_count": 2
+      }
+    },
+    {
+      "gate": "2-resilientdb-100mb-artifact",
+      "status": "pass",
+      "summary": "Real ResilientDB reconstructed the 100 MiB artifact with an identical SHA-256 after restart.",
+      "evidence": {
+        "size_bytes": 104857600,
+        "logical_chunk_size": 262144,
+        "logical_chunk_count": 400,
+        "cli_transport_chunk_size": 65536,
+        "transport_chunk_count": 1600,
+        "manifest_key": "resfinance.m0.artifact.100mib.v2.manifest",
+        "source_sha256": "d7de409992e7bb161af1d7c0fb5e4621a962f9f8e41976c8f670c5d0a71af89a",
+        "restored_sha256": "d7de409992e7bb161af1d7c0fb5e4621a962f9f8e41976c8f670c5d0a71af89a",
+        "identical": true
+      }
+    },
+    {
+      "gate": "3-rescontract-lifecycle",
+      "status": "pass",
+      "summary": "Solidity 0.8.28 compile/deploy/execute/query and all-process restart/query passed with LevelDB-backed ResContract.",
+      "evidence": {
+        "solc": "0.8.28+commit.7893614a",
+        "solc_sha256": "81515b0e53deaa266d549545ccaac0a5a96e6d4e8201c77f673b2c710976d9ea",
+        "owner_balance_after_transfer": 900,
+        "recipient_balance_after_transfer": 100,
+        "balances_after_full_restart": [900, 100]
+      }
+    },
+    {
+      "gate": "4-signed-settlement-saga",
+      "status": "pass",
+      "summary": "Approved Ed25519 intent passed REST verification, changed real ResContract state, and appended a confirmed ResilientDB event.",
+      "evidence": {
+        "http_status": 200,
+        "credit_units": 125,
+        "projection_version": 1,
+        "confirmed_event_readback": true,
+        "private_material_transmitted": false
+      }
+    },
+    {
+      "gate": "5-resvault-key-isolation",
+      "status": "pass",
+      "summary": "The isolated M0 signer requires exact origin and explicit approval and exposes only public identity and signature data.",
+      "evidence": {
+        "official_upstream_accepted": false,
+        "selected_path": "compatible-redesign",
+        "surfaces_tested": [
+          "page-request",
+          "network-request",
+          "server-response",
+          "contract-call",
+          "resilientdb-record",
+          "logs"
+        ],
+        "persistent_extension_deferred_to_milestone": 2
+      }
+    }
+  ]
+}
