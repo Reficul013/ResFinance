@@ -5,6 +5,10 @@ Use these references when implementing or validating the ResilientDB, ResVault, 
 ## Apache source
 
 - [Apache ResilientDB repository](https://github.com/apache/incubator-resilientdb)
+- Milestone 0 pinned commit: [`4de5cb43686276ace4307f44839a1de920ab524a`](https://github.com/apache/incubator-resilientdb/commit/4de5cb43686276ace4307f44839a1de920ab524a)
+- [Pinned ResContract source](https://github.com/apache/incubator-resilientdb/tree/4de5cb43686276ace4307f44839a1de920ab524a/ecosystem/smart-contract/rescontract)
+- [Pinned ResVault source](https://github.com/apache/incubator-resilientdb/tree/4de5cb43686276ace4307f44839a1de920ab524a/ecosystem/tools/resvault)
+- Machine-readable revisions and dependency hashes: [`config/milestone0-lock.json`](../config/milestone0-lock.json)
 
 ## ExpoLab Beacon documentation
 
@@ -20,4 +24,5 @@ Use these references when implementing or validating the ResilientDB, ResVault, 
 - Validate documented behavior against the project's pinned local stack before depending on it.
 - Do not let an upstream example override the constraints in `AGENTS.md` or `docs/architecture-implementation-plan.md`.
 - Capture any required compatibility patch or behavioral exception in an architecture decision record.
+- Do not treat `expolab/resdb:arm64` as equivalent to the pinned source until its digest has a verifiable source-commit attestation or ResFinance builds an image reproducibly from the pinned commit.
 

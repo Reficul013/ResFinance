@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "reviewed_at_utc": "2026-10-12T00:00:00Z",
+  "resilientdb": {
+    "repository": "https://github.com/apache/incubator-resilientdb.git",
+    "commit": "4de5cb43686276ace4307f44839a1de920ab524a",
+    "commit_date": "2026-09-27T17:03:08Z",
+    "bazel": "6.0.0"
+  },
+  "rescontract": {
+    "source": "ecosystem/smart-contract/rescontract",
+    "version": "1.2.5",
+    "npm_lock_sha256": "dc0414b64951bde6c21333746ee685998ef15447e1cbced6bab792c1165d5ad9"
+  },
+  "resvault": {
+    "source": "ecosystem/tools/resvault",
+    "manifest_version": "1.2.2",
+    "package_version": "0.1.0",
+    "npm_lock_sha256": "da30da7f8fa844a17be220b942db06bc3535a9f3f3b1a2ce3902f9cad65cb7dd"
+  },
+  "container": {
+    "reference": "expolab/resdb:arm64",
+    "index_digest": "sha256:44db514e56d792491d2f19e8232dab0f9ccdfc0efe940ba332fd37664910cd10",
+    "platform_digest": "sha256:21b80e9f41847e12f76686667519db5c35933251c162d28f66350a6cc4cccbca",
+    "source_commit_attestation": null,
+    "status": "not-approved-for-gates"
+  },
+  "toolchain": {
+    "python": "3.13.2",
+    "node": "22.14.0",
+    "solc": "0.8.28"
+  },
+  "models": {
+    "assistant": {
+      "id": "Qwen/Qwen2.5-1.5B-Instruct",
+      "revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+      "license": "Apache-2.0"
+    },
+    "sentiment": {
+      "id": "facebook/bart-large-mnli",
+      "revision": "d7645e127eaf1aefc7862fd59a17a5aa8558b8ce",
+      "license": "MIT"
+    }
+  },
+  "research_period": {
+    "start_utc": "2020-04-10T00:00:00Z",
+    "end_utc_inclusive": "2025-01-01T00:00:00Z",
+    "assets": ["BTC", "ETH", "SOL"]
+  }
+}

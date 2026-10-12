@@ -38,7 +38,9 @@ These instructions apply to the entire repository. Add a nested `AGENTS.md` only
 
 - Every behavioral change needs tests at the lowest appropriate layer plus an integration test for cross-module behavior.
 - Run the relevant available tests, lint, type checks, and builds before handoff. Use real ResilientDB integration tests where persistence behavior matters.
-- Add exact runnable verification commands here when the toolchain is established; until then, derive them from checked-in configuration rather than inventing commands.
+- Run the Milestone 0 checks with `.venv/bin/ruff check .`, `.venv/bin/mypy`, and `.venv/bin/pytest` after installing the exact development tools from `requirements-dev.txt`. The standard-library fallback is `python3 -m unittest discover -s tests -p 'test_*.py'`.
+- Run the current feasibility harness with `python3 -m scripts.milestone0.run --upstream /private/tmp/resfinance-resilientdb-upstream --output /tmp/resfinance-milestone0-evidence.json --network --allow-incomplete`. Omit `--allow-incomplete` in CI so incomplete mandatory gates fail the job; omit `--network` only when provider access is intentionally unavailable.
+- Derive later milestone verification commands from checked-in configuration; do not invent commands for toolchains that have not been established.
 - Architecture exceptions require an ADR and explicit review. A failing integration never justifies silently introducing another database or weakening security boundaries.
 
 ## Deployment hold
