@@ -46,6 +46,14 @@ These instructions apply to the entire repository. Add a nested `AGENTS.md` only
 - Cloud and production deployment are on hold. Do not provision cloud infrastructure, add a production deployment pipeline, or claim production/BFT readiness unless the hold is explicitly lifted after the required cloud feasibility review and ADR.
 - Local development, integration, research, security, browser, accessibility, load, and chaos testing remain in scope.
 
+## Repository ownership and external contributions
+
+- Keep all implementation changes in this ResFinance repository and push only to its configured `origin` (`https://github.com/haseebshaik00/ResFinance.git`).
+- Do not open or submit pull requests, issues, patches, branches, tags, commits, or other changes to Apache, ExpoLab, or any other external repository or organization.
+- Treat upstream repositories as read-only references. Prefer the approved links in `docs/development-references.md` for source inspection.
+- Before forking, cloning for modification, adding a Git remote, vendoring code, creating a submodule, or otherwise introducing content from another repository, explain why it is needed and obtain the user's explicit approval.
+- If an upstream change appears necessary, first determine whether a compatible adapter or local fix can live safely in this repository. Otherwise stop, report the exact dependency or blocker, and ask the user how to proceed.
+
 ## Commit and push substantial changes
 
 - When a task produces substantial, complete repository changes, verify the work, review the diff, create a focused commit with a meaningful Conventional Commit message, and push the current branch to its configured upstream before handing off.
