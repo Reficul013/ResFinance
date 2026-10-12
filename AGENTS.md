@@ -1,5 +1,10 @@
 # Repository workflow
 
+## Development references
+
+- Before implementing or debugging ResilientDB, ResVault, or ResContract integration, consult `docs/development-references.md` for the project-approved upstream source and documentation links.
+- Pin the exact upstream revision used, validate referenced behavior against the local stack, and preserve the constraints in `docs/architecture-implementation-plan.md`.
+
 ## Commit and push substantial changes
 
 - When a task produces substantial, complete repository changes, verify the work, review the diff, create a focused commit with a meaningful Conventional Commit message, and push the current branch to its configured upstream before handing off.
