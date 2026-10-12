@@ -188,7 +188,7 @@ Milestone 0 will audit the pinned official ResVault implementation before choosi
 
 1. Use the pinned upstream implementation unchanged if it satisfies every key-isolation and signed-intent requirement.
 2. Maintain a minimal fork, documented by an architecture decision record, if narrowly scoped compatibility or security patches are required.
-3. Block wallet-dependent work and require a new architecture decision if the implementation cannot be safely hardened without a substantial redesign.
+3. Undertake a documented substantial hardening fork or ResVault-compatible redesign if the implementation cannot be made safe with a minimal patch. The larger effort must preserve the required ResVault behavior and pass the same security contract; complexity alone does not remove wallet-dependent functionality from scope.
 
 Whichever implementation is approved will:
 
@@ -291,7 +291,7 @@ The integration is **conditionally feasible**, with mandatory validation before 
 - ResilientDB currently exposes KV, versioned history/range concepts, REST/GraphQL components, Python tooling, ResContract, and ResVault in the official Apache repository. However, the SDK/ORM surface is not mature enough to adopt directly as the domain persistence layer. ExpoLab needs a narrow, tested repository adapter. [Apache ResilientDB repository](https://github.com/apache/incubator-resilientdb/blob/master/README.md)
 - Some advertised or older “read all” behavior is not reliable in the current KV HTTP implementation. Queries must use known deterministic keys and prefix ranges. [Current KV service implementation](https://github.com/apache/incubator-resilientdb/blob/master/service/tools/kv/api_tools/kv_service_tools.cpp)
 - ResContract can create, compile, deploy, and execute Solidity contracts, but its service boundary does not provide the required wallet-signature verification. Self-hosting, network isolation, and the signed-intent gateway are therefore mandatory. [ResContract source](https://github.com/apache/incubator-resilientdb/tree/master/ecosystem/smart-contract/rescontract)
-- ResVault must pass the pinned-source key-isolation audit before wallet-dependent implementation begins. Upstream reuse is preferred when it passes; otherwise only the smallest evidence-backed fork or compatibility patch may proceed under an architecture decision record. [ResVault source](https://github.com/apache/incubator-resilientdb/tree/master/ecosystem/tools/resvault)
+- ResVault must pass the pinned-source key-isolation audit before its implementation is accepted. Upstream reuse is preferred when it passes; otherwise the project will implement the evidence-backed minimal patch or, when necessary, a documented substantial hardening fork or compatible redesign. Wallet-dependent functionality remains in scope under every outcome. [ResVault source](https://github.com/apache/incubator-resilientdb/tree/master/ecosystem/tools/resvault)
 - ResSQL is excluded because its implementation is DuckDB-based and conflicts with the sole-database constraint.
 - A four-replica local Docker setup is suitable for development but does not provide independent Byzantine fault domains. No cloud or production resilience claim will be made while deployment is on hold.
 - Large model artifacts remain feasible only if the chunked round-trip spike succeeds. No fallback database or object store is permitted.
@@ -314,7 +314,7 @@ Go/no-go validation must prove:
 
 - Populate the root `AGENTS.md` and add reviewed architecture, feasibility, REST-contract, security, and research-protocol documents.
 - Pin the ResilientDB, ResContract, ResVault, compiler, Python, Node, and model revisions.
-- Audit the pinned official ResVault implementation and record whether unchanged upstream use, a minimal fork, or a blocking redesign decision is warranted.
+- Audit the pinned official ResVault implementation and record whether unchanged upstream use, a minimal fork, or a substantial documented hardening effort is warranted.
 - Run all seven go/no-go tests above.
 - Produce a signed decision record for any local fork or compatibility patch.
 
@@ -330,7 +330,7 @@ Go/no-go validation must prove:
 
 ### Milestone 2 — Hardened wallet and authentication
 
-- Implement the Milestone 0 ResVault audit decision: use the pinned upstream implementation unchanged when it passes, or apply only the approved minimal hardening and compatibility patches.
+- Implement the Milestone 0 ResVault audit decision: use the pinned upstream implementation unchanged when it passes, apply the approved minimal patches when sufficient, or complete the documented substantial hardening fork or compatible redesign when required.
 - Implement challenge login, in-memory access tokens, refresh-session hashes in ResilientDB, logout/revocation, address derivation, and signed-intent verification.
 - Add replay, tamper, expiry, wrong-origin, wrong-network, and locked-wallet defenses.
 
@@ -408,7 +408,7 @@ Required suites:
 Principal risks and enforced responses:
 
 - **SDK/API maturity:** isolate all upstream behavior behind adapters and pin commits.
-- **Wallet key exposure:** block wallet-dependent work until the selected pinned implementation passes key-leak tests; do not assume a fork is necessary or sufficient without audit evidence.
+- **Wallet key exposure:** choose unchanged upstream use, a minimal patch, or substantial hardening from audit evidence. Do not remove wallet-dependent functionality from scope because the required work is large, and do not accept the selected implementation until it passes key-leak tests.
 - **Caller spoofing in ResContract:** private network plus mandatory signed gateway; never expose the contract service publicly.
 - **Non-atomic contract/KV writes:** authoritative contract state, idempotent saga, and reconciliation worker.
 - **Large artifact limits:** validate chunking before ML work; improve ResilientDB/configuration rather than add object storage.
@@ -457,7 +457,7 @@ It will establish these development conventions and non-negotiable rules:
 - Group settlement uses internal, non-redeemable ledger credits; no fiat, native BTC/ETH/SOL, or token transfer occurs.
 - Free-first data adapters are the default, with provider variability accepted and recorded.
 - Research baseline dates are fixed; live inference uses the latest completed UTC day.
-- ResVault and ResContract are pinned and self-hosted. ResVault is used unchanged only if the Milestone 0 audit proves it meets the security contract; otherwise the smallest approved hardening patch is maintained explicitly.
+- ResVault and ResContract are pinned and self-hosted. ResVault is used unchanged only if the Milestone 0 audit proves it meets the security contract; otherwise an explicitly documented minimal or substantial hardening implementation is maintained, according to the evidence.
 - Cloud and production deployment are on hold. No cloud topology, provider, or operational service is currently approved.
 - If deployment is resumed, four ResilientDB replicas across independent failure domains remain a prerequisite, not a current implementation claim.
 - Any future operational logging service may contain operational logs only; all application audit records must remain in ResilientDB.
