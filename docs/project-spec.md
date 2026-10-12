@@ -1,7 +1,7 @@
 ---
 title: "ResFinance — Intelligent Finance on ResilientDB"
 document_type: "Product, systems, implementation, and research plan"
-status: "Review draft"
+status: "Review draft; cloud deployment on hold"
 scope: "BTC, ETH, and SOL"
 persistent_storage: "Apache ResilientDB only"
 source_pdf: "/Users/haseebrahman/Downloads/ResFinance.pdf"
@@ -70,9 +70,9 @@ risk, portfolio, and scenario endpoints
 
 Apache ResilientDB is the only persistent database for application and ML/crypto data. Python with Pandas, Polars, and NumPy may process data in memory, but no Parquet or DuckDB persistence is used.
 
-### Online deployment
+### Deployment status — on hold
 
-React and FastAPI services connect to a cloud-hosted/self-hosted ResilientDB cluster. ResVault and smart contracts remain part of the deployed workflow.
+Cloud and production deployment are deferred until a separate feasibility review proves that the pinned ResilientDB stack can operate safely in the selected environment. Current scope is local development, integration, research, and end-to-end validation. No cloud provider or production topology is currently approved.
 
 ## 4. Five-phase implementation plan
 
@@ -92,9 +92,9 @@ Ingest historical/live market, sentiment/NLP, and on-chain data for BTC, ETH, an
 
 Train baselines, implement MSPCIFormer, and add adaptive gating across market, sentiment, and on-chain inputs. Use walk-forward evaluation and ablations against market-only and fixed-weight fusion.
 
-### Phase 5 - Risk Profiling, Portfolio Optimization, Full Integration + Deployment
+### Phase 5 - Risk Profiling, Portfolio Optimization + Full Local Integration
 
-Combine forecasted returns, uncertainty, realized risk/covariance, liquidity, and downside risk with a continuous user risk score. Generate explainable BTC/ETH/SOL weights, backtest, integrate the full journey, and deploy application services with a cloud-hosted/self-hosted ResilientDB cluster.
+Combine forecasted returns, uncertainty, realized risk/covariance, liquidity, and downside risk with a continuous user risk score. Generate explainable BTC/ETH/SOL weights, backtest, and integrate the complete journey in the local validated environment. Deployment is a separate, deferred milestone and is not required to complete this phase.
 
 ## 5. Forecasting research: 2 papers + 1 novelty
 
@@ -161,6 +161,6 @@ The ledger stays shared and auditable; Analyze Another Amount remains an isolate
 - Gurgul et al. (2025)
 - Adaptive Multi-Source Fusion/Gating
 
-## Deployment summary
+## Deployment summary — on hold
 
-React + FastAPI services with a cloud-hosted/self-hosted ResilientDB cluster.
+Do not provision cloud infrastructure or claim production readiness until ResilientDB cloud compatibility, persistence, restart recovery, replica failure behavior, and operational support have been validated and documented in an approved architecture decision record.

@@ -1,10 +1,12 @@
 # ExpoLab Finance Platform Architecture and Delivery Plan
 
-Status: Approved planning baseline for later implementation
+Status: Approved planning baseline for local implementation; cloud deployment is on hold
 
-Last reviewed: 2026-10-11
+Last reviewed: 2026-10-12
 
 Implementation status: Not started
+
+Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
 ## 1. Summary and Product Boundaries
 
@@ -24,6 +26,7 @@ Non-negotiable boundaries:
 - ResContract executes meaningful obligation and settlement-credit state transitions.
 - V1 does not transfer fiat or native cryptocurrency, execute trades, provide exchange custody, or claim that internal credits have monetary value.
 - The AI agent is read-only and cannot alter records, sign actions, settle obligations, or trade.
+- Cloud and production deployment work is out of scope until explicitly resumed after ResilientDB cloud compatibility, operations, and failure behavior are validated.
 
 ## 2. Target Architecture
 
@@ -139,7 +142,7 @@ Rules:
 - Secondary indexes and projections are rebuildable.
 - Generated model artifacts are compressed, split into 256 KiB content-addressed chunks, stored in ResilientDB, and verified against a manifest hash.
 - Temporary training files are deleted after successful verified persistence.
-- Sensitive payloads use AES-256-GCM envelope encryption. Per-user and per-group data keys are wrapped by a cloud KMS key; KMS stores keys only, never application records.
+- Sensitive payloads use AES-256-GCM envelope encryption. Local development uses non-production key handling that never commits secrets. A production KMS design remains deferred with the deployment plan; when resumed, KMS may wrap per-user and per-group data keys but must never store application records.
 - Cleartext indexes contain only pseudonymous identifiers, record type, schema version, and timestamps.
 - Erasure uses a tombstone plus destruction of the applicable data-encryption key; immutable ciphertext may remain replicated.
 - Money uses integer USD cents. Crypto quantities and prices use validated decimal strings, never binary floating point.
@@ -284,8 +287,10 @@ The integration is **conditionally feasible**, with mandatory validation before 
 - ResContract can create, compile, deploy, and execute Solidity contracts, but its service boundary does not provide the required wallet-signature verification. Self-hosting, network isolation, and the signed-intent gateway are therefore mandatory. [ResContract source](https://github.com/apache/incubator-resilientdb/tree/master/ecosystem/smart-contract/rescontract)
 - Unmodified ResVault is not acceptable for production key custody. The hardened fork is a prerequisite, not an optional enhancement. [ResVault source](https://github.com/apache/incubator-resilientdb/tree/master/ecosystem/tools/resvault)
 - ResSQL is excluded because its implementation is DuckDB-based and conflicts with the sole-database constraint.
-- A four-replica local Docker setup is suitable for development but does not provide independent Byzantine fault domains. Production must place the four replicas across separate VM/failure boundaries.
+- A four-replica local Docker setup is suitable for development but does not provide independent Byzantine fault domains. No cloud or production resilience claim will be made while deployment is on hold.
 - Large model artifacts remain feasible only if the chunked round-trip spike succeeds. No fallback database or object store is permitted.
+
+Cloud deployment is not part of the current feasibility gate. If deployment work is resumed, it requires a new decision record and a separate spike proving that the pinned ResilientDB stack can be operated safely in the selected cloud environment before any infrastructure is provisioned.
 
 Go/no-go validation must prove:
 
@@ -371,13 +376,14 @@ Go/no-go validation must prove:
 
 **Acceptance:** responses cite only supplied facts, unsupported questions trigger a caveat/fallback, and no AI path can invoke a write or wallet operation.
 
-### Milestone 9 — Production hardening and deployment
+### Milestone 9 — Production hardening and deployment — ON HOLD
 
-- Deploy TLS/reverse proxy, static frontend, API/workers, private ResContract, and four ResilientDB replicas across failure domains.
-- Add KMS integration, secret rotation, backups, restore drills, metrics, structured logs, rate limits, dependency scanning, and GitHub Actions deployment.
-- Run load, accessibility, browser, chaos, and security regression suites.
+- Do not provision cloud infrastructure or implement a production deployment pipeline until this milestone is explicitly resumed.
+- Before resumption, validate the pinned ResilientDB stack in the proposed cloud environment, including networking, persistent storage, restart recovery, replica failure, operational support, and independent failure domains.
+- If that validation passes, define the deployment architecture in an ADR before implementing TLS/reverse proxy, static frontend hosting, API/workers, private ResContract, KMS integration, backups, observability, or deployment automation.
+- Local load, accessibility, browser, chaos, and security testing may continue because it also supports implementation quality.
 
-**Acceptance:** public E2E passes, one replica can fail without data loss, restore is verified, contract services are unreachable publicly, and no prohibited persistent store appears in images or runtime configuration.
+**Acceptance:** deferred. When resumed, acceptance criteria must be re-approved using evidence from the selected cloud environment. Until then, completion of Milestones 0–8 does not imply production readiness or cloud support.
 
 ## 5. Test Strategy and Risk Gates
 
@@ -403,7 +409,7 @@ Principal risks and enforced responses:
 - **Provider gaps and drift:** availability masks, source revisions, fallback adapters, and no assumption of uniform SOL metrics.
 - **Paper/code licensing:** reimplement from the published method unless explicit reuse permission or a license is obtained.
 - **Research divergence:** label the work a three-asset adaptation and report dataset/provider differences.
-- **Single-VM production pressure:** do not claim BFT resilience unless replicas span independent failure domains.
+- **Unvalidated cloud operation:** keep deployment on hold and do not claim production or BFT resilience. Any future deployment must prove that replicas span independent failure domains.
 - **Internal-credit interpretation:** label credits non-redeemable and non-monetary throughout UI, API, and documentation.
 - **LLM factuality:** evidence-bound read-only responses and deterministic fallback.
 - **Financial harm:** no trade execution, no guaranteed-return language, and visible uncertainty/non-advice notices.
@@ -443,9 +449,10 @@ It will establish these development conventions and non-negotiable rules:
 - USD is the only fiat denomination in V1.
 - Group settlement uses internal, non-redeemable ledger credits; no fiat, native BTC/ETH/SOL, or token transfer occurs.
 - Free-first data adapters are the default, with provider variability accepted and recorded.
-- Research baseline dates are fixed; production inference uses the latest completed UTC day.
-- ResVault and ResContract are pinned, self-hosted, and locally hardened rather than trusted as unmodified upstream production components.
-- Production uses four ResilientDB replicas across independent failure domains.
-- Operational logs may use the cloud logging service, but all application audit records remain in ResilientDB.
+- Research baseline dates are fixed; live inference uses the latest completed UTC day.
+- ResVault and ResContract are pinned, self-hosted, and locally hardened rather than trusted as unmodified upstream components.
+- Cloud and production deployment are on hold. No cloud topology, provider, or operational service is currently approved.
+- If deployment is resumed, four ResilientDB replicas across independent failure domains remain a prerequisite, not a current implementation claim.
+- Any future operational logging service may contain operational logs only; all application audit records must remain in ResilientDB.
 - Source code and deterministic synthetic test generators live in Git; generated research data and artifacts live only in ResilientDB.
 - Failure of a mandatory feasibility gate blocks the affected feature rather than relaxing the sole-database, key-isolation, or signed-settlement constraints.
