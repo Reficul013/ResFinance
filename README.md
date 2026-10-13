@@ -9,8 +9,7 @@ ResFinance is a planned wallet-authenticated finance platform that connects pers
 Most finance products separate budgeting, bill splitting, and investing. ResFinance is designed to connect them into one continuous user journey:
 
 ```text
-Earn → Spend → Split → Settle → Update Finance → Calculate Savings
-     → Explore BTC/ETH/SOL → Forecast → Assess Risk → Build Portfolio
+Earn → Spend → Split → Settle → Update Finance → Calculate Savings → Explore BTC/ETH/SOL → Forecast → Assess Risk → Build Portfolio
 ```
 
 A user will be able to connect a ResVault wallet, manage personal finances, split expenses with friends, approve settlements, and use the resulting savings calculation as the default amount for a risk-aware crypto portfolio analysis.
