@@ -17,9 +17,16 @@
       transparent 34rem
     ),
     linear-gradient(120deg, #d9baff 0%, #c9cef8 48%, #b5def3 100%);
-  --card-background: rgb(255 255 255 / 48%);
-  --card-border: rgb(255 255 255 / 70%);
-  --card-shadow: 0 1.5rem 4rem rgb(78 72 139 / 14%);
+  --card-background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 58%),
+    rgb(255 255 255 / 28%)
+  );
+  --card-border: rgb(255 255 255 / 62%);
+  --card-highlight: rgb(255 255 255 / 76%);
+  --card-lowlight: rgb(104 97 164 / 10%);
+  --card-sheen: rgb(255 255 255 / 22%);
+  --card-shadow: 0 1.75rem 4.5rem rgb(78 72 139 / 18%);
   --code-background: rgb(255 255 255 / 38%);
   --status-checking: #b27621;
   --status-ready: #197b68;
@@ -85,17 +92,35 @@ code {
 }
 
 .status-card {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.75rem;
   align-items: center;
+  overflow: hidden;
   margin-top: 2.5rem;
-  padding: 1rem 1.15rem;
+  padding: 1.1rem 1.25rem;
   border: 1px solid var(--card-border);
-  border-radius: 0.75rem;
+  border-radius: 1.1rem;
   background: var(--card-background);
-  box-shadow: var(--card-shadow);
-  backdrop-filter: blur(1rem);
+  box-shadow:
+    var(--card-shadow),
+    inset 0 1px 0 var(--card-highlight),
+    inset 0 -1px 0 var(--card-lowlight);
+  -webkit-backdrop-filter: blur(28px) saturate(155%);
+  backdrop-filter: blur(28px) saturate(155%);
+}
+
+.status-card::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(125deg, var(--card-sheen), transparent 42%);
+  content: "";
+  pointer-events: none;
+}
+
+.status-card > * {
+  position: relative;
 }
 
 .status-dot {
@@ -132,9 +157,16 @@ code {
         transparent 30rem
       ),
       linear-gradient(145deg, #1b202b 0%, #10131e 48%, #0b0c14 100%);
-    --card-background: rgb(17 23 33 / 76%);
-    --card-border: #2d3747;
-    --card-shadow: 0 1.5rem 4rem rgb(0 0 0 / 24%);
+    --card-background: linear-gradient(
+      135deg,
+      rgb(35 44 57 / 62%),
+      rgb(14 19 29 / 46%)
+    );
+    --card-border: rgb(255 255 255 / 12%);
+    --card-highlight: rgb(255 255 255 / 13%);
+    --card-lowlight: rgb(0 0 0 / 22%);
+    --card-sheen: rgb(255 255 255 / 6%);
+    --card-shadow: 0 1.75rem 4.5rem rgb(0 0 0 / 34%);
     --code-background: rgb(55 209 197 / 10%);
     --status-checking: #f2bd5a;
     --status-ready: #38d1c5;
