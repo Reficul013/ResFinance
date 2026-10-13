@@ -12,13 +12,13 @@ Every observation records event time, provider availability time, retrieval time
 
 Planned sources:
 
-- Coin Metrics Community: daily market series and available BTC/ETH on-chain metrics.
+- Coin Metrics Community: daily market series; daily `AdrActCnt` and `TxCnt` are the pinned V1 BTC/ETH on-chain metric contract.
 - CoinGecko: current quote fallback; historical use requires confirmed plan/terms and coverage.
 - DefiLlama: documented SOL TVL and stablecoin-supply proxies.
 - GDELT: GKG historical tone/coverage and DOC metadata; full copyrighted articles are not persisted.
 - `facebook/bart-large-mnli` at the locked revision: supplemental headline classification.
 
-Provider availability differs by asset and date. Missing inputs are explicit masks; values are never silently backfilled from the future. Coin Metrics `PriceUSD` returned all three assets at both fixed-period boundaries. DefiLlama Solana TVL begins after the research start date, so the early proxy interval remains a documented missingness case rather than a value to backfill.
+Provider availability differs by asset and date. Missing inputs are explicit masks; values are never silently backfilled from the future. Coin Metrics `PriceUSD` covers all three assets and `AdrActCnt` plus `TxCnt` cover BTC/ETH on every day of the fixed period. DefiLlama Solana TVL begins on 2021-03-17, leaving 341 masked days. Solana USD stablecoin supply begins on 2021-09-10 and contains 243 later gaps, leaving 761 total masked days. Those masks are model inputs; missing observations are not zero values.
 
 ## Reproducibility
 

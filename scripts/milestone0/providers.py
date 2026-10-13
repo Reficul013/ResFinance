@@ -7,6 +7,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
+from collections.abc import Sequence
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
@@ -59,11 +60,18 @@ def _request_json(url: str) -> tuple[dict[str, object], Any | None]:
         )
 
 
-def _coin_metrics_url(start: str, end: str, *, page_size: int = 100) -> str:
+def _coin_metrics_url(
+    start: str,
+    end: str,
+    *,
+    assets: Sequence[str] = ("btc", "eth", "sol"),
+    metrics: Sequence[str] = ("PriceUSD",),
+    page_size: int = 100,
+) -> str:
     query = urllib.parse.urlencode(
         {
-            "assets": "btc,eth,sol",
-            "metrics": "PriceUSD",
+            "assets": ",".join(assets),
+            "metrics": ",".join(metrics),
             "frequency": "1d",
             "start_time": start,
             "end_time": end,
@@ -76,6 +84,23 @@ def _coin_metrics_url(start: str, end: str, *, page_size: int = 100) -> str:
 def summarize_coin_metrics_period(
     body: object, *, start: date, end: date
 ) -> dict[str, object]:
+    return summarize_coin_metrics_metrics_period(
+        body,
+        start=start,
+        end=end,
+        assets=("btc", "eth", "sol"),
+        metrics=("PriceUSD",),
+    )
+
+
+def summarize_coin_metrics_metrics_period(
+    body: object,
+    *,
+    start: date,
+    end: date,
+    assets: Sequence[str],
+    metrics: Sequence[str],
+) -> dict[str, object]:
     rows = body.get("data", []) if isinstance(body, dict) else []
     typed_rows = [row for row in rows if isinstance(row, dict)]
     expected_days = (end - start).days + 1
@@ -84,7 +109,8 @@ def summarize_coin_metrics_period(
     }
     by_asset: dict[str, dict[str, object]] = {}
     counts = Counter(str(row.get("asset")) for row in typed_rows)
-    for asset in ("btc", "eth", "sol"):
+    expected_assets = set(assets)
+    for asset in assets:
         asset_rows = [row for row in typed_rows if row.get("asset") == asset]
         times = sorted(str(row.get("time")) for row in asset_rows)
         actual_dates = [timestamp[:10] for timestamp in times]
@@ -97,28 +123,104 @@ def summarize_coin_metrics_period(
             "duplicate_date_count": len(actual_dates) - len(unique_dates),
             "missing_date_count": len(expected_dates - unique_dates),
             "unexpected_date_count": len(unique_dates - expected_dates),
-            "null_price_count": sum(row.get("PriceUSD") is None for row in asset_rows),
+            "null_counts": {
+                metric: sum(row.get(metric) is None for row in asset_rows)
+                for metric in metrics
+            },
+            "missing_metric_key_counts": {
+                metric: sum(metric not in row for row in asset_rows) for metric in metrics
+            },
             "complete": (
                 counts[asset] == expected_days
                 and unique_dates == expected_dates
                 and len(actual_dates) == len(unique_dates)
-                and all(row.get("PriceUSD") is not None for row in asset_rows)
+                and all(
+                    metric in row and row.get(metric) is not None
+                    for row in asset_rows
+                    for metric in metrics
+                )
             ),
         }
     unexpected_asset_count = sum(
-        count for asset, count in counts.items() if asset not in {"btc", "eth", "sol"}
+        count for asset, count in counts.items() if asset not in expected_assets
     )
     return {
         "row_count": len(typed_rows),
-        "expected_row_count": expected_days * 3,
+        "expected_row_count": expected_days * len(assets),
+        "metrics": list(metrics),
         "unexpected_asset_count": unexpected_asset_count,
         "assets": by_asset,
         "complete": (
-            len(typed_rows) == expected_days * 3
+            len(typed_rows) == expected_days * len(assets)
             and unexpected_asset_count == 0
             and all(bool(item["complete"]) for item in by_asset.values())
         ),
         "next_page_url": body.get("next_page_url") if isinstance(body, dict) else None,
+    }
+
+
+def summarize_epoch_series_period(
+    body: object,
+    *,
+    start: date,
+    end: date,
+    value_path: Sequence[str],
+) -> dict[str, object]:
+    rows = body if isinstance(body, list) else []
+    expected_dates = {
+        start + timedelta(days=offset) for offset in range((end - start).days + 1)
+    }
+    observations: list[tuple[date, object]] = []
+    invalid_row_count = 0
+    for row in rows:
+        if not isinstance(row, dict):
+            invalid_row_count += 1
+            continue
+        epoch = row.get("date")
+        try:
+            observed_date = datetime.fromtimestamp(int(str(epoch)), UTC).date()
+        except (TypeError, ValueError, OSError, OverflowError):
+            invalid_row_count += 1
+            continue
+        if observed_date not in expected_dates:
+            continue
+        value: object = row
+        for key in value_path:
+            if not isinstance(value, dict) or key not in value:
+                value = None
+                break
+            value = value[key]
+        observations.append((observed_date, value))
+
+    dates = [item[0] for item in observations]
+    unique_dates = set(dates)
+    first_date = min(unique_dates) if unique_dates else None
+    last_date = max(unique_dates) if unique_dates else None
+    internal_expected = (
+        {
+            first_date + timedelta(days=offset)
+            for offset in range((last_date - first_date).days + 1)
+        }
+        if first_date is not None and last_date is not None
+        else set()
+    )
+    return {
+        "period_row_count": len(observations),
+        "expected_daily_rows": len(expected_dates),
+        "first_date": first_date.isoformat() if first_date else None,
+        "last_date": last_date.isoformat() if last_date else None,
+        "pre_availability_mask_days": (
+            (first_date - start).days if first_date is not None else len(expected_dates)
+        ),
+        "internal_missing_days": len(internal_expected - unique_dates),
+        "post_availability_mask_days": (
+            (end - last_date).days if last_date is not None else 0
+        ),
+        "total_missing_days": len(expected_dates - unique_dates),
+        "duplicate_date_count": len(dates) - len(unique_dates),
+        "null_value_count": sum(value is None for _, value in observations),
+        "invalid_row_count": invalid_row_count,
+        "ends_at_research_boundary": last_date == end,
     }
 
 
@@ -136,6 +238,24 @@ def probe_providers() -> dict[str, object]:
         body, start=period_start, end=period_end
     )
     probes["coin_metrics_full_period"] = metadata
+
+    metadata, body = _request_json(
+        _coin_metrics_url(
+            period_start.isoformat(),
+            period_end.isoformat(),
+            assets=("btc", "eth"),
+            metrics=("AdrActCnt", "TxCnt"),
+            page_size=10_000,
+        )
+    )
+    metadata["coverage"] = summarize_coin_metrics_metrics_period(
+        body,
+        start=period_start,
+        end=period_end,
+        assets=("btc", "eth"),
+        metrics=("AdrActCnt", "TxCnt"),
+    )
+    probes["coin_metrics_on_chain_full_period"] = metadata
 
     metadata, body = _request_json(
         "https://api.coingecko.com/api/v3/simple/price?"
@@ -156,7 +276,24 @@ def probe_providers() -> dict[str, object]:
     metadata["row_count"] = len(rows)
     metadata["first_epoch"] = min(dates) if dates else None
     metadata["last_epoch"] = max(dates) if dates else None
+    metadata["coverage"] = summarize_epoch_series_period(
+        body,
+        start=period_start,
+        end=period_end,
+        value_path=("tvl",),
+    )
     probes["defillama_solana_tvl"] = metadata
+
+    metadata, body = _request_json(
+        "https://stablecoins.llama.fi/stablecoincharts/Solana"
+    )
+    metadata["coverage"] = summarize_epoch_series_period(
+        body,
+        start=period_start,
+        end=period_end,
+        value_path=("totalCirculatingUSD", "peggedUSD"),
+    )
+    probes["defillama_solana_stablecoin_supply"] = metadata
 
     gdelt_query = urllib.parse.urlencode(
         {

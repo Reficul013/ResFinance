@@ -17,7 +17,11 @@ from scripts.milestone0.gates import (
     validate_assets,
 )
 from scripts.milestone0.gdelt_evidence import validate_gdelt_csv
-from scripts.milestone0.providers import summarize_coin_metrics_period
+from scripts.milestone0.providers import (
+    summarize_coin_metrics_metrics_period,
+    summarize_coin_metrics_period,
+    summarize_epoch_series_period,
+)
 from scripts.milestone0.run import (
     ATTESTED_GATE_NAMES,
     load_attested_gates,
@@ -160,6 +164,48 @@ class ProviderCoverageTests(unittest.TestCase):
         self.assertEqual(btc["duplicate_date_count"], 1)
         self.assertEqual(btc["missing_date_count"], 1)
 
+    def test_btc_eth_on_chain_metrics_require_every_value(self) -> None:
+        body = {
+            "data": [
+                {
+                    "asset": asset,
+                    "time": "2020-04-10T00:00:00Z",
+                    "AdrActCnt": "10",
+                    "TxCnt": "20",
+                }
+                for asset in ("btc", "eth")
+            ]
+        }
+
+        summary = summarize_coin_metrics_metrics_period(
+            body,
+            start=date(2020, 4, 10),
+            end=date(2020, 4, 10),
+            assets=("btc", "eth"),
+            metrics=("AdrActCnt", "TxCnt"),
+        )
+
+        self.assertTrue(summary["complete"])
+        self.assertEqual(summary["row_count"], 2)
+
+    def test_sol_proxy_gaps_are_counted_as_masks(self) -> None:
+        body = [
+            {"date": "1586476800", "total": {"usd": 1}},
+            {"date": "1586649600", "total": {"usd": 3}},
+        ]
+
+        summary = summarize_epoch_series_period(
+            body,
+            start=date(2020, 4, 10),
+            end=date(2020, 4, 12),
+            value_path=("total", "usd"),
+        )
+
+        self.assertEqual(summary["period_row_count"], 2)
+        self.assertEqual(summary["internal_missing_days"], 1)
+        self.assertEqual(summary["total_missing_days"], 1)
+        self.assertTrue(summary["ends_at_research_boundary"])
+
 
 class GdeltEvidenceTests(unittest.TestCase):
     HEADER = (
@@ -258,7 +304,7 @@ class ProviderAttestationTests(unittest.TestCase):
         path.write_text(
             json.dumps(
                 {
-                    "schema_version": 1,
+                    "schema_version": 2,
                     "status": "pass",
                     "gdelt_bigquery": {
                         "query_sha256": query_hash,
@@ -271,6 +317,41 @@ class ProviderAttestationTests(unittest.TestCase):
                         "identical": True,
                         "source_sha256": "data-hash",
                         "restored_sha256": "data-hash",
+                    },
+                    "on_chain": {
+                        "coin_metrics_btc_eth": {
+                            "metrics": ["AdrActCnt", "TxCnt"],
+                            "row_count": 3456,
+                            "complete": True,
+                            "assets": {
+                                asset: {
+                                    "row_count": 1728,
+                                    "missing_date_count": 0,
+                                    "duplicate_date_count": 0,
+                                    "null_value_count": 0,
+                                }
+                                for asset in ("BTC", "ETH")
+                            },
+                        },
+                        "defillama_solana_proxies": {
+                            "missingness_policy": "explicit-mask-no-backfill",
+                            "tvl_usd": {
+                                "period_row_count": 1387,
+                                "total_missing_days": 341,
+                                "last_date": "2025-01-01",
+                                "duplicate_date_count": 0,
+                                "null_value_count": 0,
+                                "ends_at_research_boundary": True,
+                            },
+                            "stablecoin_supply_usd": {
+                                "period_row_count": 967,
+                                "total_missing_days": 761,
+                                "last_date": "2025-01-01",
+                                "duplicate_date_count": 0,
+                                "null_value_count": 0,
+                                "ends_at_research_boundary": True,
+                            },
+                        },
                     },
                 }
             ),
@@ -294,6 +375,18 @@ class ProviderAttestationTests(unittest.TestCase):
             query.write_text("SELECT 1", encoding="utf-8")
             attestation = self._write_attestation(directory, "stale-hash")
             with self.assertRaisesRegex(ValueError, "query digest"):
+                load_provider_attestation(attestation, query_path=query)
+
+    def test_missing_on_chain_evidence_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            query = Path(directory) / "query.sql"
+            query.write_text("SELECT 1", encoding="utf-8")
+            attestation = self._write_attestation(directory, sha256_file(query))
+            value = json.loads(attestation.read_text(encoding="utf-8"))
+            del value["on_chain"]
+            attestation.write_text(json.dumps(value), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "on-chain"):
                 load_provider_attestation(attestation, query_path=query)
 
 

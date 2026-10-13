@@ -14,13 +14,16 @@ scope does not authorize later commercial use under research-only terms.
 | Provider/channel | Observed evidence | Coverage result |
 |---|---|---|
 | Coin Metrics Community `PriceUSD` | One daily query returned 5,184 rows: 1,728 each for BTC, ETH, and SOL, no null prices, first timestamp 2020-04-10 and last timestamp 2025-01-01. Response SHA-256: `607777d12cce5104ea3e3570ff76f43844ecadd2212f6b3ede704e34836d4701`. | Full fixed-period price coverage passes. |
+| Coin Metrics Community BTC/ETH on-chain | The pinned metric contract is daily active-address count (`AdrActCnt`) and transaction count (`TxCnt`). One bounded query returned 3,456 rows: 1,728 each for BTC and ETH, with no missing dates, duplicate dates, missing metric keys, or null values. Response SHA-256: `33a732f7fd0e39298b903a909c34b0bc97b9ac53c59f8c6921a1af741b435471`. | Full fixed-period coverage passes for both metrics and both assets. These are the V1 BTC/ETH on-chain channels unless changed through a reviewed research-protocol update. |
 | CoinGecko current USD quotes | Current BTC, ETH, and SOL quote probe returned HTTP 200. | Availability passes for the planned live-quote fallback; it is not the historical research source. |
-| DefiLlama Solana TVL | The public history returned 2,037 rows; its first timestamp is 2021-03-17, after the research start. | The early interval is explicitly missing and must remain masked. Use passes only for the declared personal, non-commercial research scope below. |
+| DefiLlama Solana TVL | The fixed-period slice contains 1,387 daily rows from 2021-03-17 through 2025-01-01, with no internal gaps, duplicate dates, or null values. Its bounded canonical SHA-256 is `7a22202ca1249c8353891752c0bc4a3f8ea7c6e925aa27d3f350aaae0193b4b5`. | The 341 days before provider availability are explicitly masked. Use passes only for the declared personal, non-commercial research scope below. |
+| DefiLlama Solana USD stablecoin supply | The fixed-period slice contains 967 observations from 2021-09-10 through 2025-01-01, with no duplicate dates or null values. Its bounded canonical SHA-256 is `d631a6f4496822d320ee5c7555ec4221cad8587324781fd486e6cafa6f529be6`. | Exactly 761 days are masked: 518 before availability and 243 internal gaps. Missing days are not zero and will not be silently backfilled. |
 | GDELT DOC / GKG | The DOC historical query was rate-limited, so the partitioned public GKG table was queried in billing-disabled BigQuery Sandbox. The bounded query processed 276.48 GB in 35.724 seconds and returned exactly 5,184 daily asset rows: 1,728 each for BTC, ETH, and SOL. It matched 277,883 documents; 47 day/asset rows had zero documents. CSV SHA-256: `5c6aa7f22c8e4595ab68944276b0abe4867ea71967bfb52c1469911bde2f541a`. | Full fixed-period aggregate coverage passes. The 260,315-byte aggregate was stored and hash-verified through the real ResilientDB stack under manifest key `resfinance.m0.gdelt.gkg.daily.5c6aa7f22c8e4595.manifest`. |
 
-The probe retains source URL, retrieval time, HTTP status, bytes, and response
-hash without committing provider payloads to Git. Once ingestion is implemented,
-raw permitted data and provenance must be written directly to ResilientDB.
+The probe retains source URL, retrieval time, HTTP status, bytes, response hash,
+and bounded canonical hashes without committing provider payloads to Git. Once
+ingestion is implemented, raw permitted data and provenance must be written
+directly to ResilientDB.
 
 ## Terms disposition
 

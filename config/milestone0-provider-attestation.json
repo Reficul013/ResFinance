@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "status": "pass",
   "scope": "personal-noncommercial-university-research",
   "operator": "local-university-user",
@@ -28,6 +28,92 @@
     },
     "matched_document_count": 277883,
     "zero_document_rows": 47
+  },
+  "on_chain": {
+    "coin_metrics_btc_eth": {
+      "provider": "Coin Metrics Community",
+      "endpoint": "https://community-api.coinmetrics.io/v4/timeseries/asset-metrics?assets=btc,eth&metrics=AdrActCnt,TxCnt&frequency=1d&start_time=2020-04-10&end_time=2025-01-01&page_size=10000",
+      "retrieved_at_utc": "2026-10-13T04:22:20Z",
+      "frequency": "1d",
+      "metrics": [
+        "AdrActCnt",
+        "TxCnt"
+      ],
+      "response_bytes": 326814,
+      "response_sha256": "33a732f7fd0e39298b903a909c34b0bc97b9ac53c59f8c6921a1af741b435471",
+      "row_count": 3456,
+      "complete": true,
+      "assets": {
+        "BTC": {
+          "row_count": 1728,
+          "first_time": "2020-04-10T00:00:00.000000000Z",
+          "last_time": "2025-01-01T00:00:00.000000000Z",
+          "missing_date_count": 0,
+          "duplicate_date_count": 0,
+          "null_value_count": 0,
+          "null_values_by_metric": {
+            "AdrActCnt": 0,
+            "TxCnt": 0
+          }
+        },
+        "ETH": {
+          "row_count": 1728,
+          "first_time": "2020-04-10T00:00:00.000000000Z",
+          "last_time": "2025-01-01T00:00:00.000000000Z",
+          "missing_date_count": 0,
+          "duplicate_date_count": 0,
+          "null_value_count": 0,
+          "null_values_by_metric": {
+            "AdrActCnt": 0,
+            "TxCnt": 0
+          }
+        }
+      }
+    },
+    "defillama_solana_proxies": {
+      "provider": "DefiLlama",
+      "missingness_policy": "explicit-mask-no-backfill",
+      "tvl_usd": {
+        "endpoint": "https://api.llama.fi/v2/historicalChainTvl/Solana",
+        "retrieved_at_utc": "2026-10-13T04:22:38Z",
+        "response_bytes": 74949,
+        "response_sha256": "456e4331285d82902820571e3530ff2f04966bd801f6254f4ad10efda2102edd",
+        "bounded_canonical_bytes": 50784,
+        "bounded_canonical_sha256": "7a22202ca1249c8353891752c0bc4a3f8ea7c6e925aa27d3f350aaae0193b4b5",
+        "value_path": "tvl",
+        "period_row_count": 1387,
+        "expected_daily_rows": 1728,
+        "first_date": "2021-03-17",
+        "last_date": "2025-01-01",
+        "pre_availability_mask_days": 341,
+        "internal_missing_days": 0,
+        "post_availability_mask_days": 0,
+        "total_missing_days": 341,
+        "duplicate_date_count": 0,
+        "null_value_count": 0,
+        "ends_at_research_boundary": true
+      },
+      "stablecoin_supply_usd": {
+        "endpoint": "https://stablecoins.llama.fi/stablecoincharts/Solana",
+        "retrieved_at_utc": "2026-10-13T04:22:36Z",
+        "response_bytes": 789484,
+        "response_sha256": "180cbb7f285bb81ba540affaa070f5f190edc06244161837f6b45e5a3ef55823",
+        "bounded_canonical_bytes": 360323,
+        "bounded_canonical_sha256": "d631a6f4496822d320ee5c7555ec4221cad8587324781fd486e6cafa6f529be6",
+        "value_path": "totalCirculatingUSD.peggedUSD",
+        "period_row_count": 967,
+        "expected_daily_rows": 1728,
+        "first_date": "2021-09-10",
+        "last_date": "2025-01-01",
+        "pre_availability_mask_days": 518,
+        "internal_missing_days": 243,
+        "post_availability_mask_days": 0,
+        "total_missing_days": 761,
+        "duplicate_date_count": 0,
+        "null_value_count": 0,
+        "ends_at_research_boundary": true
+      }
+    }
   },
   "resilientdb_persistence": {
     "artifact_kind": "gdelt-gkg-daily-aggregate-csv",

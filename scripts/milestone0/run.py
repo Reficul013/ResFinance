@@ -112,15 +112,22 @@ def load_attested_gates(path: Path) -> tuple[dict[str, object], list[GateResult]
 def load_provider_attestation(path: Path, *, query_path: Path) -> dict[str, object]:
     with path.open(encoding="utf-8") as handle:
         attestation = json.load(handle)
-    if not isinstance(attestation, dict) or attestation.get("schema_version") != 1:
+    if not isinstance(attestation, dict) or attestation.get("schema_version") != 2:
         raise ValueError("unsupported provider attestation schema")
     if attestation.get("status") != "pass":
         raise ValueError("provider attestation must have pass status")
 
     gdelt = attestation.get("gdelt_bigquery")
     persistence = attestation.get("resilientdb_persistence")
-    if not isinstance(gdelt, dict) or not isinstance(persistence, dict):
-        raise ValueError("provider attestation is missing GDELT or persistence evidence")
+    on_chain = attestation.get("on_chain")
+    if (
+        not isinstance(gdelt, dict)
+        or not isinstance(persistence, dict)
+        or not isinstance(on_chain, dict)
+    ):
+        raise ValueError(
+            "provider attestation is missing GDELT, on-chain, or persistence evidence"
+        )
     if gdelt.get("query_sha256") != sha256_file(query_path):
         raise ValueError("provider attestation query digest does not match checked SQL")
     if gdelt.get("row_count") != 5_184:
@@ -137,6 +144,47 @@ def load_provider_attestation(path: Path, *, query_path: Path) -> dict[str, obje
         or source_hash != gdelt.get("csv_sha256")
     ):
         raise ValueError("provider artifact was not verified through ResilientDB")
+
+    coin_metrics = on_chain.get("coin_metrics_btc_eth")
+    solana = on_chain.get("defillama_solana_proxies")
+    if not isinstance(coin_metrics, dict) or not isinstance(solana, dict):
+        raise ValueError("provider attestation is missing BTC/ETH or SOL on-chain evidence")
+    if coin_metrics.get("metrics") != ["AdrActCnt", "TxCnt"]:
+        raise ValueError("BTC/ETH on-chain metric contract does not match the approved set")
+    if coin_metrics.get("row_count") != 3_456 or coin_metrics.get("complete") is not True:
+        raise ValueError("BTC/ETH on-chain evidence must cover the complete research period")
+    assets = coin_metrics.get("assets")
+    if not isinstance(assets, dict) or set(assets) != {"BTC", "ETH"}:
+        raise ValueError("BTC/ETH on-chain evidence must contain exactly BTC and ETH")
+    for asset in ("BTC", "ETH"):
+        coverage = assets.get(asset)
+        if not isinstance(coverage, dict):
+            raise ValueError(f"missing on-chain coverage for {asset}")
+        if (
+            coverage.get("row_count") != 1_728
+            or coverage.get("missing_date_count") != 0
+            or coverage.get("duplicate_date_count") != 0
+            or coverage.get("null_value_count") != 0
+        ):
+            raise ValueError(f"incomplete on-chain coverage for {asset}")
+
+    if solana.get("missingness_policy") != "explicit-mask-no-backfill":
+        raise ValueError("SOL proxy gaps must use explicit masks without backfill")
+    for proxy in ("tvl_usd", "stablecoin_supply_usd"):
+        coverage = solana.get(proxy)
+        if not isinstance(coverage, dict):
+            raise ValueError(f"missing SOL proxy evidence: {proxy}")
+        if (
+            coverage.get("last_date") != "2025-01-01"
+            or coverage.get("duplicate_date_count") != 0
+            or coverage.get("null_value_count") != 0
+            or coverage.get("ends_at_research_boundary") is not True
+        ):
+            raise ValueError(f"invalid SOL proxy coverage: {proxy}")
+        rows = coverage.get("period_row_count")
+        missing = coverage.get("total_missing_days")
+        if not isinstance(rows, int) or not isinstance(missing, int) or rows + missing != 1_728:
+            raise ValueError(f"SOL proxy masks do not reconcile: {proxy}")
     return cast(dict[str, object], attestation)
 
 
@@ -200,8 +248,9 @@ def main() -> int:
             "6-provider-availability-provenance",
             "pass",
             (
-                "Fixed-period prices and GDELT aggregates are proven and persisted; "
-                "provider terms pass for the declared non-commercial research scope."
+                "Fixed-period market, sentiment, and on-chain/proxy coverage is proven "
+                "with explicit SOL missingness; provider terms pass for the declared "
+                "non-commercial research scope."
             ),
             {
                 "current_probes": provider_evidence,
