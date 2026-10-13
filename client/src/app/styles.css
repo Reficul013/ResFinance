@@ -1,6 +1,29 @@
 :root {
-  color: #ecf4ff;
-  background: #07111f;
+  color: #1a2436;
+  background: #c7d9f7;
+  color-scheme: light dark;
+  --page-text: #1a2436;
+  --page-muted: #4e5d75;
+  --page-accent: #6555a5;
+  --page-background:
+    radial-gradient(
+      circle at 12% 14%,
+      rgb(255 255 255 / 34%),
+      transparent 30rem
+    ),
+    radial-gradient(
+      circle at 86% 78%,
+      rgb(222 250 255 / 32%),
+      transparent 34rem
+    ),
+    linear-gradient(120deg, #d9baff 0%, #c9cef8 48%, #b5def3 100%);
+  --card-background: rgb(255 255 255 / 48%);
+  --card-border: rgb(255 255 255 / 70%);
+  --card-shadow: 0 1.5rem 4rem rgb(78 72 139 / 14%);
+  --code-background: rgb(255 255 255 / 38%);
+  --status-checking: #b27621;
+  --status-ready: #197b68;
+  --status-error: #b73b55;
   font-family:
     Inter,
     ui-sans-serif,
@@ -21,9 +44,9 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 15% 15%, rgb(24 98 142 / 35%), transparent 36rem),
-    #07111f;
+  color: var(--page-text);
+  background: var(--page-background);
+  background-attachment: fixed;
 }
 
 .shell {
@@ -34,7 +57,7 @@ body {
 
 .eyebrow {
   margin: 0 0 0.75rem;
-  color: #75d8d0;
+  color: var(--page-accent);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.11em;
@@ -49,9 +72,16 @@ h1 {
 
 .lede {
   max-width: 42rem;
-  color: #a9bdd4;
+  color: var(--page-muted);
   font-size: 1.08rem;
   line-height: 1.7;
+}
+
+code {
+  padding: 0.08em 0.32em;
+  border-radius: 0.3rem;
+  background: var(--code-background);
+  color: inherit;
 }
 
 .status-card {
@@ -61,22 +91,53 @@ h1 {
   align-items: center;
   margin-top: 2.5rem;
   padding: 1rem 1.15rem;
-  border: 1px solid #213a54;
+  border: 1px solid var(--card-border);
   border-radius: 0.75rem;
-  background: rgb(9 26 43 / 78%);
+  background: var(--card-background);
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(1rem);
 }
 
 .status-dot {
   width: 0.7rem;
   height: 0.7rem;
   border-radius: 999px;
-  background: #f2bd5a;
+  background: var(--status-checking);
 }
 
 .status-card[data-state="ready"] .status-dot {
-  background: #53d89b;
+  background: var(--status-ready);
 }
 
 .status-card[data-state="error"] .status-dot {
-  background: #ff7f7f;
+  background: var(--status-error);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #f5f7fb;
+    background: #0d1019;
+    --page-text: #f5f7fb;
+    --page-muted: #9ba4b5;
+    --page-accent: #38d1c5;
+    --page-background:
+      radial-gradient(
+        circle at 14% 14%,
+        rgb(38 200 185 / 16%),
+        transparent 32rem
+      ),
+      radial-gradient(
+        circle at 88% 22%,
+        rgb(55 154 165 / 10%),
+        transparent 30rem
+      ),
+      linear-gradient(145deg, #1b202b 0%, #10131e 48%, #0b0c14 100%);
+    --card-background: rgb(17 23 33 / 76%);
+    --card-border: #2d3747;
+    --card-shadow: 0 1.5rem 4rem rgb(0 0 0 / 24%);
+    --code-background: rgb(55 209 197 / 10%);
+    --status-checking: #f2bd5a;
+    --status-ready: #38d1c5;
+    --status-error: #ff7f7f;
+  }
 }
