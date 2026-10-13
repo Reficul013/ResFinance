@@ -40,6 +40,11 @@ def parse_args() -> argparse.Namespace:
         help="sanitized local real-stack attestation; defaults to the checked record",
     )
     parser.add_argument(
+        "--provider-attestation",
+        type=Path,
+        help="sanitized fixed-period provider attestation; defaults to the checked record",
+    )
+    parser.add_argument(
         "--upstream",
         type=Path,
         default=Path("/private/tmp/resfinance-resilientdb-upstream"),
@@ -104,10 +109,45 @@ def load_attested_gates(path: Path) -> tuple[dict[str, object], list[GateResult]
     return attestation, results
 
 
+def load_provider_attestation(path: Path, *, query_path: Path) -> dict[str, object]:
+    with path.open(encoding="utf-8") as handle:
+        attestation = json.load(handle)
+    if not isinstance(attestation, dict) or attestation.get("schema_version") != 1:
+        raise ValueError("unsupported provider attestation schema")
+    if attestation.get("status") != "pass":
+        raise ValueError("provider attestation must have pass status")
+
+    gdelt = attestation.get("gdelt_bigquery")
+    persistence = attestation.get("resilientdb_persistence")
+    if not isinstance(gdelt, dict) or not isinstance(persistence, dict):
+        raise ValueError("provider attestation is missing GDELT or persistence evidence")
+    if gdelt.get("query_sha256") != sha256_file(query_path):
+        raise ValueError("provider attestation query digest does not match checked SQL")
+    if gdelt.get("row_count") != 5_184:
+        raise ValueError("provider attestation must contain the complete 5,184-row grid")
+    rows_by_asset = gdelt.get("rows_by_asset")
+    if rows_by_asset != {"BTC": 1_728, "ETH": 1_728, "SOL": 1_728}:
+        raise ValueError("provider attestation must cover all three assets equally")
+    if gdelt.get("billing_enabled") is not False:
+        raise ValueError("provider attestation must come from billing-disabled sandbox")
+    source_hash = persistence.get("source_sha256")
+    if (
+        persistence.get("identical") is not True
+        or source_hash != persistence.get("restored_sha256")
+        or source_hash != gdelt.get("csv_sha256")
+    ):
+        raise ValueError("provider artifact was not verified through ResilientDB")
+    return cast(dict[str, object], attestation)
+
+
 def main() -> int:
     args = parse_args()
     repo = Path(__file__).resolve().parents[2]
     attestation_path = args.attestation or repo / "config/milestone0-local-attestation.json"
+    provider_attestation_path = (
+        args.provider_attestation
+        or repo / "config/milestone0-provider-attestation.json"
+    )
     lock = load_lock(repo / "config/milestone0-lock.json")
     period = lock["research_period"]
     if not isinstance(period, dict):
@@ -129,6 +169,10 @@ def main() -> int:
         probe_providers()
         if args.network
         else {"period": period, "network_probes": "not-requested"}
+    )
+    provider_attestation = load_provider_attestation(
+        provider_attestation_path,
+        query_path=repo / "scripts/milestone0/gdelt_bigquery.sql",
     )
 
     attestation, attested_results = load_attested_gates(attestation_path)
@@ -154,12 +198,15 @@ def main() -> int:
         *attested_results,
         GateResult(
             "6-provider-availability-provenance",
-            "partial",
+            "pass",
             (
-                "Full-period prices are proven; bounded GDELT extraction and provider "
-                "permission closure remain pending."
+                "Fixed-period prices and GDELT aggregates are proven and persisted; "
+                "provider terms pass for the declared non-commercial research scope."
             ),
-            provider_evidence,
+            {
+                "current_probes": provider_evidence,
+                "fixed_period_attestation": provider_attestation,
+            },
         ),
         GateResult(
             "7-failure-enforcement",

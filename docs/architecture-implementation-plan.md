@@ -2,9 +2,9 @@
 
 Status: Approved planning baseline for local implementation; cloud deployment is on hold
 
-Last reviewed: 2026-10-12
+Last reviewed: 2026-10-13
 
-Implementation status: Milestone 0 in progress; local ecosystem gates pass and provider gate 6 remains open
+Implementation status: Milestone 0 passed for local, non-commercial research; Milestone 1 may begin
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 

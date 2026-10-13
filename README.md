@@ -2,7 +2,7 @@
 
 ResFinance is a planned wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
 
-> **Project status:** Milestone 0 feasibility work is in progress. The pinned local ResilientDB, ResContract, artifact, signed-settlement, and key-isolation gates pass; historical sentiment acquisition and provider permissions remain open. Cloud and production deployment remain on hold.
+> **Project status:** Milestone 0 passed for local, non-commercial research. All seven gates—including bounded historical sentiment acquisition and ResilientDB persistence—pass. Cloud and production deployment remain on hold.
 
 ## What the product will do
 
@@ -85,9 +85,9 @@ Research runs will use chronological walk-forward evaluation, calibrated forecas
 
 ## Current development status
 
-Milestone 0 is active. The repository now pins ResilientDB, ResContract, ResVault, the toolchain, and the initial local models; defines the REST, security, and research contracts; and provides a reproducible feasibility harness. A source-pinned, labeled ARM64 image and documented compatibility patch passed four-replica persistence/failure tests, a real 100 MiB round trip, persistent ResContract lifecycle tests, and the signed REST-to-contract-to-event slice. The official ResVault implementation failed its audit, while the disposable M0 signer proved the approval and non-disclosure boundary; the persistent hardened extension remains Milestone 2 work.
+Milestone 0 is complete for the declared local, non-commercial research scope. The repository pins ResilientDB, ResContract, ResVault, the toolchain, and the initial local models; defines the REST, security, and research contracts; and provides a reproducible feasibility harness. A source-pinned, labeled ARM64 image and documented compatibility patch passed four-replica persistence/failure tests, a real 100 MiB round trip, persistent ResContract lifecycle tests, and the signed REST-to-contract-to-event slice. The official ResVault implementation failed its audit, while the disposable M0 signer proved the approval and non-disclosure boundary; the persistent hardened extension remains Milestone 2 work.
 
-The milestone is not complete. Coin Metrics daily prices cover the full fixed research period, but bounded historical GDELT acquisition and provider permission closure still need to pass. See the [Milestone 0 feasibility status](docs/feasibility.md) and [provider terms review](docs/provider-terms-review.md).
+Coin Metrics daily prices and bounded GDELT daily aggregates cover the full fixed research period. The GDELT aggregate was hash-verified through real ResilientDB, and provider terms are recorded for the declared research-only scope. See the [Milestone 0 feasibility status](docs/feasibility.md) and [provider terms review](docs/provider-terms-review.md).
 
 Cloud and production deployment are intentionally deferred. Completing the local application will not imply cloud support or production readiness; deployment requires a separate ResilientDB cloud feasibility review and approved architecture decision record.
 

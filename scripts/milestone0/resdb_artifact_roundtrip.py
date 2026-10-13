@@ -124,6 +124,7 @@ def restore(
         raise RuntimeError("artifact manifest totals are invalid")
     restored_sha256 = restored_hash.hexdigest()
     result = {
+        "artifact_kind": manifest.get("artifact_kind"),
         "size_bytes": expected_total_size,
         "logical_chunk_size": manifest.get("logical_chunk_size"),
         "logical_chunk_count": len(chunks),
@@ -139,6 +140,76 @@ def restore(
     if not result["identical"]:
         raise RuntimeError("restored artifact checksum or size differs")
     return result
+
+
+def round_trip_file(
+    executable: Path,
+    config: Path,
+    *,
+    input_path: Path,
+    logical_chunk_size: int,
+    transport_chunk_size: int,
+    key_prefix: str,
+    artifact_kind: str,
+) -> dict[str, object]:
+    if logical_chunk_size <= 0 or transport_chunk_size <= 0:
+        raise ValueError("chunk sizes must be positive")
+    if logical_chunk_size % transport_chunk_size != 0:
+        raise ValueError("logical chunk size must be divisible by transport chunk size")
+
+    size_bytes = input_path.stat().st_size
+    if size_bytes <= 0:
+        raise ValueError("input file must not be empty")
+
+    source_hash = hashlib.sha256()
+    manifest_chunks: list[dict[str, object]] = []
+    transport_chunk_count = 0
+    with input_path.open("rb") as source:
+        for logical_index, payload in enumerate(
+            iter(lambda: source.read(logical_chunk_size), b"")
+        ):
+            source_hash.update(payload)
+            segment_count = (
+                len(payload) + transport_chunk_size - 1
+            ) // transport_chunk_size
+            for segment_index in range(segment_count):
+                start = segment_index * transport_chunk_size
+                segment = payload[start : start + transport_chunk_size]
+                encoded = base64.b64encode(segment).decode("ascii")
+                key = (
+                    f"{key_prefix}.chunk.{logical_index:06d}"
+                    f".segment.{segment_index:04d}"
+                )
+                run_client(executable, config, "set", key, encoded)
+                transport_chunk_count += 1
+            manifest_chunks.append(
+                {
+                    "index": logical_index,
+                    "size_bytes": len(payload),
+                    "sha256": hashlib.sha256(payload).hexdigest(),
+                    "transport_segment_count": segment_count,
+                }
+            )
+
+    manifest = {
+        "schema_version": 1,
+        "artifact_kind": artifact_kind,
+        "size_bytes": size_bytes,
+        "logical_chunk_size": logical_chunk_size,
+        "logical_chunk_count": len(manifest_chunks),
+        "transport_chunk_size": transport_chunk_size,
+        "transport_chunk_count": transport_chunk_count,
+        "chunks": manifest_chunks,
+        "source_sha256": source_hash.hexdigest(),
+    }
+    run_client(
+        executable,
+        config,
+        "set",
+        f"{key_prefix}.manifest",
+        json.dumps(manifest, separators=(",", ":")),
+    )
+    return restore(executable, config, key_prefix=key_prefix)
 
 
 def round_trip(
@@ -226,6 +297,16 @@ def main() -> int:
     parser.add_argument("--transport-chunk-kib", type=int, default=64)
     parser.add_argument("--key-prefix", default="resfinance.m0.artifact.v1")
     parser.add_argument(
+        "--input",
+        type=Path,
+        help="store and verify this file instead of generating a deterministic artifact",
+    )
+    parser.add_argument(
+        "--artifact-kind",
+        default="generic-file",
+        help="non-sensitive artifact type recorded in a file manifest",
+    )
+    parser.add_argument(
         "--restore-only",
         action="store_true",
         help="read and verify an existing manifest without rewriting records",
@@ -233,6 +314,16 @@ def main() -> int:
     args = parser.parse_args()
     if args.restore_only:
         result = restore(args.client, args.config, key_prefix=args.key_prefix)
+    elif args.input:
+        result = round_trip_file(
+            args.client,
+            args.config,
+            input_path=args.input,
+            logical_chunk_size=args.logical_chunk_kib * 1024,
+            transport_chunk_size=args.transport_chunk_kib * 1024,
+            key_prefix=args.key_prefix,
+            artifact_kind=args.artifact_kind,
+        )
     else:
         result = round_trip(
             args.client,

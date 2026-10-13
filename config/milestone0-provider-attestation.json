@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "scope": "personal-noncommercial-university-research",
+  "operator": "local-university-user",
+  "research_period": {
+    "start_utc": "2020-04-10T00:00:00Z",
+    "end_utc_inclusive": "2025-01-01T00:00:00Z",
+    "assets": ["BTC", "ETH", "SOL"]
+  },
+  "gdelt_bigquery": {
+    "billing_mode": "sandbox",
+    "billing_enabled": false,
+    "table": "gdelt-bq.gdeltv2.gkg_partitioned",
+    "location": "US",
+    "job_id": "resfinance:US.script_job_6ec1af80a53e51b1ee523b70cf98b682_0",
+    "started_at_utc": "2026-10-13T10:26:39Z",
+    "ended_at_utc": "2026-10-13T10:27:14Z",
+    "duration_ms": 35724,
+    "processed_bytes_display": "276.48 GB",
+    "query_sha256": "4dfa82571f7d4488073cf68d757bfacd7128dbce8bad38551f4d596d27726e93",
+    "csv_sha256": "5c6aa7f22c8e4595ab68944276b0abe4867ea71967bfb52c1469911bde2f541a",
+    "row_count": 5184,
+    "rows_by_asset": {
+      "BTC": 1728,
+      "ETH": 1728,
+      "SOL": 1728
+    },
+    "matched_document_count": 277883,
+    "zero_document_rows": 47
+  },
+  "resilientdb_persistence": {
+    "artifact_kind": "gdelt-gkg-daily-aggregate-csv",
+    "manifest_key": "resfinance.m0.gdelt.gkg.daily.5c6aa7f22c8e4595.manifest",
+    "size_bytes": 260315,
+    "logical_chunk_count": 1,
+    "transport_chunk_count": 4,
+    "source_sha256": "5c6aa7f22c8e4595ab68944276b0abe4867ea71967bfb52c1469911bde2f541a",
+    "restored_sha256": "5c6aa7f22c8e4595ab68944276b0abe4867ea71967bfb52c1469911bde2f541a",
+    "identical": true
+  },
+  "terms": {
+    "coin_metrics": "pass-cc-by-nc-4.0-with-attribution",
+    "coingecko": "pass-for-current-quote-display-with-attribution",
+    "defillama": "pass-for-declared-personal-noncommercial-research-only",
+    "gdelt": "pass-with-attribution"
+  }
+}

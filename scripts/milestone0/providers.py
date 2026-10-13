@@ -178,15 +178,16 @@ def probe_providers() -> dict[str, object]:
         "probes": probes,
         "terms_review": {
             "coin_metrics": {
-                "status": "needs-license-variant-confirmation",
+                "status": "pass-for-noncommercial-research-with-attribution",
                 "finding": (
-                    "Community data is offered under a Creative Commons license, "
-                    "but the reviewed page does not identify the exact CC variant."
+                    "Coin Metrics Community data is published under CC BY-NC 4.0. "
+                    "ResFinance's current university research use must remain "
+                    "non-commercial and provide attribution."
                 ),
-                "source": "https://gitbook-docs.coinmetrics.io/packages/coin-metrics-community-data",
+                "source": "https://github.com/coinmetrics/data",
             },
             "coingecko": {
-                "status": "conditional",
+                "status": "pass-for-current-display-with-attribution",
                 "finding": (
                     "Use requires attribution; raw API access or data may not be "
                     "resold, redistributed, or syndicated without a separate agreement."
@@ -194,10 +195,12 @@ def probe_providers() -> dict[str, object]:
                 "source": "https://www.coingecko.com/en/api_terms",
             },
             "defillama": {
-                "status": "blocked-for-commercial-use",
+                "status": "pass-for-declared-personal-noncommercial-research-only",
                 "finding": (
-                    "Current terms grant ordinary access for personal non-commercial "
-                    "use and require prior written consent for commercial harvesting."
+                    "Current terms grant personal, non-commercial use and require "
+                    "written consent for commercial harvesting. The declared personal "
+                    "university research scope is non-commercial; institutional or "
+                    "commercial reuse requires a new review."
                 ),
                 "source": "https://enterprise.defillama.com/terms",
             },

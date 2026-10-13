@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import tempfile
 import unittest
@@ -12,10 +13,16 @@ from scripts.milestone0.gates import (
     audit_resvault,
     chunk_round_trip,
     scan_forbidden_persistence,
+    sha256_file,
     validate_assets,
 )
+from scripts.milestone0.gdelt_evidence import validate_gdelt_csv
 from scripts.milestone0.providers import summarize_coin_metrics_period
-from scripts.milestone0.run import ATTESTED_GATE_NAMES, load_attested_gates
+from scripts.milestone0.run import (
+    ATTESTED_GATE_NAMES,
+    load_attested_gates,
+    load_provider_attestation,
+)
 
 
 class AssetBoundaryTests(unittest.TestCase):
@@ -154,6 +161,53 @@ class ProviderCoverageTests(unittest.TestCase):
         self.assertEqual(btc["missing_date_count"], 1)
 
 
+class GdeltEvidenceTests(unittest.TestCase):
+    HEADER = (
+        "day,asset,document_count,source_count,tone_observation_count,average_tone,"
+        "positive_document_count,negative_document_count,neutral_document_count\n"
+    )
+
+    def test_complete_daily_asset_grid_is_accepted(self) -> None:
+        rows = [
+            f"2020-04-10,{asset},1,1,1,0.5,1,0,0\n"
+            for asset in ("BTC", "ETH", "SOL")
+        ]
+        evidence = validate_gdelt_csv(
+            io.StringIO(self.HEADER + "".join(rows)),
+            start=date(2020, 4, 10),
+            end=date(2020, 4, 10),
+        )
+
+        self.assertTrue(evidence["complete"])
+        self.assertEqual(evidence["row_count"], 3)
+        self.assertEqual(evidence["total_documents"], 3)
+
+    def test_missing_asset_day_is_rejected(self) -> None:
+        rows = [
+            "2020-04-10,BTC,0,0,0,,0,0,0\n",
+            "2020-04-10,ETH,0,0,0,,0,0,0\n",
+        ]
+        with self.assertRaisesRegex(ValueError, "missing 1 rows"):
+            validate_gdelt_csv(
+                io.StringIO(self.HEADER + "".join(rows)),
+                start=date(2020, 4, 10),
+                end=date(2020, 4, 10),
+            )
+
+    def test_inconsistent_tone_counts_are_rejected(self) -> None:
+        rows = [
+            "2020-04-10,BTC,1,1,1,0.5,0,0,0\n",
+            "2020-04-10,ETH,0,0,0,,0,0,0\n",
+            "2020-04-10,SOL,0,0,0,,0,0,0\n",
+        ]
+        with self.assertRaisesRegex(ValueError, "tone counts are inconsistent"):
+            validate_gdelt_csv(
+                io.StringIO(self.HEADER + "".join(rows)),
+                start=date(2020, 4, 10),
+                end=date(2020, 4, 10),
+            )
+
+
 class LocalAttestationTests(unittest.TestCase):
     def _write_attestation(self, directory: str, *, status: str = "pass") -> Path:
         path = Path(directory) / "attestation.json"
@@ -196,6 +250,51 @@ class LocalAttestationTests(unittest.TestCase):
             path.write_text(json.dumps(value), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "exactly once"):
                 load_attested_gates(path)
+
+
+class ProviderAttestationTests(unittest.TestCase):
+    def _write_attestation(self, directory: str, query_hash: str) -> Path:
+        path = Path(directory) / "provider.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "status": "pass",
+                    "gdelt_bigquery": {
+                        "query_sha256": query_hash,
+                        "csv_sha256": "data-hash",
+                        "row_count": 5184,
+                        "rows_by_asset": {"BTC": 1728, "ETH": 1728, "SOL": 1728},
+                        "billing_enabled": False,
+                    },
+                    "resilientdb_persistence": {
+                        "identical": True,
+                        "source_sha256": "data-hash",
+                        "restored_sha256": "data-hash",
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        return path
+
+    def test_complete_billing_disabled_attestation_is_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            query = Path(directory) / "query.sql"
+            query.write_text("SELECT 1", encoding="utf-8")
+            attestation = self._write_attestation(directory, sha256_file(query))
+
+            loaded = load_provider_attestation(attestation, query_path=query)
+
+        self.assertEqual(loaded["status"], "pass")
+
+    def test_modified_query_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            query = Path(directory) / "query.sql"
+            query.write_text("SELECT 1", encoding="utf-8")
+            attestation = self._write_attestation(directory, "stale-hash")
+            with self.assertRaisesRegex(ValueError, "query digest"):
+                load_provider_attestation(attestation, query_path=query)
 
 
 if __name__ == "__main__":

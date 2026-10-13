@@ -1,8 +1,8 @@
 # Milestone 0 Feasibility Gate
 
-Status: In progress — local ecosystem gates pass; provider gate remains open
+Status: Complete — all seven Milestone 0 gates pass for local, non-commercial research
 
-Last evidence review: 2026-10-12
+Last evidence review: 2026-10-13
 
 ## Purpose
 
@@ -21,10 +21,10 @@ Milestone 0 code is a narrow feasibility spike unless a later milestone explicit
 | 3. ResContract lifecycle | Pass | Solidity 0.8.28 compiled and deployed token and settlement contracts. Account, selector, runtime bytecode, and token balances remained queryable after all contract processes restarted. | Upstream or maintain the documented persistence patch before production adoption. |
 | 4. Signed settlement saga | Pass | An explicitly approved Ed25519 intent traversed `/api/v1`, passed origin/audience/network/hash/signature/replay checks, changed real ResContract state, and appended/read back the confirmed ResilientDB event. | Replace the disposable adapters with maintainable Milestone 1/2 implementations. |
 | 5. ResVault key isolation | Pass for M0 boundary; upstream failed | The official implementation failed audit. The isolated M0 signer returns only public identity/signature, requires exact origin and explicit approval, and non-disclosure tests cover page/request, server response, contract call, ResilientDB record, and logs. | Complete the persistent hardened extension/compatible redesign in Milestone 2; do not ship the M0 in-memory signer as the wallet. |
-| 6. Provider availability and provenance | Partial | Coin Metrics returned all 5,184 expected fixed-period daily price rows with no nulls. CoinGecko current quotes responded. DefiLlama begins 2021-03-17 and its current terms block unapproved commercial harvesting. GDELT DOC was rate-limited or returned non-JSON; GKG/BigQuery extraction is not yet proven. | Resolve the license conditions and run/store the complete bounded GDELT historical extraction. See the provider terms review. |
+| 6. Provider availability and provenance | Pass | Coin Metrics returned all 5,184 fixed-period price rows. A billing-disabled BigQuery Sandbox query returned the complete 5,184-row GDELT daily asset grid from 277,883 matched documents, then the 260,315-byte aggregate was stored in real ResilientDB and read back with CSV SHA-256 `5c6aa7f22c8e4595ab68944276b0abe4867ea71967bfb52c1469911bde2f541a`. Terms pass for the declared personal, non-commercial university research scope with the documented attribution and reuse limits. | Preserve attribution, re-check the free query estimate before reruns, and re-review DefiLlama before institutional or commercial use. |
 | 7. Failure enforcement | Pass | Repository scan finds no forbidden persistence implementation. The harness exits nonzero while any mandatory gate is incomplete. | Keep this control active in CI as application code is added. |
 
-Overall status: **blocked on gate 6**. The local ResilientDB, ResContract, signed-settlement, artifact, and M0 key-isolation boundaries are feasible. Historical sentiment acquisition and provider permission are not yet approved, so provider-dependent research work must not proceed as if the full dataset were available.
+Overall status: **pass**. Milestone 0 proves the required local ResilientDB, ResContract, signed-settlement, artifact, M0 key-isolation, and fixed-period provider boundaries for the declared non-commercial research scope. This does not lift the cloud/production deployment hold, approve commercial provider use, or replace the Milestone 2 hardened persistent wallet.
 
 ## Reproduce the available checks
 
@@ -63,7 +63,7 @@ The local run used:
 - ResContract 1.2.5 defaults to in-memory service storage and also keeps account membership, selector mappings, and eEVM runtime code in process memory. The compatibility patch moves service storage to LevelDB and persists/reloads those indexes. Its convenience npm CLI targets the KV-wrapped service and writes a deployment registry to `~/.rescontract_deployed_contracts.json`; ResFinance uses the matching direct contract CLI and never treats that file as authoritative state.
 - The public ARM64 image index digest was pushed before the pinned source commit and exposes no verified commit attestation in the inspected metadata. It is recorded for provenance but cannot be the final gate artifact.
 - The official ResVault implementation crosses private material into the webpage and needs the substantial hardening described by ADR 0001. M0 proves the replacement message contract only; encrypted persistent storage, lock lifecycle, and extension UI remain Milestone 2 work.
-- Coin Metrics proves complete daily price coverage for the fixed period. Provider gate closure is blocked by GDELT extraction reliability and unresolved provider permissions documented in [`provider-terms-review.md`](provider-terms-review.md).
+- Coin Metrics proves complete daily price coverage for the fixed period. The bounded GDELT GKG extraction produced a complete daily BTC/ETH/SOL grid and its aggregate passed a real ResilientDB hash round trip. Provider terms are approved only for the documented personal, non-commercial research scope in [`provider-terms-review.md`](provider-terms-review.md).
 
 ## Evidence rules
 
