@@ -1,6 +1,6 @@
 # REST API Contract
 
-Status: Milestone 0 baseline
+Status: Milestone 1 platform boundary implemented; feature endpoints remain milestone-ordered
 
 ## Boundary
 

@@ -7,6 +7,7 @@ dependencies = [
   "cryptography==50.0.2",
   "fastapi==0.143.0",
   "rfc8785==0.1.4",
+  "uvicorn==0.54.0",
 ]
 
 [project.optional-dependencies]
@@ -27,4 +28,11 @@ select = ["B", "E", "F", "I", "UP"]
 [tool.mypy]
 python_version = "3.13"
 strict = true
-files = ["scripts/milestone0", "server/app", "blockchain/adapter", "blockchain/wallet"]
+files = [
+  "scripts/generate_openapi.py",
+  "scripts/milestone0",
+  "scripts/milestone1",
+  "server/app",
+  "blockchain/adapter",
+  "blockchain/wallet",
+]

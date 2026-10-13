@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "scope": "local-development-only",
+  "completed_at_utc": "2026-10-13T13:08:51.472870+00:00",
+  "upstream_commit": "4de5cb43686276ace4307f44839a1de920ab524a",
+  "base_image_digest": "sha256:5a639ec02a654aa4fec3e2ecba7a151f93c8acdd6319e187696b0c3417f206f8",
+  "milestone1_image_digest": "sha256:3a338918323fe1047fef8ea3c0e5436b9549d09c121bc8446a74fa40800c441a",
+  "configuration_sha256": {
+    "docker_compose": "a823d37be253efb17cac69644281dc6b61f174a951064938c60db1d439d16420",
+    "dockerfile": "72af7740d66fc72d0a25307b9fbbb28c11d935a99e44b8858a3a514b90f9e466",
+    "server_config": "2654cdb0cf1f54a751345b96f3d5064667895f2f9e9557070e0925610979e2e8",
+    "client_config": "41611966a0785ea25325950cde7f4c75113dc898120a9506e9b22696e79c4315",
+    "certificate_script": "397cd3a1411e12abc7fc12b065161c0c2869fd039c88b1a11f9ea0d45253701e"
+  },
+  "topology": {
+    "replica_count": 4,
+    "client_proxy_count": 1,
+    "network": "internal-compose-network",
+    "host_published_resilientdb_ports": 0,
+    "persistent_backend": "LevelDB"
+  },
+  "repository_acceptance": {
+    "event_id": "evt_0ce804b47116e8d6a58d972a3e36171a",
+    "encrypted_at_rest": true,
+    "replica_and_proxy_restart": true,
+    "read_after_restart": true,
+    "projection_balance_minor_units": 12500,
+    "deduplicated_before_restart": true,
+    "deduplicated_after_restart": true,
+    "substitute_database_used": false
+  },
+  "secrets": {
+    "application_data_key": "ephemeral-memory-only",
+    "development_certificates": "docker-named-volume-only",
+    "committed_private_material": false
+  }
+}

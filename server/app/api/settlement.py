@@ -5,6 +5,7 @@ from datetime import datetime
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
+from server.app.api.problems import register_problem_handlers
 from server.app.application.settlement import (
     IdempotencyConflict,
     SettlementRejected,
@@ -47,6 +48,7 @@ class SettlementCommandModel(BaseModel):
 
 def create_app(service: SettlementService) -> FastAPI:
     app = FastAPI(title="ResFinance Milestone 0 signed-settlement spike")
+    register_problem_handlers(app)
 
     @app.post("/api/v1/groups/{group_id}/settlements")
     def authorize_settlement(

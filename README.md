@@ -2,7 +2,7 @@
 
 ResFinance is a planned wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
 
-> **Project status:** Milestone 0 passed for local, non-commercial research. All seven gates—including fixed-period market, sentiment, and on-chain/proxy coverage—pass. Cloud and production deployment remain on hold.
+> **Project status:** Milestones 0 and 1 are complete for local, non-commercial development and research. The feasibility gates and encrypted ResilientDB platform foundation pass. Milestone 2 wallet/authentication work is next. Cloud and production deployment remain on hold.
 
 ## What the product will do
 
@@ -90,6 +90,32 @@ Coin Metrics daily prices cover BTC/ETH/SOL, while daily active-address and tran
 
 Cloud and production deployment are intentionally deferred. Completing the local application will not imply cloud support or production readiness; deployment requires a separate ResilientDB cloud feasibility review and approved architecture decision record.
 
+Milestone 1 adds the strict React/Vite and FastAPI foundations, checked OpenAPI-generated client types, RFC 9457 errors, typed provider ports, AES-256-GCM event/blob repositories, idempotency and projection rebuilds, and a four-replica private Compose topology with a separate ResilientDB client proxy. The real-stack acceptance test passed encrypted write, full restart, readback, rebuild, and deduplication without another database. See the [Milestone 1 platform foundation](docs/milestone1-platform-foundation.md).
+
+## Local verification
+
+```bash
+.venv/bin/ruff check .
+.venv/bin/mypy
+.venv/bin/pytest
+
+cd client
+npm ci
+npm run generate:api
+npm run check
+npm run lint
+npm test
+npm run build
+```
+
+The real ResilientDB repository acceptance requires the source-pinned local image built during Milestone 0:
+
+```bash
+docker compose --profile tools up -d --build \
+  resdb-1 resdb-2 resdb-3 resdb-4 resdb-proxy resdb-tools
+.venv/bin/python -m scripts.milestone1.run_repository_acceptance
+```
+
 ## Repository layout
 
 ```text
@@ -106,6 +132,7 @@ docs/         Product, architecture, delivery, and development references
 - [Product specification](docs/project-spec.md)
 - [Architecture and implementation plan](docs/architecture-implementation-plan.md)
 - [Milestone 0 feasibility status](docs/feasibility.md)
+- [Milestone 1 platform foundation](docs/milestone1-platform-foundation.md)
 - [REST API contract](docs/rest-api-contract.md)
 - [Security contract](docs/security.md)
 - [Research protocol](docs/research-protocol.md)

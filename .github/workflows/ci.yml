@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13.2"
+          cache: pip
+      - name: Install pinned Python dependencies
+        run: pip install -r requirements-dev.txt -r requirements-milestone0.txt -r requirements-api.txt
+      - name: Lint
+        run: ruff check .
+      - name: Type check
+        run: mypy
+      - name: Test
+        run: pytest
+      - name: Verify generated OpenAPI
+        run: |
+          python -m scripts.generate_openapi
+          git diff --exit-code -- openapi/openapi.json
+      - name: Validate Compose configuration
+        run: docker compose config --quiet
+
+  client:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - name: Install pinned client dependencies
+        working-directory: client
+        run: npm ci
+      - name: Verify generated API types
+        working-directory: client
+        run: |
+          npm run generate:api
+          git diff --exit-code -- src/lib/api/generated/schema.d.ts
+      - name: Type check
+        working-directory: client
+        run: npm run check
+      - name: Lint
+        working-directory: client
+        run: npm run lint
+      - name: Format check
+        working-directory: client
+        run: npm run format:check
+      - name: Test
+        working-directory: client
+        run: npm test
+      - name: Build
+        working-directory: client
+        run: npm run build

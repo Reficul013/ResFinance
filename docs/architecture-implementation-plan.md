@@ -4,7 +4,7 @@ Status: Approved planning baseline for local implementation; cloud deployment is
 
 Last reviewed: 2026-10-13
 
-Implementation status: Milestone 0 passed for local, non-commercial research; Milestone 1 may begin
+Implementation status: Milestones 0 and 1 passed for local, non-commercial development and research; Milestone 2 may begin
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
@@ -325,6 +325,8 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 **Acceptance:** every feasibility test passes in CI or the project remains blocked with reproducible failure evidence.
 
 ### Milestone 1 — Platform foundation
+
+**Status:** complete for local development; evidence is recorded in [`milestone1-platform-foundation.md`](milestone1-platform-foundation.md).
 
 - Establish React/Vite and FastAPI modular boundaries, OpenAPI generation, error format, validation, linting, and CI.
 - Implement the ResilientDB event/blob repository, encryption envelope, deterministic keys, idempotency, projection rebuild, and provider interfaces.

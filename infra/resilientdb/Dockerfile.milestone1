@@ -1,0 +1,7 @@
+FROM resfinance/resilientdb:4de5cb4-m0
+
+LABEL org.resfinance.base-image="resfinance/resilientdb:4de5cb4-m0" \
+      org.resfinance.purpose="milestone1-local-compose"
+
+WORKDIR /app
+RUN bazel build //tools:key_generator_tools

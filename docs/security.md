@@ -1,6 +1,6 @@
 # Security Contract
 
-Status: Milestone 0 baseline
+Status: Milestone 1 application-encryption foundation implemented; wallet hardening remains
 
 ## Trust boundaries
 
@@ -25,6 +25,8 @@ Status: Milestone 0 baseline
 The approved implementation must use Argon2id with documented parameters to derive a key-encryption key from the user password and AES-256-GCM with a fresh nonce for each encrypted seed. Authentication metadata, ciphertext, nonce, salt, and version may be persisted. Passwords, plaintext seeds, plaintext private keys, derived keys, and an exportable encryption key stored beside its ciphertext may not be persisted.
 
 ResFinance application payloads use separate AES-256-GCM data-encryption keys before ResilientDB persistence. Cleartext indexes contain only pseudonymous IDs, record type, schema version, and UTC timestamps. Erasure appends a tombstone and destroys the applicable data-encryption key.
+
+Milestone 1 implements authenticated encryption for event and blob repositories. Event payloads are stored as AES-256-GCM envelopes, and large blobs are compressed, encrypted, content-addressed, chunked, and verified on read. Local acceptance tests use an ephemeral test key; production key custody and destruction remain later-milestone work.
 
 ## Service controls
 

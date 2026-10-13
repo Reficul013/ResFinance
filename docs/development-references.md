@@ -25,4 +25,6 @@ Use these references when implementing or validating the ResilientDB, ResVault, 
 - Do not let an upstream example override the constraints in `AGENTS.md` or `docs/architecture-implementation-plan.md`.
 - Capture any required compatibility patch or behavioral exception in an architecture decision record.
 - Do not treat `expolab/resdb:arm64` as equivalent to the pinned source until its digest has a verifiable source-commit attestation or ResFinance builds an image reproducibly from the pinned commit.
+- Use the checked Milestone 1 Compose topology for application repository work. It derives from the attested local image, adds only the pinned key-generator build target, generates development certificates into a Docker volume, and keeps all four replicas plus the client proxy on an internal network.
+- The pinned CLI must use the minimal client-proxy configuration and `get_key_range_with_version` for decoded prefix scans. Its plain range command exposes serialized version-history bytes and is not an application repository boundary.
 
