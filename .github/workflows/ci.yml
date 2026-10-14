@@ -17,7 +17,7 @@ jobs:
           python-version: "3.13.2"
           cache: pip
       - name: Install pinned Python dependencies
-        run: pip install -r requirements-dev.txt -r requirements-milestone0.txt -r requirements-api.txt -r requirements-ml.txt
+        run: pip install -r requirements-dev.txt -r requirements-milestone0.txt -r requirements-api.txt -r requirements-ml.txt -r requirements-portfolio.txt
       - name: Lint
         run: ruff check .
       - name: Type check

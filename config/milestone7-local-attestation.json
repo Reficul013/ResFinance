@@ -1,0 +1,35 @@
+{
+  "assets": [
+    "BTC",
+    "ETH",
+    "SOL"
+  ],
+  "caps_respected": true,
+  "completed_at_utc": "2026-10-14T23:55:28Z",
+  "default_allocation_minor_units": 123457,
+  "default_capital_minor_units": 123457,
+  "default_weights": {
+    "BTC": "0.13750000",
+    "ETH": "0.60000000",
+    "SOL": "0.26250000"
+  },
+  "persistent_database": "Apache ResilientDB LevelDB backend",
+  "portfolio_policy_version": "portfolio-policy-v1",
+  "risk_policy_version": "risk-questionnaire-v1",
+  "risk_profile_idempotent": true,
+  "risk_score": 65,
+  "savings_calculation_id": "savings_c34f65cd6cbab5047013cd54952e3560",
+  "savings_source_event_ids": [
+    "evt_591354f6507c63949011c5d2954c9175"
+  ],
+  "scenario_allocation_minor_units": 98765,
+  "scenario_capital_minor_units": 98765,
+  "scenario_left_finance_unchanged": true,
+  "scenario_source_kind": "scenario",
+  "schema_version": 1,
+  "scope": "local-synthetic-acceptance-on-real-resilientdb",
+  "solver": "CLARABEL",
+  "stale_forecast_rejected": true,
+  "synthetic_forecast_hidden_from_normal_runtime": true,
+  "weights_sum_to_one": true
+}

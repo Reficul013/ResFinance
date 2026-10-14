@@ -7,7 +7,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 COPY requirements-api.txt /app/requirements-api.txt
-RUN pip install --no-cache-dir --requirement /app/requirements-api.txt
+COPY requirements-portfolio.txt /app/requirements-portfolio.txt
+RUN pip install --no-cache-dir \
+  --requirement /app/requirements-api.txt \
+  --requirement /app/requirements-portfolio.txt
 
 COPY --from=resilientdb \
   /app/bazel-bin/service/tools/kv/api_tools/kv_service_tools \
@@ -18,6 +21,7 @@ COPY --from=resilientdb \
 COPY infra/resilientdb/client.config /config/client.config
 COPY infra/rescontract/client.config /config/rescontract-client.config
 COPY blockchain /app/blockchain
+COPY ml /app/ml
 COPY server /app/server
 ENV RESFINANCE_RESDB_TOOL=/usr/local/bin/kv_service_tools \
     RESFINANCE_RESDB_CONFIG=/config/client.config \

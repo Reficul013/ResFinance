@@ -278,6 +278,119 @@ code {
   gap: 1.3rem;
 }
 
+.crypto-dashboard .dashboard-columns {
+  grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
+}
+
+.risk-form,
+.scenario-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.risk-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.risk-form .primary-button,
+.risk-form .form-error {
+  grid-column: 1 / -1;
+}
+
+.asset-switcher {
+  display: inline-flex;
+  gap: 0.3rem;
+  padding: 0.25rem;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  background: var(--control-background);
+}
+
+.asset-switcher button {
+  padding: 0.45rem 0.7rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--page-muted);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.asset-switcher button.active {
+  background: var(--page-accent);
+  color: #fff;
+}
+
+.crypto-chart {
+  width: 100%;
+  min-height: 310px;
+}
+
+.empty-forecast h2 {
+  margin: 0.2rem 0 0.6rem;
+}
+
+.empty-forecast > p:last-child,
+.scenario-result {
+  color: var(--page-muted);
+  line-height: 1.6;
+}
+
+.scenario-result {
+  margin: 1rem 0 0;
+  padding: 0.8rem;
+  border: 1px solid var(--control-border);
+  border-radius: 0.8rem;
+  background: var(--control-background);
+}
+
+.allocation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.allocation-grid article {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem;
+  border: 1px solid var(--control-border);
+  border-radius: 1rem;
+  background: var(--control-background);
+}
+
+.allocation-grid span,
+.allocation-grid small {
+  color: var(--page-muted);
+}
+
+.allocation-grid span {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.allocation-grid strong {
+  font-size: 1.45rem;
+}
+
+.allocation-track {
+  overflow: hidden;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--page-muted) 18%, transparent);
+}
+
+.allocation-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--page-accent);
+}
+
 .dashboard-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1052,6 +1165,7 @@ td.expense {
 @media (max-width: 52rem) {
   .dashboard-header,
   .dashboard-columns,
+  .crypto-dashboard .dashboard-columns,
   .group-actions-grid,
   .obligation-card {
     grid-template-columns: 1fr;
@@ -1099,6 +1213,8 @@ td.expense {
 
   .summary-grid,
   .entry-grid,
+  .risk-form,
+  .allocation-grid,
   .compact-form form,
   .expense-form form,
   .group-metrics {

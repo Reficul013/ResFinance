@@ -95,8 +95,7 @@ class ResearchRunRepository:
             run_id=run_id,
             manifest_key=key,
             artifact_hashes={
-                name: hashlib.sha256(content).hexdigest()
-                for name, content in artifacts.items()
+                name: hashlib.sha256(content).hexdigest() for name, content in artifacts.items()
             },
             deduplicated=result.deduplicated,
         )
@@ -174,6 +173,18 @@ class ResearchRunRepository:
         return self._put_immutable(
             f"promotion:forecast:{event_id}", {**event_core, "event_id": event_id}
         )
+
+    def promotion_event(self, event_id: str) -> dict[str, Any]:
+        encoded = self._store.get(f"promotion:forecast:{_safe(event_id)}")
+        if encoded is None:
+            raise KeyError(event_id)
+        event = _object(encoded)
+        if (
+            event.get("event_id") != event_id
+            or event.get("event_type") != "research.model-promoted"
+        ):
+            raise ValueError("forecast promotion event is invalid")
+        return event
 
     def _put_immutable(self, key: str, document: Mapping[str, object]) -> ImmutableStoreResult:
         encoded = canonical_json_bytes(document).decode()

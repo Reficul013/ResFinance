@@ -1,4 +1,6 @@
 cryptography==50.0.2
+cvxpy==1.9.3
 fastapi==0.143.0
 rfc8785==0.1.4
+scikit-learn==1.9.1
 uvicorn==0.54.0

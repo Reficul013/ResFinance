@@ -17,6 +17,11 @@ const GroupsDashboard = lazy(() =>
     default: module.GroupsDashboard,
   })),
 );
+const CryptoDashboard = lazy(() =>
+  import("../features/crypto/CryptoDashboard").then((module) => ({
+    default: module.CryptoDashboard,
+  })),
+);
 
 export function App() {
   const health = usePlatformHealth();
@@ -30,7 +35,7 @@ export function App() {
       <ThemeToggle />
       {!authenticated && (
         <>
-          <p className="eyebrow">Milestone 4 · Contractual settlement</p>
+          <p className="eyebrow">Milestone 7 · Risk-aware portfolio</p>
           <h1>ResFinance</h1>
           <p className="lede">
             Connect the hardened ResVault extension to open your encrypted
@@ -51,6 +56,7 @@ export function App() {
           <nav className="dashboard-nav" aria-label="ResFinance dashboards">
             <NavLink to="/finance">Personal Finance</NavLink>
             <NavLink to="/groups">Friends &amp; Groups</NavLink>
+            <NavLink to="/crypto">Crypto</NavLink>
           </nav>
           <Routes>
             <Route
@@ -73,6 +79,14 @@ export function App() {
                     accessToken={authentication.accessToken!}
                     actorAddress={authentication.actorAddress!}
                   />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/crypto"
+              element={
+                <Suspense fallback={<RouteLoading text="Opening Crypto…" />}>
+                  <CryptoDashboard accessToken={authentication.accessToken!} />
                 </Suspense>
               }
             />

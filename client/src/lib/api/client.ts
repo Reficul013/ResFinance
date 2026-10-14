@@ -44,6 +44,13 @@ export type ObligationDecisionCommand =
 export type FundCreditsCommand = components["schemas"]["FundCreditsCommand"];
 export type SettleObligationCommand =
   components["schemas"]["SettleObligationCommand"];
+export type CryptoOverview = components["schemas"]["CryptoOverviewModel"];
+export type RiskProfileCommand = components["schemas"]["RiskProfileCommand"];
+export type RiskProfileEvent =
+  components["schemas"]["RiskProfileEventResponse"];
+export type ScenarioCommand = components["schemas"]["ScenarioCommand"];
+export type PortfolioRecommendation =
+  components["schemas"]["RecommendationModel"];
 
 export async function createChallenge(
   identity: WalletIdentity,
@@ -102,6 +109,54 @@ export async function getFinanceOverview(
     `/api/v1/finance/overview?month=${encodeURIComponent(month)}`,
     request,
   );
+}
+
+export async function getCryptoOverview(
+  accessToken: string,
+  month: string,
+  signal?: AbortSignal,
+): Promise<CryptoOverview> {
+  const request: RequestInit = {
+    headers: authorizedHeaders(accessToken),
+    credentials: "include",
+  };
+  if (signal !== undefined) request.signal = signal;
+  return requestJson<CryptoOverview>(
+    `/api/v1/crypto/overview?month=${encodeURIComponent(month)}`,
+    request,
+  );
+}
+
+export function recordRiskProfile(
+  accessToken: string,
+  idempotencyKey: string,
+  command: RiskProfileCommand,
+): Promise<RiskProfileEvent> {
+  return requestJson<RiskProfileEvent>("/api/v1/crypto/risk-profile", {
+    method: "POST",
+    headers: {
+      ...authorizedHeaders(accessToken),
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
+    credentials: "include",
+    body: JSON.stringify(command),
+  });
+}
+
+export function analyzePortfolioScenario(
+  accessToken: string,
+  command: ScenarioCommand,
+): Promise<PortfolioRecommendation> {
+  return requestJson<PortfolioRecommendation>("/api/v1/crypto/scenarios", {
+    method: "POST",
+    headers: {
+      ...authorizedHeaders(accessToken),
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(command),
+  });
 }
 
 export async function createFinanceCategory(

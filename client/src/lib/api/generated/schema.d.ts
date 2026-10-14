@@ -72,6 +72,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/crypto/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Overview */
+        get: operations["overview_api_v1_crypto_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crypto/risk-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record Risk Profile */
+        post: operations["record_risk_profile_api_v1_crypto_risk_profile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crypto/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Analyze Scenario */
+        post: operations["analyze_scenario_api_v1_crypto_scenarios_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/finance/budgets": {
         parameters: {
             query?: never;
@@ -341,6 +392,37 @@ export interface components {
             /** Member Address */
             member_address: string;
         };
+        /** AllocationModel */
+        AllocationModel: {
+            amount: components["schemas"]["MoneyModel"];
+            /**
+             * Asset
+             * @enum {string}
+             */
+            asset: "BTC" | "ETH" | "SOL";
+            /** Cap */
+            cap: string;
+            /** Weight */
+            weight: string;
+        };
+        /** AssetForecastModel */
+        AssetForecastModel: {
+            /**
+             * Asset
+             * @enum {string}
+             */
+            asset: "BTC" | "ETH" | "SOL";
+            /** Expected Return */
+            expected_return: string;
+            /** P10 Return */
+            p10_return: string;
+            /** P50 Return */
+            p50_return: string;
+            /** P90 Return */
+            p90_return: string;
+            /** Probability Up */
+            probability_up: string;
+        };
         /** BudgetCommand */
         BudgetCommand: {
             /** Budget Id */
@@ -471,6 +553,26 @@ export interface components {
             /** Owner Display Name */
             owner_display_name: string;
         };
+        /** CryptoOverviewModel */
+        CryptoOverviewModel: {
+            default_capital: components["schemas"]["MoneyModel"];
+            forecast: components["schemas"]["ForecastSnapshotModel"] | null;
+            /** Month */
+            month: string;
+            recommendation: components["schemas"]["RecommendationModel"] | null;
+            risk_profile: components["schemas"]["RiskProfileModel"] | null;
+            /** Risk Projection Version */
+            risk_projection_version: number;
+            /** Savings Calculation Id */
+            savings_calculation_id: string;
+            /**
+             * Savings Formula Version
+             * @constant
+             */
+            savings_formula_version: "finance-savings-v1";
+            /** Savings Source Event Ids */
+            savings_source_event_ids: string[];
+        };
         /** DeactivateRecurringCommand */
         DeactivateRecurringCommand: {
             /** Expected Version */
@@ -506,6 +608,45 @@ export interface components {
             summary: components["schemas"]["MonthlySummaryModel"];
             /** Transactions */
             transactions: components["schemas"]["TransactionModel"][];
+        };
+        /** ForecastSnapshotModel */
+        ForecastSnapshotModel: {
+            /**
+             * As Of Utc
+             * Format: date-time
+             */
+            as_of_utc: string;
+            /** Dataset Hash */
+            dataset_hash: string;
+            /**
+             * Expires At Utc
+             * Format: date-time
+             */
+            expires_at_utc: string;
+            /** Forecasts */
+            forecasts: components["schemas"]["AssetForecastModel"][];
+            /**
+             * Horizon Days
+             * @constant
+             */
+            horizon_days: 15;
+            /** Model Hash */
+            model_hash: string;
+            /**
+             * Model Name
+             * @constant
+             */
+            model_name: "adaptive-gating";
+            /** Price History */
+            price_history: components["schemas"]["PricePointModel"][];
+            /** Promotion Event Id */
+            promotion_event_id: string;
+            /** Run Id */
+            run_id: string;
+            /** Scope */
+            scope: string;
+            /** Snapshot Id */
+            snapshot_id: string;
         };
         /** FundCreditsCommand */
         FundCreditsCommand: {
@@ -713,6 +854,23 @@ export interface components {
             /** Source Event Id */
             source_event_id: string;
         };
+        /** PricePointModel */
+        PricePointModel: {
+            /**
+             * Asset
+             * @enum {string}
+             */
+            asset: "BTC" | "ETH" | "SOL";
+            /**
+             * Observed At Utc
+             * Format: date-time
+             */
+            observed_at_utc: string;
+            /** Price Usd */
+            price_usd: string;
+            /** Source Record Id */
+            source_record_id: string;
+        };
         /** ProvenanceModel */
         ProvenanceModel: {
             /** As Of Utc */
@@ -721,6 +879,42 @@ export interface components {
             projection_version: number;
             /** Source Event Ids */
             source_event_ids: string[];
+        };
+        /** RecommendationModel */
+        RecommendationModel: {
+            /** Allocations */
+            allocations: components["schemas"]["AllocationModel"][];
+            capital: components["schemas"]["MoneyModel"];
+            /** Covariance Repaired */
+            covariance_repaired: boolean;
+            /** Fallback Used */
+            fallback_used: boolean;
+            /** Forecast Snapshot Id */
+            forecast_snapshot_id: string;
+            /**
+             * Policy Version
+             * @constant
+             */
+            policy_version: "portfolio-policy-v1";
+            /** Promotion Event Id */
+            promotion_event_id: string;
+            /** Risk Profile Event Id */
+            risk_profile_event_id: string;
+            /** Risk Score */
+            risk_score: number;
+            /** Savings Calculation Id */
+            savings_calculation_id: string | null;
+            /** Savings Source Event Ids */
+            savings_source_event_ids: string[];
+            /** Solver */
+            solver: string;
+            /**
+             * Source Kind
+             * @enum {string}
+             */
+            source_kind: "finance_savings" | "scenario";
+            /** Warnings */
+            warnings: string[];
         };
         /** RecurringEntryCommand */
         RecurringEntryCommand: {
@@ -784,6 +978,57 @@ export interface components {
              */
             starts_on: string;
         };
+        /** RiskAnswersModel */
+        RiskAnswersModel: {
+            /** Income Stability */
+            income_stability: number;
+            /** Investing Experience */
+            investing_experience: number;
+            /** Liquidity Need */
+            liquidity_need: number;
+            /** Loss Tolerance */
+            loss_tolerance: number;
+            /** Time Horizon */
+            time_horizon: number;
+        };
+        /** RiskProfileCommand */
+        RiskProfileCommand: {
+            answers: components["schemas"]["RiskAnswersModel"];
+            /** Expected Version */
+            expected_version: number;
+        };
+        /** RiskProfileEventResponse */
+        RiskProfileEventResponse: {
+            /** Deduplicated */
+            deduplicated: boolean;
+            /** Event Id */
+            event_id: string;
+            /**
+             * Occurred At Utc
+             * Format: date-time
+             */
+            occurred_at_utc: string;
+            /** Projection Version */
+            projection_version: number;
+        };
+        /** RiskProfileModel */
+        RiskProfileModel: {
+            answers: components["schemas"]["RiskAnswersModel"];
+            /**
+             * Policy Version
+             * @constant
+             */
+            policy_version: "risk-questionnaire-v1";
+            /**
+             * Recorded At Utc
+             * Format: date-time
+             */
+            recorded_at_utc: string;
+            /** Score */
+            score: number;
+            /** Source Event Id */
+            source_event_id: string;
+        };
         /** SavingsModel */
         SavingsModel: {
             actual: components["schemas"]["MoneyModel"];
@@ -798,6 +1043,10 @@ export interface components {
             projected: components["schemas"]["MoneyModel"];
             /** Source Event Ids */
             source_event_ids: string[];
+        };
+        /** ScenarioCommand */
+        ScenarioCommand: {
+            amount: components["schemas"]["MoneyModel"];
         };
         /** SessionRequest */
         SessionRequest: {
@@ -1128,6 +1377,114 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    overview_api_v1_crypto_overview_get: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: {
+                Authorization?: string | null;
+                Origin?: string | null;
+                Referer?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CryptoOverviewModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_risk_profile_api_v1_crypto_risk_profile_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RiskProfileCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskProfileEventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analyze_scenario_api_v1_crypto_scenarios_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScenarioCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecommendationModel"];
+                };
             };
             /** @description Validation Error */
             422: {

@@ -4,7 +4,7 @@ Status: Approved planning baseline for local implementation; cloud deployment is
 
 Last reviewed: 2026-10-14
 
-Implementation status: Milestones 0–6 passed for local, non-commercial development and research; Milestone 7 may begin
+Implementation status: Milestones 0–7 passed for local development and research; Milestone 8 may begin. No model is currently promoted, so runtime portfolio recommendations remain gated.
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
@@ -385,6 +385,8 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 **Acceptance:** repeated CPU smoke runs have identical dataset/prediction hashes; full runs retain complete provenance; adaptive gating is reported against every required baseline without overstating statistical significance.
 
 ### Milestone 7 — Risk, portfolio, and Crypto dashboard
+
+**Status:** complete for local development and synthetic acceptance; evidence is recorded in [`milestone7-risk-portfolio-crypto-dashboard.md`](milestone7-risk-portfolio-crypto-dashboard.md). No forecast is available to the normal runtime until a Milestone 6 model passes promotion.
 
 - Implement questionnaire scoring, policy versioning, CVXPY optimization, fallback behavior, forecasts, chart overlays, allocations, and non-mutating scenarios.
 - Connect the default amount to Finance savings through an immutable source event ID.

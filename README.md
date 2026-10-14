@@ -2,7 +2,7 @@
 
 ResFinance is a planned wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
 
-> **Project status:** Milestones 0–6 are complete for local, non-commercial development and research. The feasibility gates, encrypted ResilientDB platform foundation, hardened ResVault-compatible extension, wallet authentication, Personal Finance dashboard, Groups contractual-settlement workflow, crypto ingestion/feature store, and reproducible ML research mechanics pass. The deterministic Milestone 6 smoke candidate was not promoted because it did not beat the declared naive-baseline MAE criterion. Milestone 7 risk, portfolio, and Crypto dashboard work is next. Cloud and production deployment remain on hold.
+> **Project status:** Milestones 0–7 are complete for local development and research. Risk scoring, constrained BTC/ETH/SOL optimization, Finance-linked capital, non-mutating scenarios, and the Crypto dashboard now pass acceptance. The deterministic Milestone 6 smoke candidate was not promoted, so the normal runtime correctly shows no portfolio recommendation until an eligible forecast is promoted. Milestone 8 read-only AI and end-to-end integration is next. Cloud and production deployment remain on hold.
 
 ## What the product will do
 
@@ -38,6 +38,8 @@ A user will be able to connect a ResVault wallet, manage personal finances, spli
 - Review forecasts with expected return, upside probability, uncertainty intervals, freshness, and provenance.
 - Complete a risk questionnaire and receive an explainable long-only portfolio allocation.
 - Start with the savings amount calculated by Personal Finance.
+- Inspect allocations whose integer USD cents reconcile exactly to that amount.
+- See an explicit gated state when no forecast model has passed promotion.
 - Use **Analyze Another Amount** for a separate what-if scenario without changing financial records.
 
 ## Example user journey
@@ -70,7 +72,7 @@ The application follows an append-only event model. Projections can be rebuilt, 
 
 The forecasting implementation is a documented clean-room three-asset adaptation of MSPCIFormer. ResFinance combines market, sentiment, and on-chain inputs using masked Adaptive Multi-Source Gating and evaluates the approach against naive/zero-return, linear, LSTM, market-only, fixed-fusion, and every one-source-removed baseline.
 
-Research runs use five chronological expanding walk-forward folds with a 15-day embargo, validation-only split-conformal intervals, deterministic CPU execution, immutable manifests, encrypted content-addressed artifacts, and complete data/code/model provenance. Only a model that passes explicit evaluation criteria may be promoted through an immutable event. Forecasts will feed the Milestone 7 constrained BTC/ETH/SOL portfolio optimizer.
+Research runs use five chronological expanding walk-forward folds with a 15-day embargo, validation-only split-conformal intervals, deterministic CPU execution, immutable manifests, encrypted content-addressed artifacts, and complete data/code/model provenance. Only a model that passes explicit evaluation criteria may be promoted through an immutable event. The Milestone 7 constrained BTC/ETH/SOL optimizer consumes only those promoted, non-stale forecasts; no model currently qualifies.
 
 ## Important product boundaries
 
@@ -107,7 +109,8 @@ Milestone 6 adds deterministic smoke-data generation; naive, linear, and LSTM ba
 ```bash
 .venv/bin/python -m pip install \
   -r requirements-dev.txt -r requirements-milestone0.txt \
-  -r requirements-api.txt -r requirements-ml.txt
+  -r requirements-api.txt -r requirements-ml.txt \
+  -r requirements-portfolio.txt
 .venv/bin/ruff check .
 .venv/bin/mypy
 .venv/bin/pytest
@@ -160,6 +163,10 @@ docker compose --profile tools up -d --build --wait \
 .venv/bin/python -m scripts.milestone6.run_ml_acceptance \
   --docker "$(command -v docker)" \
   --output config/milestone6-local-attestation.json
+
+.venv/bin/python -m scripts.milestone7.run_portfolio_acceptance \
+  --docker "$(command -v docker)" \
+  --output config/milestone7-local-attestation.json
 ```
 
 ## Repository layout
@@ -185,6 +192,7 @@ docs/         Product, architecture, delivery, and development references
 - [Milestone 4 Groups and contractual settlement](docs/milestone4-groups-settlement.md)
 - [Milestone 5 crypto ingestion and feature store](docs/milestone5-crypto-ingestion-feature-store.md)
 - [Milestone 6 reproducible ML research](docs/milestone6-reproducible-ml-research.md)
+- [Milestone 7 risk, portfolio, and Crypto dashboard](docs/milestone7-risk-portfolio-crypto-dashboard.md)
 - [REST API contract](docs/rest-api-contract.md)
 - [Security contract](docs/security.md)
 - [Research protocol](docs/research-protocol.md)

@@ -29,6 +29,81 @@
         "title": "AddMemberCommand",
         "type": "object"
       },
+      "AllocationModel": {
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "asset": {
+            "enum": [
+              "BTC",
+              "ETH",
+              "SOL"
+            ],
+            "title": "Asset",
+            "type": "string"
+          },
+          "cap": {
+            "title": "Cap",
+            "type": "string"
+          },
+          "weight": {
+            "title": "Weight",
+            "type": "string"
+          }
+        },
+        "required": [
+          "asset",
+          "weight",
+          "amount",
+          "cap"
+        ],
+        "title": "AllocationModel",
+        "type": "object"
+      },
+      "AssetForecastModel": {
+        "properties": {
+          "asset": {
+            "enum": [
+              "BTC",
+              "ETH",
+              "SOL"
+            ],
+            "title": "Asset",
+            "type": "string"
+          },
+          "expected_return": {
+            "title": "Expected Return",
+            "type": "string"
+          },
+          "p10_return": {
+            "title": "P10 Return",
+            "type": "string"
+          },
+          "p50_return": {
+            "title": "P50 Return",
+            "type": "string"
+          },
+          "p90_return": {
+            "title": "P90 Return",
+            "type": "string"
+          },
+          "probability_up": {
+            "title": "Probability Up",
+            "type": "string"
+          }
+        },
+        "required": [
+          "asset",
+          "expected_return",
+          "probability_up",
+          "p10_return",
+          "p50_return",
+          "p90_return"
+        ],
+        "title": "AssetForecastModel",
+        "type": "object"
+      },
       "BudgetCommand": {
         "additionalProperties": false,
         "properties": {
@@ -382,6 +457,80 @@
         "title": "CreateGroupCommand",
         "type": "object"
       },
+      "CryptoOverviewModel": {
+        "properties": {
+          "default_capital": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "forecast": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ForecastSnapshotModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          },
+          "recommendation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecommendationModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "risk_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RiskProfileModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "risk_projection_version": {
+            "title": "Risk Projection Version",
+            "type": "integer"
+          },
+          "savings_calculation_id": {
+            "title": "Savings Calculation Id",
+            "type": "string"
+          },
+          "savings_formula_version": {
+            "const": "finance-savings-v1",
+            "title": "Savings Formula Version",
+            "type": "string"
+          },
+          "savings_source_event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Savings Source Event Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "month",
+          "risk_profile",
+          "risk_projection_version",
+          "forecast",
+          "recommendation",
+          "default_capital",
+          "savings_formula_version",
+          "savings_calculation_id",
+          "savings_source_event_ids"
+        ],
+        "title": "CryptoOverviewModel",
+        "type": "object"
+      },
       "DeactivateRecurringCommand": {
         "additionalProperties": false,
         "properties": {
@@ -488,6 +637,84 @@
           "provenance"
         ],
         "title": "FinanceOverviewModel",
+        "type": "object"
+      },
+      "ForecastSnapshotModel": {
+        "properties": {
+          "as_of_utc": {
+            "format": "date-time",
+            "title": "As Of Utc",
+            "type": "string"
+          },
+          "dataset_hash": {
+            "title": "Dataset Hash",
+            "type": "string"
+          },
+          "expires_at_utc": {
+            "format": "date-time",
+            "title": "Expires At Utc",
+            "type": "string"
+          },
+          "forecasts": {
+            "items": {
+              "$ref": "#/components/schemas/AssetForecastModel"
+            },
+            "title": "Forecasts",
+            "type": "array"
+          },
+          "horizon_days": {
+            "const": 15,
+            "title": "Horizon Days",
+            "type": "integer"
+          },
+          "model_hash": {
+            "title": "Model Hash",
+            "type": "string"
+          },
+          "model_name": {
+            "const": "adaptive-gating",
+            "title": "Model Name",
+            "type": "string"
+          },
+          "price_history": {
+            "items": {
+              "$ref": "#/components/schemas/PricePointModel"
+            },
+            "title": "Price History",
+            "type": "array"
+          },
+          "promotion_event_id": {
+            "title": "Promotion Event Id",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "snapshot_id",
+          "as_of_utc",
+          "expires_at_utc",
+          "horizon_days",
+          "run_id",
+          "model_name",
+          "model_hash",
+          "dataset_hash",
+          "promotion_event_id",
+          "scope",
+          "forecasts",
+          "price_history"
+        ],
+        "title": "ForecastSnapshotModel",
         "type": "object"
       },
       "FundCreditsCommand": {
@@ -1052,6 +1279,40 @@
         "title": "ObligationModel",
         "type": "object"
       },
+      "PricePointModel": {
+        "properties": {
+          "asset": {
+            "enum": [
+              "BTC",
+              "ETH",
+              "SOL"
+            ],
+            "title": "Asset",
+            "type": "string"
+          },
+          "observed_at_utc": {
+            "format": "date-time",
+            "title": "Observed At Utc",
+            "type": "string"
+          },
+          "price_usd": {
+            "title": "Price Usd",
+            "type": "string"
+          },
+          "source_record_id": {
+            "title": "Source Record Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "asset",
+          "observed_at_utc",
+          "price_usd",
+          "source_record_id"
+        ],
+        "title": "PricePointModel",
+        "type": "object"
+      },
       "ProvenanceModel": {
         "properties": {
           "as_of_utc": {
@@ -1084,6 +1345,104 @@
           "source_event_ids"
         ],
         "title": "ProvenanceModel",
+        "type": "object"
+      },
+      "RecommendationModel": {
+        "properties": {
+          "allocations": {
+            "items": {
+              "$ref": "#/components/schemas/AllocationModel"
+            },
+            "title": "Allocations",
+            "type": "array"
+          },
+          "capital": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "covariance_repaired": {
+            "title": "Covariance Repaired",
+            "type": "boolean"
+          },
+          "fallback_used": {
+            "title": "Fallback Used",
+            "type": "boolean"
+          },
+          "forecast_snapshot_id": {
+            "title": "Forecast Snapshot Id",
+            "type": "string"
+          },
+          "policy_version": {
+            "const": "portfolio-policy-v1",
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "promotion_event_id": {
+            "title": "Promotion Event Id",
+            "type": "string"
+          },
+          "risk_profile_event_id": {
+            "title": "Risk Profile Event Id",
+            "type": "string"
+          },
+          "risk_score": {
+            "title": "Risk Score",
+            "type": "integer"
+          },
+          "savings_calculation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Savings Calculation Id"
+          },
+          "savings_source_event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Savings Source Event Ids",
+            "type": "array"
+          },
+          "solver": {
+            "title": "Solver",
+            "type": "string"
+          },
+          "source_kind": {
+            "enum": [
+              "finance_savings",
+              "scenario"
+            ],
+            "title": "Source Kind",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "capital",
+          "source_kind",
+          "savings_calculation_id",
+          "savings_source_event_ids",
+          "risk_score",
+          "risk_profile_event_id",
+          "policy_version",
+          "forecast_snapshot_id",
+          "promotion_event_id",
+          "solver",
+          "fallback_used",
+          "covariance_repaired",
+          "allocations",
+          "warnings"
+        ],
+        "title": "RecommendationModel",
         "type": "object"
       },
       "RecurringEntryCommand": {
@@ -1228,6 +1587,132 @@
         "title": "RecurringEntryModel",
         "type": "object"
       },
+      "RiskAnswersModel": {
+        "additionalProperties": false,
+        "properties": {
+          "income_stability": {
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Income Stability",
+            "type": "integer"
+          },
+          "investing_experience": {
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Investing Experience",
+            "type": "integer"
+          },
+          "liquidity_need": {
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Liquidity Need",
+            "type": "integer"
+          },
+          "loss_tolerance": {
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Loss Tolerance",
+            "type": "integer"
+          },
+          "time_horizon": {
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Time Horizon",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "time_horizon",
+          "loss_tolerance",
+          "income_stability",
+          "liquidity_need",
+          "investing_experience"
+        ],
+        "title": "RiskAnswersModel",
+        "type": "object"
+      },
+      "RiskProfileCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "answers": {
+            "$ref": "#/components/schemas/RiskAnswersModel"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "answers",
+          "expected_version"
+        ],
+        "title": "RiskProfileCommand",
+        "type": "object"
+      },
+      "RiskProfileEventResponse": {
+        "properties": {
+          "deduplicated": {
+            "title": "Deduplicated",
+            "type": "boolean"
+          },
+          "event_id": {
+            "title": "Event Id",
+            "type": "string"
+          },
+          "occurred_at_utc": {
+            "format": "date-time",
+            "title": "Occurred At Utc",
+            "type": "string"
+          },
+          "projection_version": {
+            "title": "Projection Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "event_id",
+          "projection_version",
+          "occurred_at_utc",
+          "deduplicated"
+        ],
+        "title": "RiskProfileEventResponse",
+        "type": "object"
+      },
+      "RiskProfileModel": {
+        "properties": {
+          "answers": {
+            "$ref": "#/components/schemas/RiskAnswersModel"
+          },
+          "policy_version": {
+            "const": "risk-questionnaire-v1",
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "recorded_at_utc": {
+            "format": "date-time",
+            "title": "Recorded At Utc",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          },
+          "source_event_id": {
+            "title": "Source Event Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "answers",
+          "score",
+          "policy_version",
+          "source_event_id",
+          "recorded_at_utc"
+        ],
+        "title": "RiskProfileModel",
+        "type": "object"
+      },
       "SavingsModel": {
         "properties": {
           "actual": {
@@ -1265,6 +1750,19 @@
           "source_event_ids"
         ],
         "title": "SavingsModel",
+        "type": "object"
+      },
+      "ScenarioCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          }
+        },
+        "required": [
+          "amount"
+        ],
+        "title": "ScenarioCommand",
         "type": "object"
       },
       "SessionRequest": {
@@ -1979,6 +2477,255 @@
         "summary": "Logout",
         "tags": [
           "authentication"
+        ]
+      }
+    },
+    "/api/v1/crypto/overview": {
+      "get": {
+        "operationId": "overview_api_v1_crypto_overview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "month",
+            "required": true,
+            "schema": {
+              "title": "Month",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Referer",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Referer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CryptoOverviewModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Overview",
+        "tags": [
+          "crypto"
+        ]
+      }
+    },
+    "/api/v1/crypto/risk-profile": {
+      "post": {
+        "operationId": "record_risk_profile_api_v1_crypto_risk_profile_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskProfileCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskProfileEventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Risk Profile",
+        "tags": [
+          "crypto"
+        ]
+      }
+    },
+    "/api/v1/crypto/scenarios": {
+      "post": {
+        "operationId": "analyze_scenario_api_v1_crypto_scenarios_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analyze Scenario",
+        "tags": [
+          "crypto"
         ]
       }
     },

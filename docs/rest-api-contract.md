@@ -1,6 +1,6 @@
 # REST API Contract
 
-Status: Milestone 4 authentication, Personal Finance, Groups, and contractual-settlement boundaries implemented; later feature endpoints remain milestone-ordered
+Status: Milestone 7 authentication, Finance, Groups, contractual settlement, and Crypto portfolio boundaries implemented; read-only AI remains milestone-ordered
 
 ## Boundary
 
@@ -95,6 +95,24 @@ There is intentionally no public obligation-write endpoint. Receivables and paya
 - `POST /api/v1/groups/{group_id}/obligations/{obligation_id}/settlements` requires the debtor's `settlement.authorize` signed intent and accepts a positive partial or full outstanding amount.
 
 Every Group write is append-only, encrypted before ResilientDB, version checked, and idempotency keyed. Contract receipts are verified against live obligation and credit state before Finance changes. Responses label credits as non-redeemable, non-monetary, and without cash value.
+
+## Crypto risk and portfolio
+
+- `GET /api/v1/crypto/overview?month=YYYY-MM` returns the versioned risk
+  profile, Finance-owned default capital, promoted forecast evidence when
+  available, and a constrained portfolio recommendation when every gate passes.
+- `POST /api/v1/crypto/risk-profile` appends an idempotent encrypted
+  `risk-questionnaire-v1` profile event and requires the expected profile
+  version.
+- `POST /api/v1/crypto/scenarios` returns an isolated allocation for positive
+  integer USD cents. It appends no event and carries no Finance savings source.
+
+Forecast records require a matching immutable promotion event, research run,
+adaptive-gating model artifact hash, and dataset hash. The API rejects stale
+forecasts. The normal runtime also rejects synthetic acceptance fixtures. A
+recommendation carries the risk event, forecast snapshot, promotion event,
+portfolio policy, Finance calculation, Finance source events, solver path, caps,
+weights, exact integer-cent allocations, and a no-trading warning.
 
 ## Errors
 
