@@ -2,7 +2,7 @@
 
 ResFinance is a planned wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
 
-> **Project status:** Milestones 0–5 are complete for local, non-commercial development and research. The feasibility gates, encrypted ResilientDB platform foundation, hardened ResVault-compatible extension, wallet authentication, Personal Finance dashboard, Groups contractual-settlement workflow, and crypto ingestion/feature store pass. Milestone 6 reproducible ML research is next. Cloud and production deployment remain on hold.
+> **Project status:** Milestones 0–6 are complete for local, non-commercial development and research. The feasibility gates, encrypted ResilientDB platform foundation, hardened ResVault-compatible extension, wallet authentication, Personal Finance dashboard, Groups contractual-settlement workflow, crypto ingestion/feature store, and reproducible ML research mechanics pass. The deterministic Milestone 6 smoke candidate was not promoted because it did not beat the declared naive-baseline MAE criterion. Milestone 7 risk, portfolio, and Crypto dashboard work is next. Cloud and production deployment remain on hold.
 
 ## What the product will do
 
@@ -68,9 +68,9 @@ The application follows an append-only event model. Projections can be rebuilt, 
 
 ## Forecasting and portfolio research
 
-The forecasting work is a documented three-asset adaptation of MSPCIFormer. ResFinance will combine market, sentiment, and on-chain inputs using Adaptive Multi-Source Gating and evaluate the approach against naive, linear, sequence-model, market-only, fixed-fusion, and source-removal baselines.
+The forecasting implementation is a documented clean-room three-asset adaptation of MSPCIFormer. ResFinance combines market, sentiment, and on-chain inputs using masked Adaptive Multi-Source Gating and evaluates the approach against naive/zero-return, linear, LSTM, market-only, fixed-fusion, and every one-source-removed baseline.
 
-Research runs will use chronological walk-forward evaluation, calibrated forecast intervals, deterministic seeds, immutable manifests, and complete data/code/model provenance. Forecasts then feed a constrained BTC/ETH/SOL portfolio optimizer that accounts for user risk, covariance, uncertainty, and allocation caps.
+Research runs use five chronological expanding walk-forward folds with a 15-day embargo, validation-only split-conformal intervals, deterministic CPU execution, immutable manifests, encrypted content-addressed artifacts, and complete data/code/model provenance. Only a model that passes explicit evaluation criteria may be promoted through an immutable event. Forecasts will feed the Milestone 7 constrained BTC/ETH/SOL portfolio optimizer.
 
 ## Important product boundaries
 
@@ -100,9 +100,14 @@ Milestone 4 adds authenticated Groups, exact shared-expense splits, ResVault-sig
 
 Milestone 5 adds Coin Metrics market and BTC/ETH on-chain adapters, CoinGecko current-quote fallback, DefiLlama SOL proxy ingestion with explicit missing observations, and a bounded GDELT aggregate CSV adapter. Immutable observations, provider revisions, availability times, retrieval times, response checksums, license dispositions, ingestion attempts, point-in-time features, masks, and dataset manifests persist only in ResilientDB. Live provider smoke checks passed, and the real-stack acceptance proved repeat-ingestion and feature idempotency, provider-failure isolation, no-lookahead selection, SOL masks, and rejection of a fourth asset. See the [Milestone 5 crypto ingestion and feature store evidence](docs/milestone5-crypto-ingestion-feature-store.md).
 
+Milestone 6 adds deterministic smoke-data generation; naive, linear, and LSTM baselines; the clean-room three-asset MSPCIFormer adaptation; masked Adaptive Multi-Source Gating; market-only, fixed-fusion, and source-removal ablations; five expanding walk-forward folds; validation-only conformal intervals; full statistical and portfolio-relevant metrics; deterministic checkpoints and plots; immutable model-promotion rules; and encrypted artifact persistence in ResilientDB. Two CPU smoke runs produced identical dataset and prediction hashes, and all 39 artifacts were restored byte-for-byte from the real four-replica stack. The adaptive smoke candidate was correctly rejected by the declared MAE gate, so no model-performance or statistical-significance claim is made. See the [Milestone 6 reproducible ML research evidence](docs/milestone6-reproducible-ml-research.md).
+
 ## Local verification
 
 ```bash
+.venv/bin/python -m pip install \
+  -r requirements-dev.txt -r requirements-milestone0.txt \
+  -r requirements-api.txt -r requirements-ml.txt
 .venv/bin/ruff check .
 .venv/bin/mypy
 .venv/bin/pytest
@@ -151,6 +156,10 @@ docker compose --profile tools up -d --build --wait \
 .venv/bin/python -m scripts.milestone5.run_crypto_ingestion_acceptance \
   --docker "$(command -v docker)" \
   --output config/milestone5-local-attestation.json
+
+.venv/bin/python -m scripts.milestone6.run_ml_acceptance \
+  --docker "$(command -v docker)" \
+  --output config/milestone6-local-attestation.json
 ```
 
 ## Repository layout
@@ -175,6 +184,7 @@ docs/         Product, architecture, delivery, and development references
 - [Milestone 3 Personal Finance dashboard](docs/milestone3-personal-finance.md)
 - [Milestone 4 Groups and contractual settlement](docs/milestone4-groups-settlement.md)
 - [Milestone 5 crypto ingestion and feature store](docs/milestone5-crypto-ingestion-feature-store.md)
+- [Milestone 6 reproducible ML research](docs/milestone6-reproducible-ml-research.md)
 - [REST API contract](docs/rest-api-contract.md)
 - [Security contract](docs/security.md)
 - [Research protocol](docs/research-protocol.md)

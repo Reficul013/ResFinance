@@ -12,6 +12,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["httpx==0.28.1"]
+ml = ["numpy==2.5.4", "torch==2.14.1"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -35,6 +36,7 @@ files = [
   "scripts/milestone2",
   "scripts/milestone3",
   "scripts/milestone5",
+  "scripts/milestone6",
   "server/app",
   "ml",
   "blockchain/adapter",

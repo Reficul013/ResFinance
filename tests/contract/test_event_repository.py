@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import random
+import zlib
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
@@ -10,7 +13,7 @@ import pytest
 from server.app.application.projections import rebuild_projection
 from server.app.domain.events import AppendEventCommand
 from server.app.infrastructure.blob_repository import EncryptedBlobRepository
-from server.app.infrastructure.encryption import AesGcmCipher
+from server.app.infrastructure.encryption import AesGcmCipher, canonical_json_bytes
 from server.app.infrastructure.event_repository import (
     AggregateVersionConflict,
     EncryptedEventRepository,
@@ -142,4 +145,54 @@ def test_blob_round_trip_is_encrypted_chunked_and_deduplicated() -> None:
     assert content[:64].hex() not in "".join(store.values.values())
 
     manifest = json.loads(store.values[first.manifest_key])
+    assert manifest["schema_version"] == 2
     assert manifest["logical_chunk_size"] == 256 * 1024
+    assert manifest["transport_segment_size"] == 48 * 1024
+    assert all(chunk["segments"] for chunk in manifest["chunks"])
+
+
+def test_blob_repository_restores_legacy_unsegmented_schema() -> None:
+    store = MemoryKeyValueStore()
+    cipher = AesGcmCipher(b"l" * 32, key_id="legacy-blob-test-v1")
+    blobs = EncryptedBlobRepository(store, cipher)
+    content = b"legacy encrypted artifact"
+    content_hash = hashlib.sha256(content).hexdigest()
+    aad_document = {"sha256": content_hash, "media_type": "application/octet-stream"}
+    envelope = cipher.encrypt_bytes(
+        zlib.compress(content, level=9), aad=canonical_json_bytes(aad_document)
+    )
+    encrypted = canonical_json_bytes(envelope.to_dict())
+    chunk_key = f"blob:{content_hash}:00000000"
+    store.put(
+        chunk_key,
+        canonical_json_bytes(
+            {
+                "sha256": hashlib.sha256(encrypted).hexdigest(),
+                "data_b64": base64.b64encode(encrypted).decode("ascii"),
+            }
+        ).decode(),
+    )
+    store.put(
+        f"blob:{content_hash}:manifest",
+        canonical_json_bytes(
+            {
+                "schema_version": 1,
+                "sha256": content_hash,
+                "size_bytes": len(content),
+                "media_type": "application/octet-stream",
+                "compression": "zlib-9",
+                "encryption_aad": aad_document,
+                "encrypted_size_bytes": len(encrypted),
+                "logical_chunk_size": 256 * 1024,
+                "chunks": [
+                    {
+                        "number": 0,
+                        "key": chunk_key,
+                        "sha256": hashlib.sha256(encrypted).hexdigest(),
+                    }
+                ],
+            }
+        ).decode(),
+    )
+
+    assert blobs.get(content_hash) == content

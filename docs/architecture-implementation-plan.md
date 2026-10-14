@@ -4,7 +4,7 @@ Status: Approved planning baseline for local implementation; cloud deployment is
 
 Last reviewed: 2026-10-14
 
-Implementation status: Milestones 0–5 passed for local, non-commercial development and research; Milestone 6 may begin
+Implementation status: Milestones 0–6 passed for local, non-commercial development and research; Milestone 7 may begin
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
@@ -375,6 +375,8 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 **Acceptance:** a repeat ingestion is idempotent, provider failure does not corrupt existing data, point-in-time joins pass leakage tests, and any fourth asset is rejected.
 
 ### Milestone 6 — Reproducible ML research
+
+**Status:** complete for local research mechanics; evidence is recorded in [`milestone6-reproducible-ml-research.md`](milestone6-reproducible-ml-research.md). No smoke model was promoted, and no statistical or investment-performance claim is made.
 
 - Implement baselines, the three-asset MSPCIFormer adaptation, Adaptive Multi-Source Gating, walk-forward evaluation, conformal intervals, ablations, and artifact persistence.
 - Add deterministic smoke datasets generated in test code and a full research-run manifest.
