@@ -1,6 +1,67 @@
 {
   "components": {
     "schemas": {
+      "ChallengeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "wallet": {
+            "$ref": "#/components/schemas/WalletIdentityModel"
+          }
+        },
+        "required": [
+          "wallet"
+        ],
+        "title": "ChallengeRequest",
+        "type": "object"
+      },
+      "ChallengeResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "audience": {
+            "title": "Audience",
+            "type": "string"
+          },
+          "challenge": {
+            "title": "Challenge",
+            "type": "string"
+          },
+          "challenge_id": {
+            "title": "Challenge Id",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "network_id": {
+            "title": "Network Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "challenge_id",
+          "challenge",
+          "expires_at",
+          "audience",
+          "network_id"
+        ],
+        "title": "ChallengeResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
       "HealthResponse": {
         "additionalProperties": false,
         "properties": {
@@ -21,6 +82,221 @@
         ],
         "title": "HealthResponse",
         "type": "object"
+      },
+      "SessionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "challenge": {
+            "maxLength": 256,
+            "minLength": 32,
+            "title": "Challenge",
+            "type": "string"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/SignedIntentModel"
+          }
+        },
+        "required": [
+          "challenge",
+          "intent"
+        ],
+        "title": "SessionRequest",
+        "type": "object"
+      },
+      "SessionResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "actor_address": {
+            "title": "Actor Address",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "token_type": {
+            "const": "Bearer",
+            "default": "Bearer",
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_at",
+          "actor_address"
+        ],
+        "title": "SessionResponse",
+        "type": "object"
+      },
+      "SignedIntentModel": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Action",
+            "type": "string"
+          },
+          "actor_address": {
+            "pattern": "^0x[0-9a-f]{40}$",
+            "title": "Actor Address",
+            "type": "string"
+          },
+          "actor_public_key": {
+            "maxLength": 128,
+            "minLength": 32,
+            "title": "Actor Public Key",
+            "type": "string"
+          },
+          "audience": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Audience",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "intent_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Intent Id",
+            "type": "string"
+          },
+          "issued_at": {
+            "format": "date-time",
+            "title": "Issued At",
+            "type": "string"
+          },
+          "network_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Network Id",
+            "type": "string"
+          },
+          "nonce": {
+            "maxLength": 128,
+            "minLength": 16,
+            "title": "Nonce",
+            "type": "string"
+          },
+          "origin": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Origin",
+            "type": "string"
+          },
+          "parameters_hash": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Parameters Hash",
+            "type": "string"
+          },
+          "resource_id": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "signature": {
+            "maxLength": 192,
+            "minLength": 32,
+            "title": "Signature",
+            "type": "string"
+          },
+          "version": {
+            "const": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "intent_id",
+          "action",
+          "actor_public_key",
+          "actor_address",
+          "resource_id",
+          "parameters_hash",
+          "nonce",
+          "issued_at",
+          "expires_at",
+          "origin",
+          "audience",
+          "network_id",
+          "signature"
+        ],
+        "title": "SignedIntentModel",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "WalletIdentityModel": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "pattern": "^0x[0-9a-f]{40}$",
+            "title": "Address",
+            "type": "string"
+          },
+          "public_key": {
+            "maxLength": 128,
+            "minLength": 32,
+            "title": "Public Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "public_key",
+          "address"
+        ],
+        "title": "WalletIdentityModel",
+        "type": "object"
       }
     }
   },
@@ -30,6 +306,228 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/auth/challenges": {
+      "post": {
+        "operationId": "create_challenge_api_v1_auth_challenges_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "title": "Origin",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChallengeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChallengeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Challenge",
+        "tags": [
+          "authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "refresh_session_api_v1_auth_refresh_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "title": "Origin",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "resfinance_refresh",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Resfinance Refresh"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh Session",
+        "tags": [
+          "authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/sessions": {
+      "post": {
+        "operationId": "create_session_api_v1_auth_sessions_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "title": "Origin",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Session",
+        "tags": [
+          "authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/sessions/current": {
+      "delete": {
+        "operationId": "logout_api_v1_auth_sessions_current_delete",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "title": "Origin",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "schema": {
+              "title": "Authorization",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "resfinance_refresh",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Resfinance Refresh"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Logout",
+        "tags": [
+          "authentication"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "getHealth",

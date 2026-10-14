@@ -148,3 +148,68 @@ class DockerResilientDBEventStore:
             timeout=self._timeout_seconds,
         )
         return parse_versioned_range_response(completed.stdout)
+
+
+class ResilientDBCliStore:
+    """Run the pinned KV client directly from the application container."""
+
+    def __init__(
+        self,
+        *,
+        tool: Path,
+        config_path: Path,
+        timeout_seconds: int = 30,
+    ) -> None:
+        self._tool = tool
+        self._config_path = config_path
+        self._timeout_seconds = timeout_seconds
+
+    def _run(self, command: str, key: str, value: str | None = None) -> str:
+        args = [
+            str(self._tool),
+            "--config",
+            str(self._config_path),
+            "--cmd",
+            command,
+            "--key",
+            key,
+        ]
+        if value is not None:
+            args.extend(["--value", value])
+        completed = subprocess.run(
+            args,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=self._timeout_seconds,
+        )
+        return completed.stdout
+
+    def get(self, key: str) -> str | None:
+        return parse_get_response(self._run("get", key), key)
+
+    def put(self, key: str, value: str) -> None:
+        output = self._run("set", key, value)
+        if "ret = 0" not in output:
+            raise RuntimeError(f"ResilientDB rejected write for {key}")
+
+    def range_values(self, prefix: str) -> Sequence[str]:
+        args = [
+            str(self._tool),
+            "--config",
+            str(self._config_path),
+            "--cmd",
+            "get_key_range_with_version",
+            "--min_key",
+            prefix,
+            "--max_key",
+            f"{prefix}~",
+        ]
+        completed = subprocess.run(
+            args,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=self._timeout_seconds,
+        )
+        return parse_versioned_range_response(completed.stdout)

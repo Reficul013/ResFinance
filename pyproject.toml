@@ -32,6 +32,7 @@ files = [
   "scripts/generate_openapi.py",
   "scripts/milestone0",
   "scripts/milestone1",
+  "scripts/milestone2",
   "server/app",
   "blockchain/adapter",
   "blockchain/wallet",

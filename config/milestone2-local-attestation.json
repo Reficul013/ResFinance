@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "completed_at_utc": "2026-10-14T06:18:03.403545+00:00",
+  "scope": "local development only",
+  "wallet": {
+    "implementation": "hardened ResVault-compatible Manifest V3 extension",
+    "upstream_reference_commit": "4de5cb43686276ace4307f44839a1de920ab524a",
+    "encrypted_seed_format": "Argon2id plus AES-256-GCM",
+    "private_material_returned_to_page": false,
+    "exact_origin_bridge": true,
+    "explicit_approval_surface": true,
+    "restart_default": "locked",
+    "automated_security_tests_passed": 5,
+    "built_bundle_inspection_passed": true
+  },
+  "authentication": {
+    "approved_challenge_authenticated": true,
+    "live_challenge_status": 201,
+    "live_session_status": 201,
+    "live_refresh_status": 200,
+    "live_logout_status": 204,
+    "wrong_origin_status": 403,
+    "refresh_rotation_replay_status": 401,
+    "challenge_replay_rejected": true,
+    "refresh_survived_replica_restart": true,
+    "logout_revoked_session": true,
+    "raw_tokens_or_challenges_persisted": false,
+    "persistent_database": "Apache ResilientDB LevelDB backend"
+  },
+  "production_or_cloud_readiness": false
+}

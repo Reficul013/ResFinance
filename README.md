@@ -2,7 +2,7 @@
 
 ResFinance is a planned wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
 
-> **Project status:** Milestones 0 and 1 are complete for local, non-commercial development and research. The feasibility gates and encrypted ResilientDB platform foundation pass. Milestone 2 wallet/authentication work is next. Cloud and production deployment remain on hold.
+> **Project status:** Milestones 0, 1, and 2 are complete for local, non-commercial development and research. The feasibility gates, encrypted ResilientDB platform foundation, hardened ResVault-compatible extension, and wallet authentication boundary pass. Milestone 3 Personal Finance work is next. Cloud and production deployment remain on hold.
 
 ## What the product will do
 
@@ -92,6 +92,8 @@ Cloud and production deployment are intentionally deferred. Completing the local
 
 Milestone 1 adds the strict React/Vite and FastAPI foundations, checked OpenAPI-generated client types, RFC 9457 errors, typed provider ports, AES-256-GCM event/blob repositories, idempotency and projection rebuilds, and a four-replica private Compose topology with a separate ResilientDB client proxy. The real-stack acceptance test passed encrypted write, full restart, readback, rebuild, and deduplication without another database. See the [Milestone 1 platform foundation](docs/milestone1-platform-foundation.md).
 
+Milestone 2 adds the hardened Manifest V3 ResVault-compatible extension, Argon2id/AES-256-GCM encrypted seed custody, exact-origin approval/signing, challenge login, memory-only access tokens, ResilientDB refresh-session hashes, rotation, replay defense, and logout revocation. The authentication state survived a full four-replica restart, and the rebuilt live FastAPI container passed the complete HTTP flow through its pinned native ResilientDB client. See the [Milestone 2 wallet and authentication evidence](docs/milestone2-wallet-authentication.md).
+
 ## Local verification
 
 ```bash
@@ -104,8 +106,18 @@ npm ci
 npm run generate:api
 npm run check
 npm run lint
+npm run format:check
 npm test
 npm run build
+
+cd ../resvault
+npm ci
+npm run check
+npm run lint
+npm run format:check
+npm test
+npm run build
+npm run security:inspect
 ```
 
 The real ResilientDB repository acceptance requires the source-pinned local image built during Milestone 0:
@@ -114,12 +126,17 @@ The real ResilientDB repository acceptance requires the source-pinned local imag
 docker compose --profile tools up -d --build \
   resdb-1 resdb-2 resdb-3 resdb-4 resdb-proxy resdb-tools
 .venv/bin/python -m scripts.milestone1.run_repository_acceptance
+
+.venv/bin/python -m scripts.milestone2.run_auth_acceptance
+docker compose --profile app up -d --build api
+.venv/bin/python -m scripts.milestone2.run_http_auth_acceptance
 ```
 
 ## Repository layout
 
 ```text
 client/       React and TypeScript application
+resvault/     Hardened ResVault-compatible browser extension
 server/       FastAPI API, domain services, adapters, and workers
 blockchain/   ResContract contracts, gateway adapter, wallet work, and tests
 ml/           Data, features, forecasting, evaluation, and portfolio optimization
@@ -133,6 +150,7 @@ docs/         Product, architecture, delivery, and development references
 - [Architecture and implementation plan](docs/architecture-implementation-plan.md)
 - [Milestone 0 feasibility status](docs/feasibility.md)
 - [Milestone 1 platform foundation](docs/milestone1-platform-foundation.md)
+- [Milestone 2 wallet and authentication](docs/milestone2-wallet-authentication.md)
 - [REST API contract](docs/rest-api-contract.md)
 - [Security contract](docs/security.md)
 - [Research protocol](docs/research-protocol.md)

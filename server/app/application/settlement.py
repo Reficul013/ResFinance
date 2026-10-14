@@ -3,21 +3,24 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Protocol
 
-import rfc8785
-from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-
+from server.app.application.intents import (
+    IntentPolicy,
+    IntentRejected,
+    canonical_json,
+    verify_signed_intent,
+)
+from server.app.application.intents import (
+    parameters_hash as hash_parameters,
+)
 from server.app.domain.settlement import (
     ContractReceipt,
     SettlementParameters,
     SettlementResult,
     SignedIntent,
 )
-
-BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
 class SettlementRejected(ValueError):
@@ -45,81 +48,28 @@ class SettlementEventStore(Protocol):
     def put(self, key: str, value: str) -> None: ...
 
 
-def base58_encode(value: bytes) -> str:
-    leading_zeros = len(value) - len(value.lstrip(b"\0"))
-    number = int.from_bytes(value)
-    encoded = ""
-    while number:
-        number, remainder = divmod(number, 58)
-        encoded = BASE58_ALPHABET[remainder] + encoded
-    return "1" * leading_zeros + encoded
-
-
-def base58_decode(value: str) -> bytes:
-    number = 0
-    for character in value:
-        try:
-            digit = BASE58_ALPHABET.index(character)
-        except ValueError as exc:
-            raise SettlementRejected("invalid base58 value") from exc
-        number = number * 58 + digit
-    decoded = number.to_bytes((number.bit_length() + 7) // 8, "big")
-    leading_zeros = len(value) - len(value.lstrip("1"))
-    return b"\0" * leading_zeros + decoded
-
-
-def canonical_json(value: object) -> bytes:
-    return rfc8785.dumps(value)  # type: ignore[arg-type]
-
-
 def parameters_hash(parameters: SettlementParameters) -> str:
-    return hashlib.sha256(canonical_json(parameters.canonical_payload())).hexdigest()
-
-
-def actor_address(public_key: bytes) -> str:
-    return "0x" + hashlib.sha256(public_key).digest()[-20:].hex()
+    return hash_parameters(parameters.canonical_payload())
 
 
 def verify_intent(
     intent: SignedIntent,
     parameters: SettlementParameters,
     now: datetime,
+    origin: str = "https://app.resfinance.local",
 ) -> str:
-    if intent.version != 1:
-        raise SettlementRejected("unsupported intent version")
-    if intent.action != "settlement.authorize":
-        raise SettlementRejected("unexpected intent action")
-    if intent.audience != "resfinance-api":
-        raise SettlementRejected("unexpected intent audience")
-    if intent.network_id != "pinned-local-network":
-        raise SettlementRejected("unexpected intent network")
-    if intent.issued_at.tzinfo is None or intent.expires_at.tzinfo is None:
-        raise SettlementRejected("intent timestamps must include UTC offsets")
-    normalized_now = now.astimezone(UTC)
-    if intent.issued_at.astimezone(UTC) > normalized_now + timedelta(seconds=30):
-        raise SettlementRejected("intent issued in the future")
-    if intent.expires_at.astimezone(UTC) <= normalized_now:
-        raise SettlementRejected("intent expired")
-    if intent.expires_at - intent.issued_at > timedelta(minutes=10):
-        raise SettlementRejected("intent lifetime exceeds ten minutes")
     if parameters.credit_units <= 0:
         raise SettlementRejected("credit units must be positive")
-    if intent.parameters_hash != parameters_hash(parameters):
-        raise SettlementRejected("intent parameters hash mismatch")
-
-    public_key = base58_decode(intent.actor_public_key)
-    if len(public_key) != 32:
-        raise SettlementRejected("invalid Ed25519 public key length")
-    if intent.actor_address != actor_address(public_key):
-        raise SettlementRejected("actor address does not match public key")
-    signature = base58_decode(intent.signature)
     try:
-        Ed25519PublicKey.from_public_bytes(public_key).verify(
-            signature, canonical_json(intent.unsigned_payload())
+        return verify_signed_intent(
+            intent,
+            parameters=parameters.canonical_payload(),
+            origin=origin,
+            now=now,
+            policy=IntentPolicy(action="settlement.authorize"),
         )
-    except (InvalidSignature, ValueError) as exc:
-        raise SettlementRejected("invalid intent signature") from exc
-    return hashlib.sha256(canonical_json(intent.unsigned_payload())).hexdigest()
+    except IntentRejected as exc:
+        raise SettlementRejected(str(exc)) from exc
 
 
 class SettlementService:
@@ -150,7 +100,7 @@ class SettlementService:
             raise SettlementRejected("invalid idempotency key")
 
         now = self._clock().astimezone(UTC)
-        intent_hash = verify_intent(intent, parameters, now)
+        intent_hash = verify_intent(intent, parameters, now, origin)
         command_hash = hashlib.sha256(
             canonical_json(
                 {

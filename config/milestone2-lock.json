@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "resvault_reference": {
+    "repository": "https://github.com/apache/incubator-resilientdb",
+    "commit": "4de5cb43686276ace4307f44839a1de920ab524a",
+    "manifest_version": "1.2.2",
+    "decision": "compatible-redesign"
+  },
+  "cryptography": {
+    "argon2id": {
+      "package": "@noble/hashes",
+      "version": "2.4.0",
+      "integrity": "sha512-X5XaVWZIBCT7HHZGm5I7ZQXDwLG+bGXuSrMQAW+7Zvl87h1kmc1ZB1VSRJcpUfoUrGQp4Fkoxm5kZ+Ms+aW+eA==",
+      "memory_kib": 65536,
+      "iterations": 3,
+      "parallelism": 1,
+      "output_bytes": 32
+    },
+    "ed25519": {
+      "package": "@noble/ed25519",
+      "version": "3.2.0",
+      "integrity": "sha512-criDgRlnUA09hchYrTy/JUWPIEap5rZxQe6wDWzRx51oWWpDRcUpuNzlgPxDJaOK6AsW9c0wKcj3rKRv6t+bPQ=="
+    },
+    "seed_encryption": "AES-256-GCM",
+    "canonicalization": "RFC 8785-compatible constrained JSON"
+  },
+  "local_policy": {
+    "audience": "resfinance-api",
+    "network_id": "pinned-local-network",
+    "allowed_origins": [
+      "https://app.resfinance.local",
+      "http://127.0.0.1:5173"
+    ],
+    "wallet_idle_timeout_seconds": 300,
+    "access_token_lifetime_seconds": 600,
+    "refresh_session_lifetime_days": 30
+  }
+}

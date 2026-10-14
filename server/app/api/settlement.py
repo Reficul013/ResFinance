@@ -27,6 +27,7 @@ class IntentModel(BaseModel):
     nonce: str = Field(min_length=16, max_length=128)
     issued_at: datetime
     expires_at: datetime
+    origin: str
     audience: str
     network_id: str
     signature: str

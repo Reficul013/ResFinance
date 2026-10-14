@@ -1,6 +1,6 @@
 # Security Contract
 
-Status: Milestone 1 application-encryption foundation implemented; wallet hardening remains
+Status: Milestones 1 and 2 application encryption, wallet hardening, and authentication implemented for local development
 
 ## Trust boundaries
 
@@ -45,4 +45,6 @@ Security tests must inspect the browser page, extension messaging, network captu
 
 ## Current ResVault disposition
 
-The pinned official ResVault source fails this contract. The accepted path is substantial hardening while preserving ResVault behavior. Details and source evidence are recorded in [`audits/resvault-2026-10-12.md`](audits/resvault-2026-10-12.md) and ADR 0001.
+The pinned official ResVault source fails this contract. ADR 0001 selected substantial hardening while preserving ResVault behavior. Milestone 2 implements the compatible redesign as a Manifest V3 extension with a versioned Argon2id/AES-256-GCM seed record, memory-only unlocked state, exact-origin messaging, extension-owned approvals, and background-only Ed25519 signing. Authentication refresh hashes, nonce use, and revocation markers persist in ResilientDB while access tokens remain memory-only.
+
+Local acceptance and remaining non-production limits are recorded in [`milestone2-wallet-authentication.md`](milestone2-wallet-authentication.md). The original source findings remain in [`audits/resvault-2026-10-12.md`](audits/resvault-2026-10-12.md).

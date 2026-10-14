@@ -184,17 +184,17 @@ def test_wallet_requires_exact_origin_and_explicit_approval() -> None:
         "nonce": "nonce-0000000000000001",
         "issued_at": NOW,
         "expires_at": NOW + timedelta(minutes=5),
+        "requesting_origin": "https://app.resfinance.local",
         "audience": "resfinance-api",
         "network_id": "pinned-local-network",
     }
 
     with pytest.raises(WalletSigningRejected, match="origin"):
         signer.sign_intent(
-            **common, requesting_origin="https://evil.example", approved=True
+            **{**common, "requesting_origin": "https://evil.example"}, approved=True
         )
     with pytest.raises(WalletSigningRejected, match="approval"):
         signer.sign_intent(
             **common,
-            requesting_origin="https://app.resfinance.local",
             approved=False,
         )

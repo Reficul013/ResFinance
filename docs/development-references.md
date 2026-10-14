@@ -9,6 +9,7 @@ Use these references when implementing or validating the ResilientDB, ResVault, 
 - [Pinned ResContract source](https://github.com/apache/incubator-resilientdb/tree/4de5cb43686276ace4307f44839a1de920ab524a/ecosystem/smart-contract/rescontract)
 - [Pinned ResVault source](https://github.com/apache/incubator-resilientdb/tree/4de5cb43686276ace4307f44839a1de920ab524a/ecosystem/tools/resvault)
 - Machine-readable revisions and dependency hashes: [`config/milestone0-lock.json`](../config/milestone0-lock.json)
+- Hardened ResVault dependency, policy, and upstream-reference lock: [`config/milestone2-lock.json`](../config/milestone2-lock.json)
 
 ## ExpoLab Beacon documentation
 
@@ -27,4 +28,5 @@ Use these references when implementing or validating the ResilientDB, ResVault, 
 - Do not treat `expolab/resdb:arm64` as equivalent to the pinned source until its digest has a verifiable source-commit attestation or ResFinance builds an image reproducibly from the pinned commit.
 - Use the checked Milestone 1 Compose topology for application repository work. It derives from the attested local image, adds only the pinned key-generator build target, generates development certificates into a Docker volume, and keeps all four replicas plus the client proxy on an internal network.
 - The pinned CLI must use the minimal client-proxy configuration and `get_key_range_with_version` for decoded prefix scans. Its plain range command exposes serialized version-history bytes and is not an application repository boundary.
+- The Milestone 2 ResVault-compatible redesign uses pinned `@noble/hashes` 2.4.0 for Argon2id and `@noble/ed25519` 3.2.0 for signing. Package integrity values are checked in through both `resvault/package-lock.json` and `config/milestone2-lock.json`; upgrades require explicit security review and cross-language signature tests.
 

@@ -5,7 +5,7 @@ from datetime import datetime
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from server.app.application.settlement import (
+from server.app.application.intents import (
     actor_address,
     base58_encode,
     canonical_json,
@@ -76,6 +76,7 @@ class ResVaultSpikeSigner:
             "nonce": nonce,
             "issued_at": issued_at.isoformat().replace("+00:00", "Z"),
             "expires_at": expires_at.isoformat().replace("+00:00", "Z"),
+            "origin": requesting_origin,
             "audience": audience,
             "network_id": network_id,
         }

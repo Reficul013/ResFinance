@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "ResVault for ResFinance",
+  "description": "Hardened ResVault-compatible signing for ResFinance.",
+  "version": "0.1.0",
+  "permissions": ["alarms", "storage"],
+  "host_permissions": [
+    "https://app.resfinance.local/*",
+    "http://127.0.0.1:5173/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://app.resfinance.local/*", "http://127.0.0.1:5173/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

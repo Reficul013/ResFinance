@@ -63,3 +63,33 @@ jobs:
       - name: Build
         working-directory: client
         run: npm run build
+
+  resvault:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: resvault/package-lock.json
+      - name: Install pinned ResVault dependencies
+        working-directory: resvault
+        run: npm ci
+      - name: Type check
+        working-directory: resvault
+        run: npm run check
+      - name: Lint
+        working-directory: resvault
+        run: npm run lint
+      - name: Format check
+        working-directory: resvault
+        run: npm run format:check
+      - name: Test
+        working-directory: resvault
+        run: npm test
+      - name: Build and inspect security boundary
+        working-directory: resvault
+        run: |
+          npm run build
+          npm run security:inspect

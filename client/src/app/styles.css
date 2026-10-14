@@ -152,6 +152,92 @@ code {
   backdrop-filter: blur(28px) saturate(155%);
 }
 
+.auth-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.25rem;
+  align-items: center;
+  overflow: hidden;
+  margin-top: 2.5rem;
+  padding: 1.35rem;
+  border: 1px solid var(--card-border);
+  border-radius: 1.1rem;
+  background: var(--card-background);
+  box-shadow:
+    var(--card-shadow),
+    inset 0 1px 0 var(--card-highlight),
+    inset 0 -1px 0 var(--card-lowlight);
+  -webkit-backdrop-filter: blur(28px) saturate(155%);
+  backdrop-filter: blur(28px) saturate(155%);
+}
+
+.auth-card::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(125deg, var(--card-sheen), transparent 42%);
+  content: "";
+  pointer-events: none;
+}
+
+.auth-card > * {
+  position: relative;
+}
+
+.auth-kicker {
+  margin: 0 0 0.35rem;
+  color: var(--page-accent);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.auth-card h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.auth-message {
+  margin: 0.55rem 0;
+  color: var(--page-muted);
+  line-height: 1.5;
+}
+
+.wallet-address {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.auth-button {
+  min-height: 2.8rem;
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--page-accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.auth-button.secondary {
+  border: 1px solid var(--control-border);
+  background: var(--control-background);
+  color: var(--page-text);
+}
+
+.auth-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.auth-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--page-accent) 52%, transparent);
+  outline-offset: 3px;
+}
+
 .status-card::before {
   position: absolute;
   inset: 0;
@@ -217,6 +303,14 @@ code {
 }
 
 @media (max-width: 32rem) {
+  .auth-card {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-button {
+    width: 100%;
+  }
+
   .theme-toggle-label {
     position: absolute;
     width: 1px;

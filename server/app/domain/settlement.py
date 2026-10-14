@@ -16,6 +16,7 @@ class SignedIntent:
     nonce: str
     issued_at: datetime
     expires_at: datetime
+    origin: str
     audience: str
     network_id: str
     signature: str
@@ -32,6 +33,7 @@ class SignedIntent:
             "nonce": self.nonce,
             "issued_at": self.issued_at.isoformat().replace("+00:00", "Z"),
             "expires_at": self.expires_at.isoformat().replace("+00:00", "Z"),
+            "origin": self.origin,
             "audience": self.audience,
             "network_id": self.network_id,
         }

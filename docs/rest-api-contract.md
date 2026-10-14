@@ -1,6 +1,6 @@
 # REST API Contract
 
-Status: Milestone 1 platform boundary implemented; feature endpoints remain milestone-ordered
+Status: Milestone 2 authentication boundary implemented; later feature endpoints remain milestone-ordered
 
 ## Boundary
 
@@ -51,6 +51,7 @@ The signed bytes are RFC 8785 canonical JSON of every field except `signature`:
   "nonce": "single-use-value",
   "issued_at": "2026-10-12T00:00:00Z",
   "expires_at": "2026-10-12T00:05:00Z",
+  "origin": "https://app.resfinance.local",
   "audience": "resfinance-api",
   "network_id": "pinned-local-network",
   "signature": "base58-ed25519-signature"
@@ -58,6 +59,17 @@ The signed bytes are RFC 8785 canonical JSON of every field except `signature`:
 ```
 
 The backend verifies the signature, public-key/address relationship, action, audience, network, origin policy, expiry, nonce uniqueness, parameter hash, authorization, and expected resource version before invoking ResContract.
+
+`origin` is a required signed-intent field. It must exactly equal the browser `Origin` header and an explicitly configured ResFinance origin.
+
+## Authentication
+
+- `POST /api/v1/auth/challenges` accepts a public Ed25519 identity and returns a five-minute challenge.
+- `POST /api/v1/auth/sessions` consumes an approved `auth.login` signed intent and the matching challenge.
+- `POST /api/v1/auth/refresh` rotates the refresh session and returns a new memory-only access token.
+- `DELETE /api/v1/auth/sessions/current` revokes the session and expires the refresh cookie.
+
+Access tokens are opaque and held only in API/browser process memory. Refresh tokens use an HttpOnly, SameSite=Strict cookie; only their SHA-256 hashes are persisted in ResilientDB. Challenges are also persisted only as hashes. Challenge use, intent nonces, refresh rotation, and logout append durable use or revocation markers. The checked local environment permits `https://app.resfinance.local` and `http://127.0.0.1:5173` exactly.
 
 ## Errors
 

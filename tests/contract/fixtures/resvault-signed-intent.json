@@ -1,0 +1,22 @@
+{
+  "parameters": {
+    "challenge": "challenge-value-cross-language",
+    "origin": "https://app.resfinance.local"
+  },
+  "intent": {
+    "version": 1,
+    "intent_id": "intent-cross-language-0001",
+    "action": "auth.login",
+    "actor_public_key": "9C6hybhQ6Aycep9jaUnP6uL9ZYvDjUp1aSkFWPUFJtpj",
+    "actor_address": "0x2d82ada0740f29ac3355d6a925c81f17f47a27b8",
+    "resource_id": "challenge-cross-language-0001",
+    "parameters_hash": "6216c467286569fc1d5ac542de67d940dcc585a7b0811c142a464bbf75c19eac",
+    "nonce": "nonce-cross-language-0001",
+    "issued_at": "2026-10-13T18:00:00Z",
+    "expires_at": "2026-10-13T18:05:00Z",
+    "origin": "https://app.resfinance.local",
+    "audience": "resfinance-api",
+    "network_id": "pinned-local-network",
+    "signature": "mfiJXubbr4gpJw3UZZqjvpVDeCeiZHYU99U1JEGrAFCNyHR4K5CVSejs6j1iok9qUa8J9vRH8zsKGwnvKBHKtpb"
+  }
+}

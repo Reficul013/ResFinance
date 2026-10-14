@@ -53,6 +53,7 @@ def register_problem_handlers(app: FastAPI) -> None:
             404: "Not found",
             409: "Conflict",
             422: "Unprocessable content",
+            503: "Service unavailable",
         }.get(exc.status_code, "Request failed")
         detail = exc.detail if isinstance(exc.detail, str) else title
         return problem_response(

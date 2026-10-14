@@ -4,7 +4,7 @@ Status: Approved planning baseline for local implementation; cloud deployment is
 
 Last reviewed: 2026-10-13
 
-Implementation status: Milestones 0 and 1 passed for local, non-commercial development and research; Milestone 2 may begin
+Implementation status: Milestones 0, 1, and 2 passed for local, non-commercial development and research; Milestone 3 may begin
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
@@ -168,7 +168,7 @@ Money = { currency: "USD", minor_units: int64 }
 SignedIntent = {
   version, intent_id, action, actor_public_key, actor_address,
   resource_id, parameters_hash, nonce, issued_at, expires_at,
-  audience, network_id, signature
+  origin, audience, network_id, signature
 }
 Forecast = {
   asset, as_of, horizon_days, expected_return,
@@ -335,6 +335,8 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 **Acceptance:** contract tests write, restart, read, rebuild, and deduplicate encrypted sample events without another database.
 
 ### Milestone 2 — Hardened wallet and authentication
+
+**Status:** complete for local development; evidence is recorded in [`milestone2-wallet-authentication.md`](milestone2-wallet-authentication.md).
 
 - Implement the Milestone 0 ResVault audit decision: use the pinned upstream implementation unchanged when it passes, apply the approved minimal patches when sufficient, or complete the documented substantial hardening fork or compatible redesign when required.
 - Implement challenge login, in-memory access tokens, refresh-session hashes in ResilientDB, logout/revocation, address derivation, and signed-intent verification.

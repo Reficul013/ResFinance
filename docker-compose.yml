@@ -123,6 +123,7 @@ services:
         condition: service_healthy
 
   api:
+    platform: linux/arm64
     build:
       context: .
       dockerfile: infra/api/Dockerfile
