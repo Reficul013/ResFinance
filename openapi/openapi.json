@@ -1,6 +1,207 @@
 {
   "components": {
     "schemas": {
+      "BudgetCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "budget_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Budget Id",
+            "type": "string"
+          },
+          "category_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Category Id",
+            "type": "string"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "limit": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "month": {
+            "pattern": "^\\d{4}-\\d{2}$",
+            "title": "Month",
+            "type": "string"
+          }
+        },
+        "required": [
+          "budget_id",
+          "category_id",
+          "month",
+          "limit",
+          "expected_version"
+        ],
+        "title": "BudgetCommand",
+        "type": "object"
+      },
+      "BudgetModel": {
+        "properties": {
+          "budget_id": {
+            "title": "Budget Id",
+            "type": "string"
+          },
+          "category_id": {
+            "title": "Category Id",
+            "type": "string"
+          },
+          "limit": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          },
+          "source_event_id": {
+            "title": "Source Event Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "budget_id",
+          "category_id",
+          "month",
+          "limit",
+          "source_event_id"
+        ],
+        "title": "BudgetModel",
+        "type": "object"
+      },
+      "BudgetStatusModel": {
+        "properties": {
+          "budget_id": {
+            "title": "Budget Id",
+            "type": "string"
+          },
+          "category_id": {
+            "title": "Category Id",
+            "type": "string"
+          },
+          "category_name": {
+            "title": "Category Name",
+            "type": "string"
+          },
+          "limit": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "remaining": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "source_event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Event Ids",
+            "type": "array"
+          },
+          "spent": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "status": {
+            "enum": [
+              "on_track",
+              "near_limit",
+              "over_budget"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "utilization_basis_points": {
+            "title": "Utilization Basis Points",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "budget_id",
+          "category_id",
+          "category_name",
+          "limit",
+          "spent",
+          "remaining",
+          "utilization_basis_points",
+          "status",
+          "source_event_ids"
+        ],
+        "title": "BudgetStatusModel",
+        "type": "object"
+      },
+      "CategoryCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "category_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Category Id",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "income",
+              "expense"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category_id",
+          "name",
+          "direction",
+          "expected_version"
+        ],
+        "title": "CategoryCommand",
+        "type": "object"
+      },
+      "CategoryModel": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "category_id": {
+            "title": "Category Id",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "income",
+              "expense"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "source_event_id": {
+            "title": "Source Event Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category_id",
+          "name",
+          "direction",
+          "active",
+          "source_event_id"
+        ],
+        "title": "CategoryModel",
+        "type": "object"
+      },
       "ChallengeRequest": {
         "additionalProperties": false,
         "properties": {
@@ -49,6 +250,114 @@
         "title": "ChallengeResponse",
         "type": "object"
       },
+      "DeactivateRecurringCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_version"
+        ],
+        "title": "DeactivateRecurringCommand",
+        "type": "object"
+      },
+      "EventResponse": {
+        "properties": {
+          "deduplicated": {
+            "title": "Deduplicated",
+            "type": "boolean"
+          },
+          "event_id": {
+            "title": "Event Id",
+            "type": "string"
+          },
+          "occurred_at_utc": {
+            "format": "date-time",
+            "title": "Occurred At Utc",
+            "type": "string"
+          },
+          "projection_version": {
+            "title": "Projection Version",
+            "type": "integer"
+          },
+          "receipt_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Receipt Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "event_id",
+          "projection_version",
+          "occurred_at_utc",
+          "deduplicated",
+          "receipt_ids"
+        ],
+        "title": "EventResponse",
+        "type": "object"
+      },
+      "FinanceOverviewModel": {
+        "properties": {
+          "budgets": {
+            "items": {
+              "$ref": "#/components/schemas/BudgetModel"
+            },
+            "title": "Budgets",
+            "type": "array"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryModel"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "obligations": {
+            "items": {
+              "$ref": "#/components/schemas/ObligationModel"
+            },
+            "title": "Obligations",
+            "type": "array"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ProvenanceModel"
+          },
+          "recurring_entries": {
+            "items": {
+              "$ref": "#/components/schemas/RecurringEntryModel"
+            },
+            "title": "Recurring Entries",
+            "type": "array"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/MonthlySummaryModel"
+          },
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/TransactionModel"
+            },
+            "title": "Transactions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "summary",
+          "categories",
+          "transactions",
+          "budgets",
+          "recurring_entries",
+          "obligations",
+          "provenance"
+        ],
+        "title": "FinanceOverviewModel",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -81,6 +390,348 @@
           "service"
         ],
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "MoneyModel": {
+        "additionalProperties": false,
+        "properties": {
+          "currency": {
+            "const": "USD",
+            "default": "USD",
+            "title": "Currency",
+            "type": "string"
+          },
+          "minor_units": {
+            "title": "Minor Units",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "minor_units"
+        ],
+        "title": "MoneyModel",
+        "type": "object"
+      },
+      "MonthlySummaryModel": {
+        "properties": {
+          "balance": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "budget_statuses": {
+            "items": {
+              "$ref": "#/components/schemas/BudgetStatusModel"
+            },
+            "title": "Budget Statuses",
+            "type": "array"
+          },
+          "expense": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "income": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          },
+          "outstanding_recurring_expense": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "outstanding_recurring_income": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "payable": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "receivable": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "savings": {
+            "$ref": "#/components/schemas/SavingsModel"
+          }
+        },
+        "required": [
+          "month",
+          "income",
+          "expense",
+          "balance",
+          "receivable",
+          "payable",
+          "outstanding_recurring_income",
+          "outstanding_recurring_expense",
+          "savings",
+          "budget_statuses"
+        ],
+        "title": "MonthlySummaryModel",
+        "type": "object"
+      },
+      "ObligationModel": {
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "contract_receipt": {
+            "title": "Contract Receipt",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "receivable",
+              "payable"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due On"
+          },
+          "obligation_id": {
+            "title": "Obligation Id",
+            "type": "string"
+          },
+          "settled": {
+            "title": "Settled",
+            "type": "boolean"
+          },
+          "source_event_id": {
+            "title": "Source Event Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "obligation_id",
+          "direction",
+          "amount",
+          "due_on",
+          "settled",
+          "source_event_id",
+          "contract_receipt"
+        ],
+        "title": "ObligationModel",
+        "type": "object"
+      },
+      "ProvenanceModel": {
+        "properties": {
+          "as_of_utc": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Utc"
+          },
+          "projection_version": {
+            "title": "Projection Version",
+            "type": "integer"
+          },
+          "source_event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Event Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "projection_version",
+          "as_of_utc",
+          "source_event_ids"
+        ],
+        "title": "ProvenanceModel",
+        "type": "object"
+      },
+      "RecurringEntryCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "cadence": {
+            "const": "monthly",
+            "default": "monthly",
+            "title": "Cadence",
+            "type": "string"
+          },
+          "category_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Category Id",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "income",
+              "expense"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "recurring_entry_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Recurring Entry Id",
+            "type": "string"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recurring_entry_id",
+          "direction",
+          "category_id",
+          "amount",
+          "description",
+          "starts_on",
+          "expected_version"
+        ],
+        "title": "RecurringEntryCommand",
+        "type": "object"
+      },
+      "RecurringEntryModel": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "cadence": {
+            "const": "monthly",
+            "default": "monthly",
+            "title": "Cadence",
+            "type": "string"
+          },
+          "category_id": {
+            "title": "Category Id",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "income",
+              "expense"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "recurring_entry_id": {
+            "title": "Recurring Entry Id",
+            "type": "string"
+          },
+          "source_event_id": {
+            "title": "Source Event Id",
+            "type": "string"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recurring_entry_id",
+          "direction",
+          "category_id",
+          "amount",
+          "description",
+          "starts_on",
+          "ends_on",
+          "active",
+          "source_event_id"
+        ],
+        "title": "RecurringEntryModel",
+        "type": "object"
+      },
+      "SavingsModel": {
+        "properties": {
+          "actual": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "available": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "calculation_id": {
+            "title": "Calculation Id",
+            "type": "string"
+          },
+          "formula_version": {
+            "const": "finance-savings-v1",
+            "title": "Formula Version",
+            "type": "string"
+          },
+          "projected": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "source_event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Event Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "actual",
+          "projected",
+          "available",
+          "formula_version",
+          "calculation_id",
+          "source_event_ids"
+        ],
+        "title": "SavingsModel",
         "type": "object"
       },
       "SessionRequest": {
@@ -236,6 +887,135 @@
         "title": "SignedIntentModel",
         "type": "object"
       },
+      "TransactionCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "category_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Category Id",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "income",
+              "expense"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "occurred_on": {
+            "format": "date",
+            "title": "Occurred On",
+            "type": "string"
+          },
+          "recurring_entry_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurring Entry Id"
+          },
+          "transaction_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Transaction Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "transaction_id",
+          "direction",
+          "category_id",
+          "amount",
+          "occurred_on",
+          "description",
+          "expected_version"
+        ],
+        "title": "TransactionCommand",
+        "type": "object"
+      },
+      "TransactionModel": {
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "category_id": {
+            "title": "Category Id",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "income",
+              "expense"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "occurred_on": {
+            "format": "date",
+            "title": "Occurred On",
+            "type": "string"
+          },
+          "recurring_entry_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurring Entry Id"
+          },
+          "source_event_id": {
+            "title": "Source Event Id",
+            "type": "string"
+          },
+          "transaction_id": {
+            "title": "Transaction Id",
+            "type": "string"
+          },
+          "voided": {
+            "title": "Voided",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "transaction_id",
+          "direction",
+          "category_id",
+          "amount",
+          "occurred_on",
+          "description",
+          "recurring_entry_id",
+          "voided",
+          "source_event_id"
+        ],
+        "title": "TransactionModel",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -274,6 +1054,28 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VoidTransactionCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "reason": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "expected_version"
+        ],
+        "title": "VoidTransactionCommand",
         "type": "object"
       },
       "WalletIdentityModel": {
@@ -525,6 +1327,618 @@
         "summary": "Logout",
         "tags": [
           "authentication"
+        ]
+      }
+    },
+    "/api/v1/finance/budgets": {
+      "post": {
+        "operationId": "set_budget_api_v1_finance_budgets_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BudgetCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Budget",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/api/v1/finance/categories": {
+      "post": {
+        "operationId": "create_category_api_v1_finance_categories_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Category",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/api/v1/finance/overview": {
+      "get": {
+        "operationId": "overview_api_v1_finance_overview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "month",
+            "required": true,
+            "schema": {
+              "title": "Month",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Referer",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Referer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceOverviewModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Overview",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/api/v1/finance/recurring": {
+      "post": {
+        "operationId": "create_recurring_entry_api_v1_finance_recurring_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecurringEntryCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Recurring Entry",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/api/v1/finance/recurring/{recurring_entry_id}/deactivate": {
+      "post": {
+        "operationId": "deactivate_recurring_entry_api_v1_finance_recurring__recurring_entry_id__deactivate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "recurring_entry_id",
+            "required": true,
+            "schema": {
+              "title": "Recurring Entry Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateRecurringCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Deactivate Recurring Entry",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/api/v1/finance/transactions": {
+      "post": {
+        "operationId": "record_transaction_api_v1_finance_transactions_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransactionCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Transaction",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/api/v1/finance/transactions/{transaction_id}/void": {
+      "post": {
+        "operationId": "void_transaction_api_v1_finance_transactions__transaction_id__void_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoidTransactionCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Void Transaction",
+        "tags": [
+          "finance"
         ]
       }
     },

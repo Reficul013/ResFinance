@@ -1,0 +1,22 @@
+{
+  "actual_savings_minor_units": 410000,
+  "available_savings_minor_units": 270000,
+  "balance_minor_units": 410000,
+  "budget_status": "near_limit",
+  "budget_utilization_basis_points": 9000,
+  "completed_at_utc": "2026-10-14T08:30:32.233216+00:00",
+  "expense_minor_units": 90000,
+  "idempotent_retry": true,
+  "income_minor_units": 500000,
+  "payable_minor_units": 20000,
+  "persistent_database": "Apache ResilientDB LevelDB backend",
+  "production_or_cloud_readiness": false,
+  "projected_savings_minor_units": 270000,
+  "projection_rebuild_equal": true,
+  "projection_version": 8,
+  "receivable_minor_units": 30000,
+  "replica_restart": true,
+  "savings_formula_version": "finance-savings-v1",
+  "schema_version": 1,
+  "scope": "local development only"
+}

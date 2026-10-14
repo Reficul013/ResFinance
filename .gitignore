@@ -213,6 +213,8 @@ tempCodeRunnerFile.py
 # Node / Vite
 node_modules/
 client/dist/
+client/playwright-report/
+client/test-results/
 !client/src/lib/
 !client/src/lib/**
 

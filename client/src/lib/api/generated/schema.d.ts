@@ -72,6 +72,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/finance/budgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Budget */
+        post: operations["set_budget_api_v1_finance_budgets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Category */
+        post: operations["create_category_api_v1_finance_categories_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Overview */
+        get: operations["overview_api_v1_finance_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/recurring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Recurring Entry */
+        post: operations["create_recurring_entry_api_v1_finance_recurring_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/recurring/{recurring_entry_id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivate Recurring Entry */
+        post: operations["deactivate_recurring_entry_api_v1_finance_recurring__recurring_entry_id__deactivate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record Transaction */
+        post: operations["record_transaction_api_v1_finance_transactions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/transactions/{transaction_id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Void Transaction */
+        post: operations["void_transaction_api_v1_finance_transactions__transaction_id__void_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -93,6 +212,81 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BudgetCommand */
+        BudgetCommand: {
+            /** Budget Id */
+            budget_id: string;
+            /** Category Id */
+            category_id: string;
+            /** Expected Version */
+            expected_version: number;
+            limit: components["schemas"]["MoneyModel"];
+            /** Month */
+            month: string;
+        };
+        /** BudgetModel */
+        BudgetModel: {
+            /** Budget Id */
+            budget_id: string;
+            /** Category Id */
+            category_id: string;
+            limit: components["schemas"]["MoneyModel"];
+            /** Month */
+            month: string;
+            /** Source Event Id */
+            source_event_id: string;
+        };
+        /** BudgetStatusModel */
+        BudgetStatusModel: {
+            /** Budget Id */
+            budget_id: string;
+            /** Category Id */
+            category_id: string;
+            /** Category Name */
+            category_name: string;
+            limit: components["schemas"]["MoneyModel"];
+            remaining: components["schemas"]["MoneyModel"];
+            /** Source Event Ids */
+            source_event_ids: string[];
+            spent: components["schemas"]["MoneyModel"];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "on_track" | "near_limit" | "over_budget";
+            /** Utilization Basis Points */
+            utilization_basis_points: number;
+        };
+        /** CategoryCommand */
+        CategoryCommand: {
+            /** Category Id */
+            category_id: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "income" | "expense";
+            /** Expected Version */
+            expected_version: number;
+            /** Name */
+            name: string;
+        };
+        /** CategoryModel */
+        CategoryModel: {
+            /** Active */
+            active: boolean;
+            /** Category Id */
+            category_id: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "income" | "expense";
+            /** Name */
+            name: string;
+            /** Source Event Id */
+            source_event_id: string;
+        };
         /** ChallengeRequest */
         ChallengeRequest: {
             wallet: components["schemas"]["WalletIdentityModel"];
@@ -113,6 +307,42 @@ export interface components {
             /** Network Id */
             network_id: string;
         };
+        /** DeactivateRecurringCommand */
+        DeactivateRecurringCommand: {
+            /** Expected Version */
+            expected_version: number;
+        };
+        /** EventResponse */
+        EventResponse: {
+            /** Deduplicated */
+            deduplicated: boolean;
+            /** Event Id */
+            event_id: string;
+            /**
+             * Occurred At Utc
+             * Format: date-time
+             */
+            occurred_at_utc: string;
+            /** Projection Version */
+            projection_version: number;
+            /** Receipt Ids */
+            receipt_ids: string[];
+        };
+        /** FinanceOverviewModel */
+        FinanceOverviewModel: {
+            /** Budgets */
+            budgets: components["schemas"]["BudgetModel"][];
+            /** Categories */
+            categories: components["schemas"]["CategoryModel"][];
+            /** Obligations */
+            obligations: components["schemas"]["ObligationModel"][];
+            provenance: components["schemas"]["ProvenanceModel"];
+            /** Recurring Entries */
+            recurring_entries: components["schemas"]["RecurringEntryModel"][];
+            summary: components["schemas"]["MonthlySummaryModel"];
+            /** Transactions */
+            transactions: components["schemas"]["TransactionModel"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -130,6 +360,137 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** MoneyModel */
+        MoneyModel: {
+            /**
+             * Currency
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
+            /** Minor Units */
+            minor_units: number;
+        };
+        /** MonthlySummaryModel */
+        MonthlySummaryModel: {
+            balance: components["schemas"]["MoneyModel"];
+            /** Budget Statuses */
+            budget_statuses: components["schemas"]["BudgetStatusModel"][];
+            expense: components["schemas"]["MoneyModel"];
+            income: components["schemas"]["MoneyModel"];
+            /** Month */
+            month: string;
+            outstanding_recurring_expense: components["schemas"]["MoneyModel"];
+            outstanding_recurring_income: components["schemas"]["MoneyModel"];
+            payable: components["schemas"]["MoneyModel"];
+            receivable: components["schemas"]["MoneyModel"];
+            savings: components["schemas"]["SavingsModel"];
+        };
+        /** ObligationModel */
+        ObligationModel: {
+            amount: components["schemas"]["MoneyModel"];
+            /** Contract Receipt */
+            contract_receipt: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "receivable" | "payable";
+            /** Due On */
+            due_on: string | null;
+            /** Obligation Id */
+            obligation_id: string;
+            /** Settled */
+            settled: boolean;
+            /** Source Event Id */
+            source_event_id: string;
+        };
+        /** ProvenanceModel */
+        ProvenanceModel: {
+            /** As Of Utc */
+            as_of_utc: string | null;
+            /** Projection Version */
+            projection_version: number;
+            /** Source Event Ids */
+            source_event_ids: string[];
+        };
+        /** RecurringEntryCommand */
+        RecurringEntryCommand: {
+            amount: components["schemas"]["MoneyModel"];
+            /**
+             * Cadence
+             * @default monthly
+             * @constant
+             */
+            cadence: "monthly";
+            /** Category Id */
+            category_id: string;
+            /** Description */
+            description: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "income" | "expense";
+            /** Ends On */
+            ends_on?: string | null;
+            /** Expected Version */
+            expected_version: number;
+            /** Recurring Entry Id */
+            recurring_entry_id: string;
+            /**
+             * Starts On
+             * Format: date
+             */
+            starts_on: string;
+        };
+        /** RecurringEntryModel */
+        RecurringEntryModel: {
+            /** Active */
+            active: boolean;
+            amount: components["schemas"]["MoneyModel"];
+            /**
+             * Cadence
+             * @default monthly
+             * @constant
+             */
+            cadence: "monthly";
+            /** Category Id */
+            category_id: string;
+            /** Description */
+            description: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "income" | "expense";
+            /** Ends On */
+            ends_on: string | null;
+            /** Recurring Entry Id */
+            recurring_entry_id: string;
+            /** Source Event Id */
+            source_event_id: string;
+            /**
+             * Starts On
+             * Format: date
+             */
+            starts_on: string;
+        };
+        /** SavingsModel */
+        SavingsModel: {
+            actual: components["schemas"]["MoneyModel"];
+            available: components["schemas"]["MoneyModel"];
+            /** Calculation Id */
+            calculation_id: string;
+            /**
+             * Formula Version
+             * @constant
+             */
+            formula_version: "finance-savings-v1";
+            projected: components["schemas"]["MoneyModel"];
+            /** Source Event Ids */
+            source_event_ids: string[];
         };
         /** SessionRequest */
         SessionRequest: {
@@ -195,6 +556,56 @@ export interface components {
              */
             version: 1;
         };
+        /** TransactionCommand */
+        TransactionCommand: {
+            amount: components["schemas"]["MoneyModel"];
+            /** Category Id */
+            category_id: string;
+            /** Description */
+            description: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "income" | "expense";
+            /** Expected Version */
+            expected_version: number;
+            /**
+             * Occurred On
+             * Format: date
+             */
+            occurred_on: string;
+            /** Recurring Entry Id */
+            recurring_entry_id?: string | null;
+            /** Transaction Id */
+            transaction_id: string;
+        };
+        /** TransactionModel */
+        TransactionModel: {
+            amount: components["schemas"]["MoneyModel"];
+            /** Category Id */
+            category_id: string;
+            /** Description */
+            description: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "income" | "expense";
+            /**
+             * Occurred On
+             * Format: date
+             */
+            occurred_on: string;
+            /** Recurring Entry Id */
+            recurring_entry_id: string | null;
+            /** Source Event Id */
+            source_event_id: string;
+            /** Transaction Id */
+            transaction_id: string;
+            /** Voided */
+            voided: boolean;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -207,6 +618,13 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** VoidTransactionCommand */
+        VoidTransactionCommand: {
+            /** Expected Version */
+            expected_version: number;
+            /** Reason */
+            reason: string;
         };
         /** WalletIdentityModel */
         WalletIdentityModel: {
@@ -347,6 +765,267 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_budget_api_v1_finance_budgets_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BudgetCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_category_api_v1_finance_categories_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    overview_api_v1_finance_overview_get: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: {
+                Authorization?: string | null;
+                Origin?: string | null;
+                Referer?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceOverviewModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_recurring_entry_api_v1_finance_recurring_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecurringEntryCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deactivate_recurring_entry_api_v1_finance_recurring__recurring_entry_id__deactivate_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path: {
+                recurring_entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeactivateRecurringCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_transaction_api_v1_finance_transactions_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    void_transaction_api_v1_finance_transactions__transaction_id__void_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoidTransactionCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
             };
             /** @description Validation Error */
             422: {

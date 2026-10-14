@@ -1,6 +1,6 @@
 # REST API Contract
 
-Status: Milestone 2 authentication boundary implemented; later feature endpoints remain milestone-ordered
+Status: Milestone 3 authentication and Personal Finance boundaries implemented; later feature endpoints remain milestone-ordered
 
 ## Boundary
 
@@ -70,6 +70,18 @@ The backend verifies the signature, public-key/address relationship, action, aud
 - `DELETE /api/v1/auth/sessions/current` revokes the session and expires the refresh cookie.
 
 Access tokens are opaque and held only in API/browser process memory. Refresh tokens use an HttpOnly, SameSite=Strict cookie; only their SHA-256 hashes are persisted in ResilientDB. Challenges are also persisted only as hashes. Challenge use, intent nonces, refresh rotation, and logout append durable use or revocation markers. The checked local environment permits `https://app.resfinance.local` and `http://127.0.0.1:5173` exactly.
+
+## Personal Finance
+
+- `GET /api/v1/finance/overview?month=YYYY-MM` returns the authenticated user's rebuilt monthly summary, categories, transactions, budgets, recurring entries, read-only obligations, and provenance.
+- `POST /api/v1/finance/categories` appends an income or expense category.
+- `POST /api/v1/finance/transactions` appends an integer-cent USD income or expense.
+- `POST /api/v1/finance/transactions/{id}/void` appends a compensating void event.
+- `POST /api/v1/finance/budgets` appends or replaces the named category-month budget in the projection.
+- `POST /api/v1/finance/recurring` appends a monthly recurring entry.
+- `POST /api/v1/finance/recurring/{id}/deactivate` appends a deactivation event.
+
+There is intentionally no public obligation-write endpoint. Receivables and payables enter Finance only through the application service after confirmed ResContract state, with a source event and contract receipt. Finance responses expose formula version `finance-savings-v1`, a deterministic savings calculation ID, projection freshness, and source event IDs.
 
 ## Errors
 

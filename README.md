@@ -2,7 +2,7 @@
 
 ResFinance is a planned wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
 
-> **Project status:** Milestones 0, 1, and 2 are complete for local, non-commercial development and research. The feasibility gates, encrypted ResilientDB platform foundation, hardened ResVault-compatible extension, and wallet authentication boundary pass. Milestone 3 Personal Finance work is next. Cloud and production deployment remain on hold.
+> **Project status:** Milestones 0–3 are complete for local, non-commercial development and research. The feasibility gates, encrypted ResilientDB platform foundation, hardened ResVault-compatible extension, wallet authentication, and Personal Finance dashboard pass. Milestone 4 Groups and contractual settlement work is next. Cloud and production deployment remain on hold.
 
 ## What the product will do
 
@@ -84,7 +84,7 @@ Research runs will use chronological walk-forward evaluation, calibrated forecas
 
 ## Current development status
 
-Milestone 0 is complete for the declared local, non-commercial research scope. The repository pins ResilientDB, ResContract, ResVault, the toolchain, and the initial local models; defines the REST, security, and research contracts; and provides a reproducible feasibility harness. A source-pinned, labeled ARM64 image and documented compatibility patch passed four-replica persistence/failure tests, a real 100 MiB round trip, persistent ResContract lifecycle tests, and the signed REST-to-contract-to-event slice. The official ResVault implementation failed its audit, while the disposable M0 signer proved the approval and non-disclosure boundary; the persistent hardened extension remains Milestone 2 work.
+Milestone 0 is complete for the declared local, non-commercial research scope. The repository pins ResilientDB, ResContract, ResVault, the toolchain, and the initial local models; defines the REST, security, and research contracts; and provides a reproducible feasibility harness. A source-pinned, labeled ARM64 image and documented compatibility patch passed four-replica persistence/failure tests, a real 100 MiB round trip, persistent ResContract lifecycle tests, and the signed REST-to-contract-to-event slice. The official ResVault implementation failed its audit, while the disposable M0 signer proved the approval and non-disclosure boundary; Milestone 2 subsequently delivered the persistent hardened extension.
 
 Coin Metrics daily prices cover BTC/ETH/SOL, while daily active-address and transaction counts cover BTC/ETH for the full fixed research period. DefiLlama SOL TVL and stablecoin-supply proxies reach the research boundary with their earlier and internal gaps explicitly masked. Bounded GDELT daily aggregates cover sentiment and were hash-verified through real ResilientDB. Provider terms are recorded for the declared research-only scope. See the [Milestone 0 feasibility status](docs/feasibility.md) and [provider terms review](docs/provider-terms-review.md).
 
@@ -93,6 +93,8 @@ Cloud and production deployment are intentionally deferred. Completing the local
 Milestone 1 adds the strict React/Vite and FastAPI foundations, checked OpenAPI-generated client types, RFC 9457 errors, typed provider ports, AES-256-GCM event/blob repositories, idempotency and projection rebuilds, and a four-replica private Compose topology with a separate ResilientDB client proxy. The real-stack acceptance test passed encrypted write, full restart, readback, rebuild, and deduplication without another database. See the [Milestone 1 platform foundation](docs/milestone1-platform-foundation.md).
 
 Milestone 2 adds the hardened Manifest V3 ResVault-compatible extension, Argon2id/AES-256-GCM encrypted seed custody, exact-origin approval/signing, challenge login, memory-only access tokens, ResilientDB refresh-session hashes, rotation, replay defense, and logout revocation. The authentication state survived a full four-replica restart, and the rebuilt live FastAPI container passed the complete HTTP flow through its pinned native ResilientDB client. See the [Milestone 2 wallet and authentication evidence](docs/milestone2-wallet-authentication.md).
+
+Milestone 3 adds the authenticated Personal Finance dashboard and encrypted append-only finance domain: categories, income and expenses, compensating voids, monthly budgets and alerts, recurring entries, read-only contract-backed receivable/payable projections, exact integer-cent summaries, and the versioned `finance-savings-v1` calculation. The projection rebuilt identically after a full four-replica restart, the live FastAPI container passed authenticated native-ResilientDB writes and reads, and Chromium Playwright reproduced balances, budget alerts, savings, and provenance. See the [Milestone 3 Personal Finance evidence](docs/milestone3-personal-finance.md).
 
 ## Local verification
 
@@ -109,6 +111,8 @@ npm run lint
 npm run format:check
 npm test
 npm run build
+npx playwright install chromium
+npm run test:e2e
 
 cd ../resvault
 npm ci
@@ -130,6 +134,10 @@ docker compose --profile tools up -d --build \
 .venv/bin/python -m scripts.milestone2.run_auth_acceptance
 docker compose --profile app up -d --build api
 .venv/bin/python -m scripts.milestone2.run_http_auth_acceptance
+
+.venv/bin/python -m scripts.milestone3.run_finance_acceptance \
+  --output config/milestone3-local-attestation.json
+.venv/bin/python -m scripts.milestone3.run_http_finance_acceptance
 ```
 
 ## Repository layout
@@ -151,6 +159,7 @@ docs/         Product, architecture, delivery, and development references
 - [Milestone 0 feasibility status](docs/feasibility.md)
 - [Milestone 1 platform foundation](docs/milestone1-platform-foundation.md)
 - [Milestone 2 wallet and authentication](docs/milestone2-wallet-authentication.md)
+- [Milestone 3 Personal Finance dashboard](docs/milestone3-personal-finance.md)
 - [REST API contract](docs/rest-api-contract.md)
 - [Security contract](docs/security.md)
 - [Research protocol](docs/research-protocol.md)

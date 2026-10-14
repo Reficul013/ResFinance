@@ -22,6 +22,7 @@ interface Authentication {
   message: string;
   identity: WalletIdentity | null;
   actorAddress: string | null;
+  accessToken: string | null;
   connect(): Promise<void>;
   logout(): Promise<void>;
 }
@@ -127,5 +128,13 @@ export function useAuthentication(): Authentication {
     }
   }, [accessToken, inspectWallet]);
 
-  return { state, message, identity, actorAddress, connect, logout };
+  return {
+    state,
+    message,
+    identity,
+    actorAddress,
+    accessToken,
+    connect,
+    logout,
+  };
 }

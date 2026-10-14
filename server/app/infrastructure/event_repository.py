@@ -40,34 +40,10 @@ class EncryptedEventRepository:
         self._clock = clock
 
     def append(self, command: AppendEventCommand) -> AppendResult:
-        command_document = {
-            "tenant_id": command.tenant_id,
-            "actor_id": command.actor_id,
-            "command_type": command.command_type,
-            "event_type": command.event_type,
-            "aggregate_type": command.aggregate_type,
-            "aggregate_id": command.aggregate_id,
-            "expected_version": command.expected_version,
-            "payload": command.payload,
-            "source_references": list(command.source_references),
-            "contract_receipt": command.contract_receipt,
-        }
-        command_hash = hashlib.sha256(canonical_json_bytes(command_document)).hexdigest()
-        idempotency_hash = hashlib.sha256(command.idempotency_key.encode()).hexdigest()
-        command_key = (
-            f"cmd:{command.tenant_id}:{command.command_type}:{idempotency_hash}"
-        )
-        previous = self._store.get(command_key)
-        if previous is not None:
-            record = self._load_object(previous, "idempotency record")
-            if record.get("command_hash") != command_hash:
-                raise IdempotencyConflict(
-                    "idempotency key was previously used for a different command"
-                )
-            event_key = record.get("event_key")
-            if not isinstance(event_key, str):
-                raise CorruptEventError("idempotency record has no event key")
-            return AppendResult(event=self._load_event(event_key), deduplicated=True)
+        previous_result = self.find_idempotent(command)
+        if previous_result is not None:
+            return previous_result
+        command_hash, idempotency_hash, command_key = self._command_identity(command)
 
         stream = self.load_stream(
             tenant_id=command.tenant_id,
@@ -129,6 +105,42 @@ class EncryptedEventRepository:
             ),
         )
         return AppendResult(event=self._decode_event(stored_event), deduplicated=False)
+
+    def find_idempotent(self, command: AppendEventCommand) -> AppendResult | None:
+        command_hash, _, command_key = self._command_identity(command)
+        previous = self._store.get(command_key)
+        if previous is None:
+            return None
+        record = self._load_object(previous, "idempotency record")
+        if record.get("command_hash") != command_hash:
+            raise IdempotencyConflict(
+                "idempotency key was previously used for a different command"
+            )
+        event_key = record.get("event_key")
+        if not isinstance(event_key, str):
+            raise CorruptEventError("idempotency record has no event key")
+        return AppendResult(event=self._load_event(event_key), deduplicated=True)
+
+    @staticmethod
+    def _command_identity(command: AppendEventCommand) -> tuple[str, str, str]:
+        command_document = {
+            "tenant_id": command.tenant_id,
+            "actor_id": command.actor_id,
+            "command_type": command.command_type,
+            "event_type": command.event_type,
+            "aggregate_type": command.aggregate_type,
+            "aggregate_id": command.aggregate_id,
+            "expected_version": command.expected_version,
+            "payload": command.payload,
+            "source_references": list(command.source_references),
+            "contract_receipt": command.contract_receipt,
+        }
+        command_hash = hashlib.sha256(canonical_json_bytes(command_document)).hexdigest()
+        idempotency_hash = hashlib.sha256(command.idempotency_key.encode()).hexdigest()
+        command_key = (
+            f"cmd:{command.tenant_id}:{command.command_type}:{idempotency_hash}"
+        )
+        return command_hash, idempotency_hash, command_key
 
     def load_stream(
         self, *, tenant_id: str, aggregate_type: str, aggregate_id: str

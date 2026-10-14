@@ -63,6 +63,12 @@ jobs:
       - name: Build
         working-directory: client
         run: npm run build
+      - name: Install Playwright Chromium
+        working-directory: client
+        run: npx playwright install --with-deps chromium
+      - name: Browser acceptance
+        working-directory: client
+        run: npm run test:e2e
 
   resvault:
     runs-on: ubuntu-latest

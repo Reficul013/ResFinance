@@ -16,5 +16,6 @@ COPY infra/resilientdb/client.config /config/client.config
 COPY server /app/server
 ENV RESFINANCE_RESDB_TOOL=/usr/local/bin/kv_service_tools \
     RESFINANCE_RESDB_CONFIG=/config/client.config \
+    RESFINANCE_EVENT_KEY_FILE=/certs/finance-event.key \
     RESFINANCE_SECURE_COOKIE=false
 CMD ["uvicorn", "server.app.main:app", "--host", "0.0.0.0", "--port", "8000"]

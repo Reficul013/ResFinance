@@ -4,12 +4,19 @@ set -euo pipefail
 readonly CERT_DIR="/certs"
 readonly KEYGEN="/app/bazel-bin/tools/key_generator_tools"
 readonly CERTGEN="/app/bazel-bin/tools/certificate_tools"
+readonly FINANCE_EVENT_KEY="${CERT_DIR}/finance-event.key"
+
+mkdir -p "${CERT_DIR}"
+
+if [[ ! -f "${FINANCE_EVENT_KEY}" ]]; then
+  head -c 32 /dev/urandom > "${FINANCE_EVENT_KEY}"
+  chmod 600 "${FINANCE_EVENT_KEY}"
+fi
 
 if [[ -f "${CERT_DIR}/cert_5.cert" ]]; then
   exit 0
 fi
 
-mkdir -p "${CERT_DIR}"
 "${KEYGEN}" "${CERT_DIR}/admin"
 
 ips=("172.28.0.11" "172.28.0.12" "172.28.0.13" "172.28.0.14" "172.28.0.10")

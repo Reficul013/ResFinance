@@ -144,6 +144,10 @@ services:
         condition: service_healthy
       resdb-proxy:
         condition: service_healthy
+    environment:
+      RESFINANCE_EVENT_KEY_FILE: /certs/finance-event.key
+    volumes:
+      - resdb-certs:/certs:ro
     read_only: true
     tmpfs:
       - /tmp

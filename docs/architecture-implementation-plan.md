@@ -2,9 +2,9 @@
 
 Status: Approved planning baseline for local implementation; cloud deployment is on hold
 
-Last reviewed: 2026-10-13
+Last reviewed: 2026-10-14
 
-Implementation status: Milestones 0, 1, and 2 passed for local, non-commercial development and research; Milestone 3 may begin
+Implementation status: Milestones 0, 1, 2, and 3 passed for local, non-commercial development and research; Milestone 4 may begin
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
@@ -345,6 +345,8 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 **Acceptance:** approved challenges authenticate; all altered or replayed intents fail; automated inspection finds no key leakage.
 
 ### Milestone 3 — Personal Finance dashboard
+
+**Status:** complete for local development; evidence is recorded in [`milestone3-personal-finance.md`](milestone3-personal-finance.md).
 
 - Implement income/expense events, categories, budgets, recurring entries, summaries, savings calculation, and receivable/payable projections.
 - Build accessible charts, validation, empty/loading/error states, and provenance views.
