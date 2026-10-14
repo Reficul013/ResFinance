@@ -1,0 +1,73 @@
+{
+  "adaptive_metrics": {
+    "annualized_sharpe": -5.9469637871,
+    "brier_score": 0.2532626987,
+    "directional_accuracy": 0.3386666775,
+    "interval_coverage": 0.9066666961,
+    "interval_mean_width": 0.1695764363,
+    "mae": 0.0483409762,
+    "maximum_drawdown": -0.9838511944,
+    "rmse": 0.0591869392,
+    "sample_count": 75,
+    "transaction_cost_mean_return": {
+      "0": -0.0104670124,
+      "10": -0.0114670126,
+      "25": -0.0129670128
+    }
+  },
+  "artifact_count": 39,
+  "artifact_restore_verified": true,
+  "assets": [
+    "BTC",
+    "ETH",
+    "SOL"
+  ],
+  "author_repository_code_copied": false,
+  "completed_at_utc": "2026-10-14T21:31:43.580916Z",
+  "dataset_hash": "2c11ce17e3a80f9efe84b579dc1ff9c533de24d19b2da2b32be1cf50266d576d",
+  "embargo_days": 15,
+  "first_manifest_key": "run:e47b96c929914a658fbe0cba5a8ade10-a:manifest",
+  "first_run_id": "e47b96c929914a658fbe0cba5a8ade10-a",
+  "fold_count": 5,
+  "naive_metrics": {
+    "annualized_sharpe": 0.0,
+    "brier_score": 0.25,
+    "directional_accuracy": 0.6933333278,
+    "interval_coverage": 0.6293333173,
+    "interval_mean_width": 0.0669007376,
+    "mae": 0.0224560387,
+    "maximum_drawdown": 0.0,
+    "rmse": 0.0298363343,
+    "sample_count": 75,
+    "transaction_cost_mean_return": {
+      "0": 0.0,
+      "10": 0.0,
+      "25": 0.0
+    }
+  },
+  "persistent_database": "Apache ResilientDB LevelDB backend",
+  "prediction_hash": "c80a13add27f3685a257a2ffcf666536e9d90baf1e728e27a7b3ce2d67cf97f3",
+  "promotion_reason": "model does not satisfy promotion criteria: mae_ratio",
+  "promotion_rejected_by_explicit_criteria": true,
+  "repeat_persistence_idempotent": true,
+  "repeated_dataset_hash_identical": true,
+  "repeated_prediction_hash_identical": true,
+  "reported_models": [
+    "naive-zero-return",
+    "linear-ridge",
+    "lstm-sequence",
+    "market-only",
+    "fixed-equal-fusion",
+    "adaptive-gating",
+    "without-market",
+    "without-sentiment",
+    "without-on-chain"
+  ],
+  "required_comparisons_complete": true,
+  "schema_version": 1,
+  "scope": "local-deterministic-synthetic-ml-on-real-resilientdb",
+  "second_manifest_key": "run:e47b96c929914a658fbe0cba5a8ade10-b:manifest",
+  "second_run_id": "e47b96c929914a658fbe0cba5a8ade10-b",
+  "statistical_significance_claim": null,
+  "three_asset_adaptation": true
+}
