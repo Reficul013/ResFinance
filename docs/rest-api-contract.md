@@ -1,6 +1,6 @@
 # REST API Contract
 
-Status: Milestone 3 authentication and Personal Finance boundaries implemented; later feature endpoints remain milestone-ordered
+Status: Milestone 4 authentication, Personal Finance, Groups, and contractual-settlement boundaries implemented; later feature endpoints remain milestone-ordered
 
 ## Boundary
 
@@ -82,6 +82,19 @@ Access tokens are opaque and held only in API/browser process memory. Refresh to
 - `POST /api/v1/finance/recurring/{id}/deactivate` appends a deactivation event.
 
 There is intentionally no public obligation-write endpoint. Receivables and payables enter Finance only through the application service after confirmed ResContract state, with a source event and contract receipt. Finance responses expose formula version `finance-savings-v1`, a deterministic savings calculation ID, projection freshness, and source event IDs.
+
+## Groups and contractual settlement
+
+- `GET /api/v1/groups` lists the authenticated wallet's group projections.
+- `POST /api/v1/groups` creates a group and owner membership.
+- `GET /api/v1/groups/{group_id}` returns members, expenses, obligations, internal-credit balances, notifications, and event provenance.
+- `POST /api/v1/groups/{group_id}/members` adds a wallet member; only the owner may call it.
+- `POST /api/v1/groups/{group_id}/expenses` validates an exact integer-cent split and requires the payer's `split.approve` signed intent before creating contract obligations.
+- `POST /api/v1/groups/{group_id}/obligations/{obligation_id}/decision` requires the debtor's signed approval or rejection.
+- `POST /api/v1/groups/{group_id}/credits` requires a `credits.fund` signed intent and issues internal accounting credits only.
+- `POST /api/v1/groups/{group_id}/obligations/{obligation_id}/settlements` requires the debtor's `settlement.authorize` signed intent and accepts a positive partial or full outstanding amount.
+
+Every Group write is append-only, encrypted before ResilientDB, version checked, and idempotency keyed. Contract receipts are verified against live obligation and credit state before Finance changes. Responses label credits as non-redeemable, non-monetary, and without cash value.
 
 ## Errors
 

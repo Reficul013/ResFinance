@@ -339,6 +339,47 @@ class FinanceService:
                 raise FinanceRejected("obligation ID already exists")
             return self._repository.append(command)
 
+    def record_confirmed_obligation_settlement(
+        self,
+        *,
+        actor_address: str,
+        idempotency_key: str,
+        expected_version: int,
+        obligation_id: str,
+        amount_minor_units: int,
+        source_event_id: str,
+        contract_receipt: str,
+    ) -> AppendResult:
+        """Application-only propagation after a confirmed ResContract receipt."""
+        obligation_id = _identifier("obligation_id", obligation_id)
+        source_event_id = _identifier("source_event_id", source_event_id)
+        contract_receipt = _identifier("contract_receipt", contract_receipt)
+        amount_minor_units = _money(amount_minor_units)
+        command = self._command(
+            actor_address=actor_address,
+            idempotency_key=idempotency_key,
+            expected_version=expected_version,
+            command_type="finance.record-confirmed-obligation-settlement",
+            event_type="finance.obligation-settled",
+            payload={
+                "obligation_id": obligation_id,
+                "amount_minor_units": amount_minor_units,
+                "currency": "USD",
+            },
+            source_references=(source_event_id,),
+            contract_receipt=contract_receipt,
+        )
+        with self._lock:
+            if (existing := self._repository.find_idempotent(command)) is not None:
+                return existing
+            projection = self._projection(actor_address)
+            obligation = projection.obligations.get(obligation_id)
+            if obligation is None:
+                raise FinanceRejected("obligation does not exist")
+            if amount_minor_units > obligation.outstanding_minor_units:
+                raise FinanceRejected("settlement exceeds outstanding obligation")
+            return self._repository.append(command)
+
     def overview(self, *, actor_address: str, month: str) -> FinanceOverview:
         month = _month(month)
         projection = self._projection(actor_address)

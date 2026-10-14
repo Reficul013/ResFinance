@@ -2,7 +2,7 @@
 
 ResFinance is a planned wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
 
-> **Project status:** Milestones 0–3 are complete for local, non-commercial development and research. The feasibility gates, encrypted ResilientDB platform foundation, hardened ResVault-compatible extension, wallet authentication, and Personal Finance dashboard pass. Milestone 4 Groups and contractual settlement work is next. Cloud and production deployment remain on hold.
+> **Project status:** Milestones 0–4 are complete for local, non-commercial development and research. The feasibility gates, encrypted ResilientDB platform foundation, hardened ResVault-compatible extension, wallet authentication, Personal Finance dashboard, and Groups contractual-settlement workflow pass. Milestone 5 crypto ingestion and feature-store work is next. Cloud and production deployment remain on hold.
 
 ## What the product will do
 
@@ -96,6 +96,8 @@ Milestone 2 adds the hardened Manifest V3 ResVault-compatible extension, Argon2i
 
 Milestone 3 adds the authenticated Personal Finance dashboard and encrypted append-only finance domain: categories, income and expenses, compensating voids, monthly budgets and alerts, recurring entries, read-only contract-backed receivable/payable projections, exact integer-cent summaries, and the versioned `finance-savings-v1` calculation. The projection rebuilt identically after a full four-replica restart, the live FastAPI container passed authenticated native-ResilientDB writes and reads, and Chromium Playwright reproduced balances, budget alerts, savings, and provenance. See the [Milestone 3 Personal Finance evidence](docs/milestone3-personal-finance.md).
 
+Milestone 4 adds authenticated Groups, exact shared-expense splits, ResVault-signed participant decisions, obligation notifications, a deployed `ResFinanceSettlement.sol` state machine, non-redeemable internal credits, partial/full settlement, immutable receipts, and confirmed Finance propagation. A real-stack run recovered exactly one missing confirmation after an injected post-contract crash and a restart of every ResilientDB and ResContract process; Group and Finance balances then matched exactly. See the [Milestone 4 Groups and contractual settlement evidence](docs/milestone4-groups-settlement.md).
+
 ## Local verification
 
 ```bash
@@ -138,6 +140,11 @@ docker compose --profile app up -d --build api
 .venv/bin/python -m scripts.milestone3.run_finance_acceptance \
   --output config/milestone3-local-attestation.json
 .venv/bin/python -m scripts.milestone3.run_http_finance_acceptance
+
+docker compose --profile tools up -d --build --wait \
+  resdb-tools rescontract-tools
+.venv/bin/python -m scripts.milestone4.run_groups_acceptance \
+  --docker "$(command -v docker)" --restart
 ```
 
 ## Repository layout
@@ -160,6 +167,7 @@ docs/         Product, architecture, delivery, and development references
 - [Milestone 1 platform foundation](docs/milestone1-platform-foundation.md)
 - [Milestone 2 wallet and authentication](docs/milestone2-wallet-authentication.md)
 - [Milestone 3 Personal Finance dashboard](docs/milestone3-personal-finance.md)
+- [Milestone 4 Groups and contractual settlement](docs/milestone4-groups-settlement.md)
 - [REST API contract](docs/rest-api-contract.md)
 - [Security contract](docs/security.md)
 - [Research protocol](docs/research-protocol.md)

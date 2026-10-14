@@ -6,7 +6,8 @@ export interface WalletIdentity {
 export interface SignedIntent {
   version: 1;
   intent_id: string;
-  action: string;
+  action:
+    "auth.login" | "split.approve" | "credits.fund" | "settlement.authorize";
   actor_public_key: string;
   actor_address: string;
   resource_id: string;
@@ -15,17 +16,21 @@ export interface SignedIntent {
   issued_at: string;
   expires_at: string;
   origin: string;
-  audience: string;
-  network_id: string;
+  audience: "resfinance-api";
+  network_id: "pinned-local-network";
   signature: string;
 }
+
+export type JsonValue =
+  null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 
 export interface SignIntentRequest {
   version: 1;
   intent_id: string;
-  action: "auth.login";
+  action:
+    "auth.login" | "split.approve" | "credits.fund" | "settlement.authorize";
   resource_id: string;
-  parameters: Record<string, string>;
+  parameters: Record<string, JsonValue>;
   parameters_hash: string;
   nonce: string;
   issued_at: string;
@@ -61,7 +66,7 @@ export function lockWallet(): Promise<{ locked: boolean }> {
 }
 
 export async function hashParameters(
-  parameters: Record<string, string>,
+  parameters: Record<string, JsonValue>,
 ): Promise<string> {
   const bytes = new TextEncoder().encode(canonicalJson(parameters));
   const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -116,9 +121,18 @@ function sendVaultRequest<T>(
   });
 }
 
-function canonicalJson(value: Record<string, string>): string {
+function canonicalJson(value: JsonValue): string {
+  if (value === null || typeof value === "boolean")
+    return JSON.stringify(value);
+  if (typeof value === "number") {
+    if (!Number.isFinite(value))
+      throw new Error("Intent parameters must be finite");
+    return JSON.stringify(value);
+  }
+  if (typeof value === "string") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
   return `{${Object.keys(value)
     .sort()
-    .map((key) => `${JSON.stringify(key)}:${JSON.stringify(value[key])}`)
+    .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key]!)}`)
     .join(",")}}`;
 }

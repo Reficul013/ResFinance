@@ -14,6 +14,22 @@ x-resdb-common: &resdb-common
     resdb-certs:
       condition: service_completed_successfully
 
+x-rescontract-common: &rescontract-common
+  image: resfinance/resilientdb:4de5cb4-m1
+  platform: linux/arm64
+  entrypoint: ["/bin/bash", "-lc"]
+  working_dir: /data
+  restart: unless-stopped
+  healthcheck:
+    test: ["CMD-SHELL", "pgrep -f '/app/bazel-bin/service/contract/contract_service' >/dev/null"]
+    interval: 5s
+    timeout: 3s
+    retries: 20
+    start_period: 10s
+  depends_on:
+    rescontract-certs:
+      condition: service_completed_successfully
+
 services:
   resdb-certs:
     image: resfinance/resilientdb:4de5cb4-m1
@@ -122,6 +138,158 @@ services:
       resdb-proxy:
         condition: service_healthy
 
+  rescontract-compile:
+    image: ethereum/solc@sha256:b3b83d65e1eae916b58e0c19b9051afa7ffc93e00f8210196639dee794a2a98a
+    platform: linux/amd64
+    restart: "no"
+    command:
+      - --evm-version
+      - homestead
+      - --combined-json
+      - bin,hashes
+      - --optimize
+      - --overwrite
+      - -o
+      - /deployment
+      - /src/blockchain/contracts/ResFinanceSettlement.sol
+    volumes:
+      - ./blockchain/contracts:/src/blockchain/contracts:ro
+      - rescontract-deployment:/deployment
+
+  rescontract-certs:
+    image: resfinance/resilientdb:4de5cb4-m1
+    entrypoint: ["/bin/bash", "/config/generate_dev_certificates.sh"]
+    restart: "no"
+    volumes:
+      - ./infra/rescontract/generate_dev_certificates.sh:/config/generate_dev_certificates.sh:ro
+      - rescontract-certs:/certs
+
+  rescontract-1:
+    <<: *rescontract-common
+    command:
+      - >-
+        exec /app/bazel-bin/service/contract/contract_service
+        /config/server.config
+        /certs/node1.key.pri
+        /certs/cert_1.cert
+    volumes:
+      - ./infra/rescontract/server.config:/config/server.config:ro
+      - rescontract-1-data:/data
+      - rescontract-certs:/certs:ro
+    networks:
+      rescontract-private:
+        ipv4_address: 172.29.0.11
+
+  rescontract-2:
+    <<: *rescontract-common
+    command:
+      - >-
+        exec /app/bazel-bin/service/contract/contract_service
+        /config/server.config
+        /certs/node2.key.pri
+        /certs/cert_2.cert
+    volumes:
+      - ./infra/rescontract/server.config:/config/server.config:ro
+      - rescontract-2-data:/data
+      - rescontract-certs:/certs:ro
+    networks:
+      rescontract-private:
+        ipv4_address: 172.29.0.12
+
+  rescontract-3:
+    <<: *rescontract-common
+    command:
+      - >-
+        exec /app/bazel-bin/service/contract/contract_service
+        /config/server.config
+        /certs/node3.key.pri
+        /certs/cert_3.cert
+    volumes:
+      - ./infra/rescontract/server.config:/config/server.config:ro
+      - rescontract-3-data:/data
+      - rescontract-certs:/certs:ro
+    networks:
+      rescontract-private:
+        ipv4_address: 172.29.0.13
+
+  rescontract-4:
+    <<: *rescontract-common
+    command:
+      - >-
+        exec /app/bazel-bin/service/contract/contract_service
+        /config/server.config
+        /certs/node4.key.pri
+        /certs/cert_4.cert
+    volumes:
+      - ./infra/rescontract/server.config:/config/server.config:ro
+      - rescontract-4-data:/data
+      - rescontract-certs:/certs:ro
+    networks:
+      rescontract-private:
+        ipv4_address: 172.29.0.14
+
+  rescontract-proxy:
+    <<: *rescontract-common
+    command:
+      - >-
+        exec /app/bazel-bin/service/contract/contract_service
+        /config/server.config
+        /certs/node5.key.pri
+        /certs/cert_5.cert
+    volumes:
+      - ./infra/rescontract/server.config:/config/server.config:ro
+      - rescontract-certs:/certs:ro
+    networks:
+      rescontract-private:
+        ipv4_address: 172.29.0.10
+
+  rescontract-init:
+    image: resfinance/resilientdb:4de5cb4-m1
+    platform: linux/arm64
+    entrypoint: ["python3", "/scripts/deploy_contract.py"]
+    restart: "no"
+    environment:
+      RESFINANCE_RESCONTRACT_COMPILED: /deployment/combined.json
+      RESFINANCE_RESCONTRACT_REGISTRY: /deployment/registry.json
+    volumes:
+      - ./infra/rescontract/client.config:/config/client.config:ro
+      - ./scripts/milestone4/deploy_contract.py:/scripts/deploy_contract.py:ro
+      - rescontract-deployment:/deployment
+    networks:
+      rescontract-private:
+        ipv4_address: 172.29.0.20
+    depends_on:
+      rescontract-compile:
+        condition: service_completed_successfully
+      rescontract-1:
+        condition: service_healthy
+      rescontract-2:
+        condition: service_healthy
+      rescontract-3:
+        condition: service_healthy
+      rescontract-4:
+        condition: service_healthy
+      rescontract-proxy:
+        condition: service_healthy
+
+  rescontract-tools:
+    <<: *rescontract-common
+    container_name: resfinance-rescontract-tools
+    profiles: ["tools"]
+    command: ["tail -f /dev/null"]
+    restart: "no"
+    healthcheck:
+      disable: true
+    volumes:
+      - ./infra/rescontract/client.config:/config/client.config:ro
+      - rescontract-deployment:/deployment:ro
+    networks:
+      rescontract-private:
+        ipv4_address: 172.29.0.21
+    depends_on:
+      rescontract-init:
+        condition: service_completed_successfully
+
   api:
     platform: linux/arm64
     build:
@@ -133,6 +301,7 @@ services:
     networks:
       - app-public
       - resdb-private
+      - rescontract-private
     depends_on:
       resdb-1:
         condition: service_healthy
@@ -144,10 +313,13 @@ services:
         condition: service_healthy
       resdb-proxy:
         condition: service_healthy
+      rescontract-init:
+        condition: service_completed_successfully
     environment:
       RESFINANCE_EVENT_KEY_FILE: /certs/finance-event.key
     volumes:
       - resdb-certs:/certs:ro
+      - rescontract-deployment:/deployment:ro
     read_only: true
     tmpfs:
       - /tmp
@@ -161,6 +333,11 @@ networks:
     ipam:
       config:
         - subnet: 172.28.0.0/24
+  rescontract-private:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.29.0.0/24
 
 volumes:
   resdb-certs:
@@ -168,3 +345,9 @@ volumes:
   resdb-2-data:
   resdb-3-data:
   resdb-4-data:
+  rescontract-certs:
+  rescontract-deployment:
+  rescontract-1-data:
+  rescontract-2-data:
+  rescontract-3-data:
+  rescontract-4-data:

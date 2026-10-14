@@ -1,6 +1,34 @@
 {
   "components": {
     "schemas": {
+      "AddMemberCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "display_name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Display Name",
+            "type": "string"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "member_address": {
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "title": "Member Address",
+            "type": "string"
+          }
+        },
+        "required": [
+          "member_address",
+          "display_name",
+          "expected_version"
+        ],
+        "title": "AddMemberCommand",
+        "type": "object"
+      },
       "BudgetCommand": {
         "additionalProperties": false,
         "properties": {
@@ -250,6 +278,110 @@
         "title": "ChallengeResponse",
         "type": "object"
       },
+      "CreateExpenseCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "description": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due On"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "expense_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Expense Id",
+            "type": "string"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/server__app__api__groups__SignedIntentModel"
+          },
+          "occurred_on": {
+            "format": "date",
+            "title": "Occurred On",
+            "type": "string"
+          },
+          "payer_address": {
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "title": "Payer Address",
+            "type": "string"
+          },
+          "shares": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MoneyModel"
+            },
+            "minProperties": 1,
+            "title": "Shares",
+            "type": "object"
+          }
+        },
+        "required": [
+          "expense_id",
+          "payer_address",
+          "description",
+          "amount",
+          "occurred_on",
+          "shares",
+          "expected_version",
+          "intent"
+        ],
+        "title": "CreateExpenseCommand",
+        "type": "object"
+      },
+      "CreateGroupCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "group_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Group Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "owner_display_name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Owner Display Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "group_id",
+          "name",
+          "owner_display_name",
+          "expected_version"
+        ],
+        "title": "CreateGroupCommand",
+        "type": "object"
+      },
       "DeactivateRecurringCommand": {
         "additionalProperties": false,
         "properties": {
@@ -356,6 +488,338 @@
           "provenance"
         ],
         "title": "FinanceOverviewModel",
+        "type": "object"
+      },
+      "FundCreditsCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/server__app__api__groups__SignedIntentModel"
+          }
+        },
+        "required": [
+          "amount",
+          "expected_version",
+          "intent"
+        ],
+        "title": "FundCreditsCommand",
+        "type": "object"
+      },
+      "GroupExpenseModel": {
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "contract_receipts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Contract Receipts",
+            "type": "array"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "expense_id": {
+            "title": "Expense Id",
+            "type": "string"
+          },
+          "obligation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Obligation Ids",
+            "type": "array"
+          },
+          "occurred_on": {
+            "format": "date",
+            "title": "Occurred On",
+            "type": "string"
+          },
+          "payer_address": {
+            "title": "Payer Address",
+            "type": "string"
+          },
+          "shares": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MoneyModel"
+            },
+            "title": "Shares",
+            "type": "object"
+          },
+          "source_event_id": {
+            "title": "Source Event Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expense_id",
+          "payer_address",
+          "description",
+          "amount",
+          "occurred_on",
+          "shares",
+          "obligation_ids",
+          "source_event_id",
+          "contract_receipts"
+        ],
+        "title": "GroupExpenseModel",
+        "type": "object"
+      },
+      "GroupMemberModel": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "actor_address": {
+            "title": "Actor Address",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "source_event_id": {
+            "title": "Source Event Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor_address",
+          "display_name",
+          "active",
+          "source_event_id"
+        ],
+        "title": "GroupMemberModel",
+        "type": "object"
+      },
+      "GroupObligationModel": {
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "contract_receipts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Contract Receipts",
+            "type": "array"
+          },
+          "creditor_address": {
+            "title": "Creditor Address",
+            "type": "string"
+          },
+          "debtor_address": {
+            "title": "Debtor Address",
+            "type": "string"
+          },
+          "due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due On"
+          },
+          "expense_id": {
+            "title": "Expense Id",
+            "type": "string"
+          },
+          "obligation_id": {
+            "title": "Obligation Id",
+            "type": "string"
+          },
+          "outstanding_amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "settled_amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
+          "source_event_id": {
+            "title": "Source Event Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "open",
+              "partially_settled",
+              "settled",
+              "rejected",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "obligation_id",
+          "expense_id",
+          "creditor_address",
+          "debtor_address",
+          "amount",
+          "settled_amount",
+          "outstanding_amount",
+          "due_on",
+          "status",
+          "source_event_id",
+          "contract_receipts"
+        ],
+        "title": "GroupObligationModel",
+        "type": "object"
+      },
+      "GroupOverviewModel": {
+        "properties": {
+          "credit_balances": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MoneyModel"
+            },
+            "title": "Credit Balances",
+            "type": "object"
+          },
+          "credit_disclaimer": {
+            "const": "Internal credits are non-redeemable, non-monetary, and have no cash value.",
+            "title": "Credit Disclaimer",
+            "type": "string"
+          },
+          "expenses": {
+            "items": {
+              "$ref": "#/components/schemas/GroupExpenseModel"
+            },
+            "title": "Expenses",
+            "type": "array"
+          },
+          "group_id": {
+            "title": "Group Id",
+            "type": "string"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/GroupMemberModel"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "notifications": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationModel"
+            },
+            "title": "Notifications",
+            "type": "array"
+          },
+          "obligations": {
+            "items": {
+              "$ref": "#/components/schemas/GroupObligationModel"
+            },
+            "title": "Obligations",
+            "type": "array"
+          },
+          "owner_address": {
+            "title": "Owner Address",
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/GroupProvenanceModel"
+          }
+        },
+        "required": [
+          "group_id",
+          "name",
+          "owner_address",
+          "members",
+          "expenses",
+          "obligations",
+          "credit_balances",
+          "notifications",
+          "provenance",
+          "credit_disclaimer"
+        ],
+        "title": "GroupOverviewModel",
+        "type": "object"
+      },
+      "GroupProvenanceModel": {
+        "properties": {
+          "as_of_utc": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Utc"
+          },
+          "projection_version": {
+            "title": "Projection Version",
+            "type": "integer"
+          },
+          "source_event_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Event Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "projection_version",
+          "as_of_utc",
+          "source_event_ids"
+        ],
+        "title": "GroupProvenanceModel",
+        "type": "object"
+      },
+      "GroupSummaryModel": {
+        "properties": {
+          "group_id": {
+            "title": "Group Id",
+            "type": "string"
+          },
+          "member_count": {
+            "title": "Member Count",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "open_obligation_count": {
+            "title": "Open Obligation Count",
+            "type": "integer"
+          },
+          "projection_version": {
+            "title": "Projection Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "group_id",
+          "name",
+          "member_count",
+          "open_obligation_count",
+          "projection_version"
+        ],
+        "title": "GroupSummaryModel",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -465,6 +929,67 @@
         "title": "MonthlySummaryModel",
         "type": "object"
       },
+      "NotificationModel": {
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "notification_id": {
+            "title": "Notification Id",
+            "type": "string"
+          },
+          "recipient_address": {
+            "title": "Recipient Address",
+            "type": "string"
+          },
+          "source_event_id": {
+            "title": "Source Event Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "notification_id",
+          "recipient_address",
+          "kind",
+          "message",
+          "source_event_id"
+        ],
+        "title": "NotificationModel",
+        "type": "object"
+      },
+      "ObligationDecisionCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/server__app__api__groups__SignedIntentModel"
+          }
+        },
+        "required": [
+          "decision",
+          "expected_version",
+          "intent"
+        ],
+        "title": "ObligationDecisionCommand",
+        "type": "object"
+      },
       "ObligationModel": {
         "properties": {
           "amount": {
@@ -498,9 +1023,15 @@
             "title": "Obligation Id",
             "type": "string"
           },
+          "outstanding_amount": {
+            "$ref": "#/components/schemas/MoneyModel"
+          },
           "settled": {
             "title": "Settled",
             "type": "boolean"
+          },
+          "settled_amount": {
+            "$ref": "#/components/schemas/MoneyModel"
           },
           "source_event_id": {
             "title": "Source Event Id",
@@ -511,6 +1042,8 @@
           "obligation_id",
           "direction",
           "amount",
+          "settled_amount",
+          "outstanding_amount",
           "due_on",
           "settled",
           "source_event_id",
@@ -744,7 +1277,7 @@
             "type": "string"
           },
           "intent": {
-            "$ref": "#/components/schemas/SignedIntentModel"
+            "$ref": "#/components/schemas/server__app__api__auth__SignedIntentModel"
           }
         },
         "required": [
@@ -785,106 +1318,27 @@
         "title": "SessionResponse",
         "type": "object"
       },
-      "SignedIntentModel": {
+      "SettleObligationCommand": {
         "additionalProperties": false,
         "properties": {
-          "action": {
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Action",
-            "type": "string"
+          "amount": {
+            "$ref": "#/components/schemas/MoneyModel"
           },
-          "actor_address": {
-            "pattern": "^0x[0-9a-f]{40}$",
-            "title": "Actor Address",
-            "type": "string"
-          },
-          "actor_public_key": {
-            "maxLength": 128,
-            "minLength": 32,
-            "title": "Actor Public Key",
-            "type": "string"
-          },
-          "audience": {
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Audience",
-            "type": "string"
-          },
-          "expires_at": {
-            "format": "date-time",
-            "title": "Expires At",
-            "type": "string"
-          },
-          "intent_id": {
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Intent Id",
-            "type": "string"
-          },
-          "issued_at": {
-            "format": "date-time",
-            "title": "Issued At",
-            "type": "string"
-          },
-          "network_id": {
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Network Id",
-            "type": "string"
-          },
-          "nonce": {
-            "maxLength": 128,
-            "minLength": 16,
-            "title": "Nonce",
-            "type": "string"
-          },
-          "origin": {
-            "maxLength": 256,
-            "minLength": 1,
-            "title": "Origin",
-            "type": "string"
-          },
-          "parameters_hash": {
-            "pattern": "^[0-9a-f]{64}$",
-            "title": "Parameters Hash",
-            "type": "string"
-          },
-          "resource_id": {
-            "maxLength": 160,
-            "minLength": 1,
-            "title": "Resource Id",
-            "type": "string"
-          },
-          "signature": {
-            "maxLength": 192,
-            "minLength": 32,
-            "title": "Signature",
-            "type": "string"
-          },
-          "version": {
-            "const": 1,
-            "title": "Version",
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
             "type": "integer"
+          },
+          "intent": {
+            "$ref": "#/components/schemas/server__app__api__groups__SignedIntentModel"
           }
         },
         "required": [
-          "version",
-          "intent_id",
-          "action",
-          "actor_public_key",
-          "actor_address",
-          "resource_id",
-          "parameters_hash",
-          "nonce",
-          "issued_at",
-          "expires_at",
-          "origin",
-          "audience",
-          "network_id",
-          "signature"
+          "amount",
+          "expected_version",
+          "intent"
         ],
-        "title": "SignedIntentModel",
+        "title": "SettleObligationCommand",
         "type": "object"
       },
       "TransactionCommand": {
@@ -1098,6 +1552,204 @@
           "address"
         ],
         "title": "WalletIdentityModel",
+        "type": "object"
+      },
+      "server__app__api__auth__SignedIntentModel": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Action",
+            "type": "string"
+          },
+          "actor_address": {
+            "pattern": "^0x[0-9a-f]{40}$",
+            "title": "Actor Address",
+            "type": "string"
+          },
+          "actor_public_key": {
+            "maxLength": 128,
+            "minLength": 32,
+            "title": "Actor Public Key",
+            "type": "string"
+          },
+          "audience": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Audience",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "intent_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Intent Id",
+            "type": "string"
+          },
+          "issued_at": {
+            "format": "date-time",
+            "title": "Issued At",
+            "type": "string"
+          },
+          "network_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Network Id",
+            "type": "string"
+          },
+          "nonce": {
+            "maxLength": 128,
+            "minLength": 16,
+            "title": "Nonce",
+            "type": "string"
+          },
+          "origin": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Origin",
+            "type": "string"
+          },
+          "parameters_hash": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Parameters Hash",
+            "type": "string"
+          },
+          "resource_id": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "signature": {
+            "maxLength": 192,
+            "minLength": 32,
+            "title": "Signature",
+            "type": "string"
+          },
+          "version": {
+            "const": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "intent_id",
+          "action",
+          "actor_public_key",
+          "actor_address",
+          "resource_id",
+          "parameters_hash",
+          "nonce",
+          "issued_at",
+          "expires_at",
+          "origin",
+          "audience",
+          "network_id",
+          "signature"
+        ],
+        "title": "SignedIntentModel",
+        "type": "object"
+      },
+      "server__app__api__groups__SignedIntentModel": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "split.approve",
+              "credits.fund",
+              "settlement.authorize"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "actor_address": {
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "title": "Actor Address",
+            "type": "string"
+          },
+          "actor_public_key": {
+            "title": "Actor Public Key",
+            "type": "string"
+          },
+          "audience": {
+            "const": "resfinance-api",
+            "title": "Audience",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "intent_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Intent Id",
+            "type": "string"
+          },
+          "issued_at": {
+            "format": "date-time",
+            "title": "Issued At",
+            "type": "string"
+          },
+          "network_id": {
+            "const": "pinned-local-network",
+            "title": "Network Id",
+            "type": "string"
+          },
+          "nonce": {
+            "maxLength": 128,
+            "minLength": 16,
+            "title": "Nonce",
+            "type": "string"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "parameters_hash": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Parameters Hash",
+            "type": "string"
+          },
+          "resource_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "signature": {
+            "title": "Signature",
+            "type": "string"
+          },
+          "version": {
+            "const": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "intent_id",
+          "action",
+          "actor_public_key",
+          "actor_address",
+          "resource_id",
+          "parameters_hash",
+          "nonce",
+          "issued_at",
+          "expires_at",
+          "origin",
+          "audience",
+          "network_id",
+          "signature"
+        ],
+        "title": "SignedIntentModel",
         "type": "object"
       }
     }
@@ -1939,6 +2591,746 @@
         "summary": "Void Transaction",
         "tags": [
           "finance"
+        ]
+      }
+    },
+    "/api/v1/groups": {
+      "get": {
+        "operationId": "list_groups_api_v1_groups_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Referer",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Referer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GroupSummaryModel"
+                  },
+                  "title": "Response List Groups Api V1 Groups Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Groups",
+        "tags": [
+          "groups"
+        ]
+      },
+      "post": {
+        "operationId": "create_group_api_v1_groups_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGroupCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Group",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/v1/groups/{group_id}": {
+      "get": {
+        "operationId": "overview_api_v1_groups__group_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Referer",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Referer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupOverviewModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Overview",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/v1/groups/{group_id}/credits": {
+      "post": {
+        "operationId": "fund_credits_api_v1_groups__group_id__credits_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FundCreditsCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fund Credits",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/v1/groups/{group_id}/expenses": {
+      "post": {
+        "operationId": "create_expense_api_v1_groups__group_id__expenses_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExpenseCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Expense",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/v1/groups/{group_id}/members": {
+      "post": {
+        "operationId": "add_member_api_v1_groups__group_id__members_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddMemberCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Member",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/v1/groups/{group_id}/obligations/{obligation_id}/decision": {
+      "post": {
+        "operationId": "decide_obligation_api_v1_groups__group_id__obligations__obligation_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "obligation_id",
+            "required": true,
+            "schema": {
+              "title": "Obligation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObligationDecisionCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decide Obligation",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/v1/groups/{group_id}/obligations/{obligation_id}/settlements": {
+      "post": {
+        "operationId": "settle_obligation_api_v1_groups__group_id__obligations__obligation_id__settlements_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "obligation_id",
+            "required": true,
+            "schema": {
+              "title": "Obligation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettleObligationCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Settle Obligation",
+        "tags": [
+          "groups"
         ]
       }
     },

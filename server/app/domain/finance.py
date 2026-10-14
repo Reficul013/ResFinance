@@ -75,10 +75,18 @@ class Obligation:
     obligation_id: str
     direction: ObligationDirection
     amount_minor_units: int
+    settled_minor_units: int
     due_on: date | None
-    settled: bool
     source_event_id: str
     contract_receipt: str
+
+    @property
+    def settled(self) -> bool:
+        return self.settled_minor_units == self.amount_minor_units
+
+    @property
+    def outstanding_minor_units(self) -> int:
+        return self.amount_minor_units - self.settled_minor_units
 
 
 @dataclass(frozen=True)
@@ -217,8 +225,8 @@ def reduce_finance_event(
             obligation_id=obligation_id,
             direction=ObligationDirection(_text(payload, "direction")),
             amount_minor_units=_positive_money(payload),
+            settled_minor_units=0,
             due_on=_parse_date(due_on) if due_on is not None else None,
-            settled=False,
             source_event_id=event.event_id,
             contract_receipt=event.contract_receipt,
         )
@@ -227,9 +235,13 @@ def reduce_finance_event(
         obligation = obligations.get(obligation_id)
         if obligation is None or obligation.settled or event.contract_receipt is None:
             raise FinanceProjectionError("obligation cannot be settled")
+        amount = _positive_money(payload, field_name="amount_minor_units")
+        settled_minor_units = obligation.settled_minor_units + amount
+        if settled_minor_units > obligation.amount_minor_units:
+            raise FinanceProjectionError("obligation settlement exceeds outstanding amount")
         obligations[obligation_id] = replace(
             obligation,
-            settled=True,
+            settled_minor_units=settled_minor_units,
             source_event_id=event.event_id,
             contract_receipt=event.contract_receipt,
         )
@@ -300,12 +312,12 @@ def summarize_month(
         )
     ]
     receivable = sum(
-        item.amount_minor_units
+        item.outstanding_minor_units
         for item in due_obligations
         if item.direction == ObligationDirection.RECEIVABLE
     )
     payable = sum(
-        item.amount_minor_units
+        item.outstanding_minor_units
         for item in due_obligations
         if item.direction == ObligationDirection.PAYABLE
     )

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "scope": "local-development-only",
+  "upstream_commit": "4de5cb43686276ace4307f44839a1de920ab524a",
+  "solidity": {
+    "compiler": "0.8.28",
+    "compiler_image": "ethereum/solc@sha256:b3b83d65e1eae916b58e0c19b9051afa7ffc93e00f8210196639dee794a2a98a",
+    "compiled_sha256": "1e7b9fd350785c75676b077378f7532b999548dc01db7475cbda6bb954ea5092",
+    "contract": "ResFinanceSettlement",
+    "evm_version": "homestead"
+  },
+  "acceptance": {
+    "multi_user_signed_split": true,
+    "tamper_rejected": true,
+    "replay_rejected": true,
+    "overpayment_rejected": true,
+    "insufficient_credits_rejected": true,
+    "partial_settlement": true,
+    "full_settlement": true,
+    "full_resilientdb_and_rescontract_restart": true,
+    "injected_post_contract_crash": true,
+    "repaired_confirmation_count": 1,
+    "obligation_status_after_reconciliation": "settled",
+    "debtor_credit_balance": 0,
+    "creditor_credit_balance": 6000,
+    "finance_payable_minor_units": 0,
+    "finance_receivable_minor_units": 0,
+    "private_material_transmitted": false
+  }
+}

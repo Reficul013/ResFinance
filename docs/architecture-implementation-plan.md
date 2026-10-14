@@ -356,6 +356,8 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 
 ### Milestone 4 — Groups and contractual settlement
 
+**Status:** complete for local development; evidence is recorded in [`milestone4-groups-settlement.md`](milestone4-groups-settlement.md).
+
 - Implement groups, membership, expenses, split validation, participant approval, obligation projections, and notifications.
 - Deploy `ResFinanceSettlement.sol`.
 - Implement non-redeemable credit issuance, partial/full settlements, receipts, finance propagation, and saga reconciliation.

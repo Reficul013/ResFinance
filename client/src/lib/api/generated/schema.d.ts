@@ -191,6 +191,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Groups */
+        get: operations["list_groups_api_v1_groups_get"];
+        put?: never;
+        /** Create Group */
+        post: operations["create_group_api_v1_groups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Overview */
+        get: operations["overview_api_v1_groups__group_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}/credits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Fund Credits */
+        post: operations["fund_credits_api_v1_groups__group_id__credits_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Expense */
+        post: operations["create_expense_api_v1_groups__group_id__expenses_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Member */
+        post: operations["add_member_api_v1_groups__group_id__members_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}/obligations/{obligation_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide Obligation */
+        post: operations["decide_obligation_api_v1_groups__group_id__obligations__obligation_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}/obligations/{obligation_id}/settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Settle Obligation */
+        post: operations["settle_obligation_api_v1_groups__group_id__obligations__obligation_id__settlements_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -212,6 +332,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AddMemberCommand */
+        AddMemberCommand: {
+            /** Display Name */
+            display_name: string;
+            /** Expected Version */
+            expected_version: number;
+            /** Member Address */
+            member_address: string;
+        };
         /** BudgetCommand */
         BudgetCommand: {
             /** Budget Id */
@@ -307,6 +436,41 @@ export interface components {
             /** Network Id */
             network_id: string;
         };
+        /** CreateExpenseCommand */
+        CreateExpenseCommand: {
+            amount: components["schemas"]["MoneyModel"];
+            /** Description */
+            description: string;
+            /** Due On */
+            due_on?: string | null;
+            /** Expected Version */
+            expected_version: number;
+            /** Expense Id */
+            expense_id: string;
+            intent: components["schemas"]["server__app__api__groups__SignedIntentModel"];
+            /**
+             * Occurred On
+             * Format: date
+             */
+            occurred_on: string;
+            /** Payer Address */
+            payer_address: string;
+            /** Shares */
+            shares: {
+                [key: string]: components["schemas"]["MoneyModel"];
+            };
+        };
+        /** CreateGroupCommand */
+        CreateGroupCommand: {
+            /** Expected Version */
+            expected_version: number;
+            /** Group Id */
+            group_id: string;
+            /** Name */
+            name: string;
+            /** Owner Display Name */
+            owner_display_name: string;
+        };
         /** DeactivateRecurringCommand */
         DeactivateRecurringCommand: {
             /** Expected Version */
@@ -342,6 +506,123 @@ export interface components {
             summary: components["schemas"]["MonthlySummaryModel"];
             /** Transactions */
             transactions: components["schemas"]["TransactionModel"][];
+        };
+        /** FundCreditsCommand */
+        FundCreditsCommand: {
+            amount: components["schemas"]["MoneyModel"];
+            /** Expected Version */
+            expected_version: number;
+            intent: components["schemas"]["server__app__api__groups__SignedIntentModel"];
+        };
+        /** GroupExpenseModel */
+        GroupExpenseModel: {
+            amount: components["schemas"]["MoneyModel"];
+            /** Contract Receipts */
+            contract_receipts: string[];
+            /** Description */
+            description: string;
+            /** Expense Id */
+            expense_id: string;
+            /** Obligation Ids */
+            obligation_ids: string[];
+            /**
+             * Occurred On
+             * Format: date
+             */
+            occurred_on: string;
+            /** Payer Address */
+            payer_address: string;
+            /** Shares */
+            shares: {
+                [key: string]: components["schemas"]["MoneyModel"];
+            };
+            /** Source Event Id */
+            source_event_id: string;
+        };
+        /** GroupMemberModel */
+        GroupMemberModel: {
+            /** Active */
+            active: boolean;
+            /** Actor Address */
+            actor_address: string;
+            /** Display Name */
+            display_name: string;
+            /** Source Event Id */
+            source_event_id: string;
+        };
+        /** GroupObligationModel */
+        GroupObligationModel: {
+            amount: components["schemas"]["MoneyModel"];
+            /** Contract Receipts */
+            contract_receipts: string[];
+            /** Creditor Address */
+            creditor_address: string;
+            /** Debtor Address */
+            debtor_address: string;
+            /** Due On */
+            due_on: string | null;
+            /** Expense Id */
+            expense_id: string;
+            /** Obligation Id */
+            obligation_id: string;
+            outstanding_amount: components["schemas"]["MoneyModel"];
+            settled_amount: components["schemas"]["MoneyModel"];
+            /** Source Event Id */
+            source_event_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "open" | "partially_settled" | "settled" | "rejected" | "cancelled";
+        };
+        /** GroupOverviewModel */
+        GroupOverviewModel: {
+            /** Credit Balances */
+            credit_balances: {
+                [key: string]: components["schemas"]["MoneyModel"];
+            };
+            /**
+             * Credit Disclaimer
+             * @constant
+             */
+            credit_disclaimer: "Internal credits are non-redeemable, non-monetary, and have no cash value.";
+            /** Expenses */
+            expenses: components["schemas"]["GroupExpenseModel"][];
+            /** Group Id */
+            group_id: string;
+            /** Members */
+            members: components["schemas"]["GroupMemberModel"][];
+            /** Name */
+            name: string;
+            /** Notifications */
+            notifications: components["schemas"]["NotificationModel"][];
+            /** Obligations */
+            obligations: components["schemas"]["GroupObligationModel"][];
+            /** Owner Address */
+            owner_address: string;
+            provenance: components["schemas"]["GroupProvenanceModel"];
+        };
+        /** GroupProvenanceModel */
+        GroupProvenanceModel: {
+            /** As Of Utc */
+            as_of_utc: string | null;
+            /** Projection Version */
+            projection_version: number;
+            /** Source Event Ids */
+            source_event_ids: string[];
+        };
+        /** GroupSummaryModel */
+        GroupSummaryModel: {
+            /** Group Id */
+            group_id: string;
+            /** Member Count */
+            member_count: number;
+            /** Name */
+            name: string;
+            /** Open Obligation Count */
+            open_obligation_count: number;
+            /** Projection Version */
+            projection_version: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -387,6 +668,30 @@ export interface components {
             receivable: components["schemas"]["MoneyModel"];
             savings: components["schemas"]["SavingsModel"];
         };
+        /** NotificationModel */
+        NotificationModel: {
+            /** Kind */
+            kind: string;
+            /** Message */
+            message: string;
+            /** Notification Id */
+            notification_id: string;
+            /** Recipient Address */
+            recipient_address: string;
+            /** Source Event Id */
+            source_event_id: string;
+        };
+        /** ObligationDecisionCommand */
+        ObligationDecisionCommand: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "reject";
+            /** Expected Version */
+            expected_version: number;
+            intent: components["schemas"]["server__app__api__groups__SignedIntentModel"];
+        };
         /** ObligationModel */
         ObligationModel: {
             amount: components["schemas"]["MoneyModel"];
@@ -401,8 +706,10 @@ export interface components {
             due_on: string | null;
             /** Obligation Id */
             obligation_id: string;
+            outstanding_amount: components["schemas"]["MoneyModel"];
             /** Settled */
             settled: boolean;
+            settled_amount: components["schemas"]["MoneyModel"];
             /** Source Event Id */
             source_event_id: string;
         };
@@ -496,7 +803,7 @@ export interface components {
         SessionRequest: {
             /** Challenge */
             challenge: string;
-            intent: components["schemas"]["SignedIntentModel"];
+            intent: components["schemas"]["server__app__api__auth__SignedIntentModel"];
         };
         /** SessionResponse */
         SessionResponse: {
@@ -516,45 +823,12 @@ export interface components {
              */
             token_type: "Bearer";
         };
-        /** SignedIntentModel */
-        SignedIntentModel: {
-            /** Action */
-            action: string;
-            /** Actor Address */
-            actor_address: string;
-            /** Actor Public Key */
-            actor_public_key: string;
-            /** Audience */
-            audience: string;
-            /**
-             * Expires At
-             * Format: date-time
-             */
-            expires_at: string;
-            /** Intent Id */
-            intent_id: string;
-            /**
-             * Issued At
-             * Format: date-time
-             */
-            issued_at: string;
-            /** Network Id */
-            network_id: string;
-            /** Nonce */
-            nonce: string;
-            /** Origin */
-            origin: string;
-            /** Parameters Hash */
-            parameters_hash: string;
-            /** Resource Id */
-            resource_id: string;
-            /** Signature */
-            signature: string;
-            /**
-             * Version
-             * @constant
-             */
-            version: 1;
+        /** SettleObligationCommand */
+        SettleObligationCommand: {
+            amount: components["schemas"]["MoneyModel"];
+            /** Expected Version */
+            expected_version: number;
+            intent: components["schemas"]["server__app__api__groups__SignedIntentModel"];
         };
         /** TransactionCommand */
         TransactionCommand: {
@@ -632,6 +906,95 @@ export interface components {
             address: string;
             /** Public Key */
             public_key: string;
+        };
+        /** SignedIntentModel */
+        server__app__api__auth__SignedIntentModel: {
+            /** Action */
+            action: string;
+            /** Actor Address */
+            actor_address: string;
+            /** Actor Public Key */
+            actor_public_key: string;
+            /** Audience */
+            audience: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Intent Id */
+            intent_id: string;
+            /**
+             * Issued At
+             * Format: date-time
+             */
+            issued_at: string;
+            /** Network Id */
+            network_id: string;
+            /** Nonce */
+            nonce: string;
+            /** Origin */
+            origin: string;
+            /** Parameters Hash */
+            parameters_hash: string;
+            /** Resource Id */
+            resource_id: string;
+            /** Signature */
+            signature: string;
+            /**
+             * Version
+             * @constant
+             */
+            version: 1;
+        };
+        /** SignedIntentModel */
+        server__app__api__groups__SignedIntentModel: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "split.approve" | "credits.fund" | "settlement.authorize";
+            /** Actor Address */
+            actor_address: string;
+            /** Actor Public Key */
+            actor_public_key: string;
+            /**
+             * Audience
+             * @constant
+             */
+            audience: "resfinance-api";
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Intent Id */
+            intent_id: string;
+            /**
+             * Issued At
+             * Format: date-time
+             */
+            issued_at: string;
+            /**
+             * Network Id
+             * @constant
+             */
+            network_id: "pinned-local-network";
+            /** Nonce */
+            nonce: string;
+            /** Origin */
+            origin: string;
+            /** Parameters Hash */
+            parameters_hash: string;
+            /** Resource Id */
+            resource_id: string;
+            /** Signature */
+            signature: string;
+            /**
+             * Version
+             * @constant
+             */
+            version: 1;
         };
     };
     responses: never;
@@ -1015,6 +1378,308 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["VoidTransactionCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_groups_api_v1_groups_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string | null;
+                Origin?: string | null;
+                Referer?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupSummaryModel"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_group_api_v1_groups_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGroupCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    overview_api_v1_groups__group_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string | null;
+                Origin?: string | null;
+                Referer?: string | null;
+            };
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupOverviewModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fund_credits_api_v1_groups__group_id__credits_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FundCreditsCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_expense_api_v1_groups__group_id__expenses_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExpenseCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_member_api_v1_groups__group_id__members_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddMemberCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_obligation_api_v1_groups__group_id__obligations__obligation_id__decision_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path: {
+                group_id: string;
+                obligation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ObligationDecisionCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    settle_obligation_api_v1_groups__group_id__obligations__obligation_id__settlements_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path: {
+                group_id: string;
+                obligation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettleObligationCommand"];
             };
         };
         responses: {

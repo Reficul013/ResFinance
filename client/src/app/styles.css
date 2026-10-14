@@ -778,6 +778,261 @@ td.expense {
   --warning: #f2bd5a;
 }
 
+.dashboard-nav {
+  display: flex;
+  gap: 0.55rem;
+  margin: 0.35rem 0 1rem;
+  padding: 0.35rem;
+  width: fit-content;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  background: var(--control-background);
+}
+
+.dashboard-nav a {
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.dashboard-nav a.active {
+  color: var(--button-text);
+  background: var(--accent);
+  box-shadow: 0 0.65rem 1.5rem rgb(29 143 135 / 18%);
+}
+
+.groups-dashboard {
+  gap: 1rem;
+}
+
+.group-switcher {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.65rem;
+}
+
+.group-switcher button {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--control-border);
+  border-radius: 1rem;
+  color: var(--text);
+  text-align: left;
+  background: var(--control-background);
+}
+
+.group-switcher button.active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.group-switcher span,
+.form-note,
+.obligation-card p,
+.empty-copy,
+.notifications-panel li span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.group-overview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.group-overview h2,
+.compact-form h2,
+.expense-form h2,
+.notifications-panel h2 {
+  margin: 0.2rem 0 0.45rem;
+}
+
+.group-overview p {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--muted);
+}
+
+.group-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(7rem, 1fr));
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.group-metrics div {
+  padding: 0.8rem;
+  border: 1px solid var(--control-border);
+  border-radius: 0.9rem;
+  background: var(--control-background);
+}
+
+.group-metrics dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.group-metrics dd {
+  margin: 0.25rem 0 0;
+  font-weight: 760;
+}
+
+.group-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.compact-form form,
+.expense-form form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.compact-form label,
+.expense-form label,
+.inline-settlement label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.compact-form input,
+.expense-form input,
+.expense-form textarea,
+.inline-settlement input {
+  width: 100%;
+  padding: 0.72rem 0.78rem;
+  border: 1px solid var(--control-border);
+  border-radius: 0.72rem;
+  color: var(--text);
+  font: inherit;
+  background: var(--control-background);
+}
+
+.expense-form textarea {
+  resize: vertical;
+}
+
+.compact-form button,
+.expense-form button,
+.inline-actions button,
+.inline-settlement button {
+  align-self: end;
+  padding: 0.72rem 0.9rem;
+  border: 0;
+  border-radius: 0.72rem;
+  color: var(--button-text);
+  font-weight: 760;
+  background: var(--accent);
+}
+
+.compact-form button:disabled,
+.expense-form button:disabled,
+.inline-actions button:disabled,
+.inline-settlement button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.expense-form {
+  grid-column: 1 / -1;
+}
+
+.wide-field {
+  grid-column: 1 / -1;
+}
+
+.obligation-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.obligation-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--control-border);
+  border-radius: 1rem;
+  background: var(--control-background);
+}
+
+.obligation-card h3 {
+  margin: 0.5rem 0 0.25rem;
+}
+
+.obligation-card p {
+  margin: 0;
+}
+
+.status-pill {
+  display: inline-flex;
+  padding: 0.24rem 0.5rem;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: var(--code-background);
+}
+
+.status-pill.open,
+.status-pill.partially_settled {
+  color: var(--warning);
+}
+
+.status-pill.settled {
+  color: var(--income);
+}
+
+.status-pill.rejected,
+.status-pill.cancelled {
+  color: var(--expense);
+}
+
+.inline-actions,
+.inline-settlement {
+  display: flex;
+  align-items: end;
+  gap: 0.5rem;
+}
+
+.inline-actions .secondary {
+  color: var(--text);
+  background: var(--control-background-hover);
+}
+
+.inline-settlement input {
+  max-width: 11rem;
+}
+
+.notifications-panel ul {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notifications-panel li {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--control-border);
+}
+
 :root[data-theme="dark"] .month-control input,
 :root[data-theme="dark"] .form-field input,
 :root[data-theme="dark"] .form-field select {
@@ -796,8 +1051,18 @@ td.expense {
 
 @media (max-width: 52rem) {
   .dashboard-header,
-  .dashboard-columns {
+  .dashboard-columns,
+  .group-actions-grid,
+  .obligation-card {
     grid-template-columns: 1fr;
+  }
+
+  .group-overview {
+    display: grid;
+  }
+
+  .group-metrics {
+    width: 100%;
   }
 
   .month-control {
@@ -833,8 +1098,27 @@ td.expense {
   }
 
   .summary-grid,
-  .entry-grid {
+  .entry-grid,
+  .compact-form form,
+  .expense-form form,
+  .group-metrics {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-nav,
+  .inline-actions,
+  .inline-settlement {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-nav a {
+    text-align: center;
+  }
+
+  .wide-field {
+    grid-column: auto;
   }
 
   .metric-card {

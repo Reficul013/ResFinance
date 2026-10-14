@@ -33,6 +33,17 @@ export type BudgetCommand = components["schemas"]["BudgetCommand"];
 export type RecurringEntryCommand =
   components["schemas"]["RecurringEntryCommand"];
 export type FinanceEvent = components["schemas"]["EventResponse"];
+export type GroupSummary = components["schemas"]["GroupSummaryModel"];
+export type GroupOverview = components["schemas"]["GroupOverviewModel"];
+export type CreateGroupCommand = components["schemas"]["CreateGroupCommand"];
+export type AddMemberCommand = components["schemas"]["AddMemberCommand"];
+export type CreateExpenseCommand =
+  components["schemas"]["CreateExpenseCommand"];
+export type ObligationDecisionCommand =
+  components["schemas"]["ObligationDecisionCommand"];
+export type FundCreditsCommand = components["schemas"]["FundCreditsCommand"];
+export type SettleObligationCommand =
+  components["schemas"]["SettleObligationCommand"];
 
 export async function createChallenge(
   identity: WalletIdentity,
@@ -145,6 +156,114 @@ export async function createFinanceRecurringEntry(
   );
 }
 
+export async function listGroups(
+  accessToken: string,
+  signal?: AbortSignal,
+): Promise<GroupSummary[]> {
+  const request: RequestInit = {
+    headers: authorizedHeaders(accessToken),
+    credentials: "include",
+  };
+  if (signal !== undefined) request.signal = signal;
+  return requestJson<GroupSummary[]>("/api/v1/groups", request);
+}
+
+export async function getGroupOverview(
+  accessToken: string,
+  groupId: string,
+  signal?: AbortSignal,
+): Promise<GroupOverview> {
+  const request: RequestInit = {
+    headers: authorizedHeaders(accessToken),
+    credentials: "include",
+  };
+  if (signal !== undefined) request.signal = signal;
+  return requestJson<GroupOverview>(
+    `/api/v1/groups/${encodeURIComponent(groupId)}`,
+    request,
+  );
+}
+
+export function createGroup(
+  accessToken: string,
+  idempotencyKey: string,
+  command: CreateGroupCommand,
+): Promise<FinanceEvent> {
+  return groupCommand("/api/v1/groups", accessToken, idempotencyKey, command);
+}
+
+export function addGroupMember(
+  accessToken: string,
+  groupId: string,
+  idempotencyKey: string,
+  command: AddMemberCommand,
+): Promise<FinanceEvent> {
+  return groupCommand(
+    `/api/v1/groups/${encodeURIComponent(groupId)}/members`,
+    accessToken,
+    idempotencyKey,
+    command,
+  );
+}
+
+export function createGroupExpense(
+  accessToken: string,
+  groupId: string,
+  idempotencyKey: string,
+  command: CreateExpenseCommand,
+): Promise<FinanceEvent> {
+  return groupCommand(
+    `/api/v1/groups/${encodeURIComponent(groupId)}/expenses`,
+    accessToken,
+    idempotencyKey,
+    command,
+  );
+}
+
+export function decideGroupObligation(
+  accessToken: string,
+  groupId: string,
+  obligationId: string,
+  idempotencyKey: string,
+  command: ObligationDecisionCommand,
+): Promise<FinanceEvent> {
+  return groupCommand(
+    `/api/v1/groups/${encodeURIComponent(groupId)}/obligations/${encodeURIComponent(obligationId)}/decision`,
+    accessToken,
+    idempotencyKey,
+    command,
+  );
+}
+
+export function fundGroupCredits(
+  accessToken: string,
+  groupId: string,
+  idempotencyKey: string,
+  command: FundCreditsCommand,
+): Promise<FinanceEvent> {
+  return groupCommand(
+    `/api/v1/groups/${encodeURIComponent(groupId)}/credits`,
+    accessToken,
+    idempotencyKey,
+    command,
+  );
+}
+
+export function settleGroupObligation(
+  accessToken: string,
+  groupId: string,
+  obligationId: string,
+  idempotencyKey: string,
+  command: SettleObligationCommand,
+): Promise<FinanceEvent> {
+  return groupCommand(
+    `/api/v1/groups/${encodeURIComponent(groupId)}/obligations/${encodeURIComponent(obligationId)}/settlements`,
+    accessToken,
+    idempotencyKey,
+    command,
+  );
+}
+
 async function financeCommand<T extends object>(
   url: string,
   accessToken: string,
@@ -161,6 +280,15 @@ async function financeCommand<T extends object>(
     credentials: "include",
     body: JSON.stringify(command),
   });
+}
+
+async function groupCommand<T extends object>(
+  url: string,
+  accessToken: string,
+  idempotencyKey: string,
+  command: T,
+): Promise<FinanceEvent> {
+  return financeCommand(url, accessToken, idempotencyKey, command);
 }
 
 async function requestJson<T>(url: string, request: RequestInit): Promise<T> {

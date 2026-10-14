@@ -147,6 +147,8 @@ class ObligationModel(BaseModel):
     obligation_id: str
     direction: Literal["receivable", "payable"]
     amount: MoneyModel
+    settled_amount: MoneyModel
+    outstanding_amount: MoneyModel
     due_on: date | None
     settled: bool
     source_event_id: str
@@ -530,6 +532,8 @@ def _overview_response(value: FinanceOverview) -> FinanceOverviewModel:
                 obligation_id=item.obligation_id,
                 direction=item.direction.value,
                 amount=_money(item.amount_minor_units),
+                settled_amount=_money(item.settled_minor_units),
+                outstanding_amount=_money(item.outstanding_minor_units),
                 due_on=item.due_on,
                 settled=item.settled,
                 source_event_id=item.source_event_id,
