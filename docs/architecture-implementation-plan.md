@@ -4,7 +4,7 @@ Status: Approved planning baseline for local implementation; cloud deployment is
 
 Last reviewed: 2026-10-14
 
-Implementation status: Milestones 0, 1, 2, and 3 passed for local, non-commercial development and research; Milestone 4 may begin
+Implementation status: Milestones 0–5 passed for local, non-commercial development and research; Milestone 6 may begin
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
@@ -365,6 +365,8 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 **Acceptance:** multi-user E2E test creates a split, obtains approvals, rejects unsigned/tampered actions, settles partially and fully, prevents overpayment/replay, and shows matching Group and Finance balances after an injected crash.
 
 ### Milestone 5 — Crypto ingestion and feature store
+
+**Status:** complete for local, non-commercial research; evidence is recorded in [`milestone5-crypto-ingestion-feature-store.md`](milestone5-crypto-ingestion-feature-store.md).
 
 - Add Coin Metrics, CoinGecko, DefiLlama, and GDELT adapters.
 - Persist immutable raw observations, derived features, availability masks, licenses, and checksums.

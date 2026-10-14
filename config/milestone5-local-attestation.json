@@ -1,0 +1,23 @@
+{
+  "assets": [
+    "BTC",
+    "ETH",
+    "SOL"
+  ],
+  "completed_at_utc": "2026-10-14T21:06:47.620913Z",
+  "dataset_hash": "bf963ed7288e4c8222350c768fa2affd03abdc46acd2e116098762321ab04945",
+  "failed_attempt_recorded": true,
+  "feature_inserted_count": 10,
+  "feature_repeat_idempotent": true,
+  "feature_row_count": 9,
+  "fourth_asset_rejected": true,
+  "initial_inserted_count": 28,
+  "persistent_database": "Apache ResilientDB LevelDB backend",
+  "point_in_time_leakage_rejected": true,
+  "provider_failure_preserved_observation_count": true,
+  "raw_observation_count": 28,
+  "repeat_deduplicated_count": 28,
+  "schema_version": 1,
+  "scope": "local-synthetic-acceptance-on-real-resilientdb",
+  "sol_missingness_is_mask_not_zero": true
+}

@@ -2,7 +2,7 @@
 
 ResFinance is a planned wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
 
-> **Project status:** Milestones 0–4 are complete for local, non-commercial development and research. The feasibility gates, encrypted ResilientDB platform foundation, hardened ResVault-compatible extension, wallet authentication, Personal Finance dashboard, and Groups contractual-settlement workflow pass. Milestone 5 crypto ingestion and feature-store work is next. Cloud and production deployment remain on hold.
+> **Project status:** Milestones 0–5 are complete for local, non-commercial development and research. The feasibility gates, encrypted ResilientDB platform foundation, hardened ResVault-compatible extension, wallet authentication, Personal Finance dashboard, Groups contractual-settlement workflow, and crypto ingestion/feature store pass. Milestone 6 reproducible ML research is next. Cloud and production deployment remain on hold.
 
 ## What the product will do
 
@@ -98,6 +98,8 @@ Milestone 3 adds the authenticated Personal Finance dashboard and encrypted appe
 
 Milestone 4 adds authenticated Groups, exact shared-expense splits, ResVault-signed participant decisions, obligation notifications, a deployed `ResFinanceSettlement.sol` state machine, non-redeemable internal credits, partial/full settlement, immutable receipts, and confirmed Finance propagation. A real-stack run recovered exactly one missing confirmation after an injected post-contract crash and a restart of every ResilientDB and ResContract process; Group and Finance balances then matched exactly. See the [Milestone 4 Groups and contractual settlement evidence](docs/milestone4-groups-settlement.md).
 
+Milestone 5 adds Coin Metrics market and BTC/ETH on-chain adapters, CoinGecko current-quote fallback, DefiLlama SOL proxy ingestion with explicit missing observations, and a bounded GDELT aggregate CSV adapter. Immutable observations, provider revisions, availability times, retrieval times, response checksums, license dispositions, ingestion attempts, point-in-time features, masks, and dataset manifests persist only in ResilientDB. Live provider smoke checks passed, and the real-stack acceptance proved repeat-ingestion and feature idempotency, provider-failure isolation, no-lookahead selection, SOL masks, and rejection of a fourth asset. See the [Milestone 5 crypto ingestion and feature store evidence](docs/milestone5-crypto-ingestion-feature-store.md).
+
 ## Local verification
 
 ```bash
@@ -145,6 +147,10 @@ docker compose --profile tools up -d --build --wait \
   resdb-tools rescontract-tools
 .venv/bin/python -m scripts.milestone4.run_groups_acceptance \
   --docker "$(command -v docker)" --restart
+
+.venv/bin/python -m scripts.milestone5.run_crypto_ingestion_acceptance \
+  --docker "$(command -v docker)" \
+  --output config/milestone5-local-attestation.json
 ```
 
 ## Repository layout
@@ -168,6 +174,7 @@ docs/         Product, architecture, delivery, and development references
 - [Milestone 2 wallet and authentication](docs/milestone2-wallet-authentication.md)
 - [Milestone 3 Personal Finance dashboard](docs/milestone3-personal-finance.md)
 - [Milestone 4 Groups and contractual settlement](docs/milestone4-groups-settlement.md)
+- [Milestone 5 crypto ingestion and feature store](docs/milestone5-crypto-ingestion-feature-store.md)
 - [REST API contract](docs/rest-api-contract.md)
 - [Security contract](docs/security.md)
 - [Research protocol](docs/research-protocol.md)

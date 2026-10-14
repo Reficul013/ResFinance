@@ -34,7 +34,9 @@ files = [
   "scripts/milestone1",
   "scripts/milestone2",
   "scripts/milestone3",
+  "scripts/milestone5",
   "server/app",
+  "ml",
   "blockchain/adapter",
   "blockchain/wallet",
 ]
