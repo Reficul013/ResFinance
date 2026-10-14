@@ -28,6 +28,9 @@
   --card-sheen: rgb(255 255 255 / 22%);
   --card-shadow: 0 1.75rem 4.5rem rgb(78 72 139 / 18%);
   --code-background: rgb(255 255 255 / 38%);
+  --control-background: rgb(255 255 255 / 42%);
+  --control-background-hover: rgb(255 255 255 / 58%);
+  --control-border: rgb(255 255 255 / 62%);
   --status-checking: #b27621;
   --status-ready: #197b68;
   --status-error: #b73b55;
@@ -91,6 +94,44 @@ code {
   color: inherit;
 }
 
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  background: var(--control-background);
+  box-shadow:
+    0 0.8rem 2.5rem rgb(78 72 139 / 14%),
+    inset 0 1px 0 var(--card-highlight);
+  color: var(--page-text);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(24px) saturate(150%);
+}
+
+.theme-toggle:hover {
+  background: var(--control-background-hover);
+}
+
+.theme-toggle:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--page-accent) 52%, transparent);
+  outline-offset: 3px;
+}
+
+.theme-toggle-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
 .status-card {
   position: relative;
   display: grid;
@@ -138,38 +179,50 @@ code {
   background: var(--status-error);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f5f7fb;
-    background: #0d1019;
-    --page-text: #f5f7fb;
-    --page-muted: #9ba4b5;
-    --page-accent: #38d1c5;
-    --page-background:
-      radial-gradient(
-        circle at 14% 14%,
-        rgb(38 200 185 / 16%),
-        transparent 32rem
-      ),
-      radial-gradient(
-        circle at 88% 22%,
-        rgb(55 154 165 / 10%),
-        transparent 30rem
-      ),
-      linear-gradient(145deg, #1b202b 0%, #10131e 48%, #0b0c14 100%);
-    --card-background: linear-gradient(
-      135deg,
-      rgb(35 44 57 / 62%),
-      rgb(14 19 29 / 46%)
-    );
-    --card-border: rgb(255 255 255 / 12%);
-    --card-highlight: rgb(255 255 255 / 13%);
-    --card-lowlight: rgb(0 0 0 / 22%);
-    --card-sheen: rgb(255 255 255 / 6%);
-    --card-shadow: 0 1.75rem 4.5rem rgb(0 0 0 / 34%);
-    --code-background: rgb(55 209 197 / 10%);
-    --status-checking: #f2bd5a;
-    --status-ready: #38d1c5;
-    --status-error: #ff7f7f;
+:root[data-theme="dark"] {
+  color: #f5f7fb;
+  background: #0d1019;
+  --page-text: #f5f7fb;
+  --page-muted: #9ba4b5;
+  --page-accent: #38d1c5;
+  --page-background:
+    radial-gradient(
+      circle at 14% 14%,
+      rgb(38 200 185 / 16%),
+      transparent 32rem
+    ),
+    radial-gradient(
+      circle at 88% 22%,
+      rgb(55 154 165 / 10%),
+      transparent 30rem
+    ),
+    linear-gradient(145deg, #1b202b 0%, #10131e 48%, #0b0c14 100%);
+  --card-background: linear-gradient(
+    135deg,
+    rgb(35 44 57 / 62%),
+    rgb(14 19 29 / 46%)
+  );
+  --card-border: rgb(255 255 255 / 12%);
+  --card-highlight: rgb(255 255 255 / 13%);
+  --card-lowlight: rgb(0 0 0 / 22%);
+  --card-sheen: rgb(255 255 255 / 6%);
+  --card-shadow: 0 1.75rem 4.5rem rgb(0 0 0 / 34%);
+  --code-background: rgb(55 209 197 / 10%);
+  --control-background: rgb(26 34 46 / 62%);
+  --control-background-hover: rgb(36 47 61 / 76%);
+  --control-border: rgb(255 255 255 / 12%);
+  --status-checking: #f2bd5a;
+  --status-ready: #38d1c5;
+  --status-error: #ff7f7f;
+}
+
+@media (max-width: 32rem) {
+  .theme-toggle-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }

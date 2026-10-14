@@ -1,4 +1,5 @@
 import { StatusCard } from "../components/StatusCard";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { usePlatformHealth } from "../features/platform/usePlatformHealth";
 
 export function App() {
@@ -6,6 +7,7 @@ export function App() {
 
   return (
     <main className="shell">
+      <ThemeToggle />
       <p className="eyebrow">Milestone 1 · Platform foundation</p>
       <h1>ResFinance</h1>
       <p className="lede">
