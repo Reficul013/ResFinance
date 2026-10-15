@@ -2,7 +2,7 @@
 
 ResFinance is a planned wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
 
-> **Project status:** Milestones 0–8 are complete for local development and research. Wallet-scoped Smart Savings Insights, verified evidence citations, deterministic refusals/fallbacks, cross-dashboard navigation, and in-app notifications now pass acceptance. The deterministic Milestone 6 smoke candidate was not promoted, so the normal runtime correctly shows no portfolio recommendation until an eligible forecast is promoted. Cloud and production deployment remain on hold.
+> **Project status:** Milestones 0–8 are complete for local development and research. Milestone 9 Local Handoff is planned and has not started; it will package one-command startup, prove one continuous real-browser/full-stack journey, and attempt a live recommendation through the existing model-promotion gate. The deterministic Milestone 6 smoke candidate was not promoted, so the normal runtime correctly shows no portfolio recommendation until an eligible forecast is promoted. Milestone 10 cloud and production deployment remains on hold.
 
 ## What the product will do
 
@@ -107,6 +107,8 @@ Milestone 6 adds deterministic smoke-data generation; naive, linear, and LSTM ba
 Milestone 7 adds the versioned risk questionnaire, constrained BTC/ETH/SOL optimization, Finance-linked default capital, exact-cent allocations, immutable forecast provenance, non-mutating amount scenarios, and the Crypto dashboard. Stale, synthetic, and unpromoted forecasts fail closed in normal runtime. See the [Milestone 7 risk, portfolio, and Crypto dashboard evidence](docs/milestone7-risk-portfolio-crypto-dashboard.md).
 
 Milestone 8 adds wallet-authorized fact bundles, the pinned local Qwen instruction model, evidence-ID validation, prompt-injection and prohibited-action refusals, deterministic template fallback, Smart Savings Insights, cross-dashboard navigation, and a unified in-app notification center. The model ranks facts only; final claims are rendered from server-validated evidence. Real-stack acceptance recorded zero ResilientDB writes from the AI path. See the [Milestone 8 read-only AI and integration evidence](docs/milestone8-read-only-ai-integration.md).
+
+Milestone 9 Local Handoff is the final local delivery gate. It is planning-only today: implementation has not started. It will package the complete local stack behind one documented startup flow, replace mocked browser boundaries with one continuous real-service journey using ResVault, ResilientDB, and ResContract, and run approved full-scale research in pursuit of an honestly promoted BTC/ETH/SOL forecast. A failing model will remain unpromoted; the milestone will not weaken its evaluation gate to manufacture a recommendation. See the [Milestone 9 Local Handoff plan](docs/milestone9-local-handoff.md).
 
 ## Local verification
 
@@ -217,7 +219,8 @@ docs/         Product, architecture, delivery, and development references
 - [Milestone 5 crypto ingestion and feature store](docs/milestone5-crypto-ingestion-feature-store.md)
 - [Milestone 6 reproducible ML research](docs/milestone6-reproducible-ml-research.md)
 - [Milestone 7 risk, portfolio, and Crypto dashboard](docs/milestone7-risk-portfolio-crypto-dashboard.md)
-- [Milestone 8 read-only AI and end-to-end integration](docs/milestone8-read-only-ai-integration.md)
+- [Milestone 8 read-only AI and cross-dashboard integration](docs/milestone8-read-only-ai-integration.md)
+- [Milestone 9 Local Handoff plan](docs/milestone9-local-handoff.md)
 - [REST API contract](docs/rest-api-contract.md)
 - [Security contract](docs/security.md)
 - [Research protocol](docs/research-protocol.md)

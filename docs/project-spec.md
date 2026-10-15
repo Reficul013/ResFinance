@@ -96,6 +96,10 @@ Train baselines, implement MSPCIFormer, and add adaptive gating across market, s
 
 Combine forecasted returns, uncertainty, realized risk/covariance, liquidity, and downside risk with a continuous user risk score. Generate explainable BTC/ETH/SOL weights, backtest, and integrate the complete journey in the local validated environment. Deployment is a separate, deferred milestone and is not required to complete this phase.
 
+### Final local delivery gate - Milestone 9 Local Handoff
+
+After the functional phases, package the complete local stack behind one documented startup lifecycle and prove one continuous, non-mocked browser journey through ResVault, React, FastAPI, ResilientDB, ResContract, Crypto, and Smart Insights. Run the approved full research protocol and expose a live BTC/ETH/SOL recommendation only if a candidate passes the existing immutable promotion criteria. This gate is planned and implementation has not started. Production hardening and deployment remain a separate, deferred Milestone 10.
+
 ## 5. Forecasting research: 2 papers + 1 novelty
 
 ### Paper 1 - MSPCIFormer

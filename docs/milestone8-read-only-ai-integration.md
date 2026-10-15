@@ -1,4 +1,4 @@
-# Milestone 8 — Read-only AI and End-to-End Integration
+# Milestone 8 — Read-only AI and Cross-Dashboard Integration
 
 Status: complete for local development and real-stack acceptance. Cloud,
 production, trading, custody, autonomous actions, and investment-advice claims
@@ -6,11 +6,12 @@ remain out of scope.
 
 ## Purpose
 
-Milestone 8 completes the local user journey with wallet-scoped Smart Savings
-Insights, cross-dashboard navigation, and in-app notifications. It explains
-Finance, Groups, and Crypto state without giving a model access to private keys,
-write commands, ResContract, trading systems, direct ResilientDB operations, or
-the public internet.
+Milestone 8 connects the local user journey at the application-feature level
+with wallet-scoped Smart Savings Insights, cross-dashboard navigation, and
+in-app notifications. It explains Finance, Groups, and Crypto state without
+giving a model access to private keys, write commands, ResContract, trading
+systems, direct ResilientDB operations, or the public internet. The continuous
+real-browser/full-stack handoff is intentionally assigned to Milestone 9.
 
 ## Evidence-bound design
 
@@ -118,6 +119,8 @@ weights stay outside Git and are mounted read-only for local runtime.
 
 No forecasting model is currently promoted, so Insights explains the Crypto
 promotion gate and cannot provide a portfolio recommendation. That is the
-correct evidence-safe behavior. Milestone 9 remains explicitly on hold;
-Milestone 8 does not establish cloud, production, commercial, BFT, or
-investment-performance readiness.
+correct evidence-safe behavior. Milestone 9 Local Handoff is planned but has
+not started; it owns the one-command local lifecycle, continuous real-browser
+proof, and honest attempt to produce a promoted forecast. Milestone 10 remains
+explicitly on hold. Milestone 8 does not establish cloud, production,
+commercial, BFT, or investment-performance readiness.

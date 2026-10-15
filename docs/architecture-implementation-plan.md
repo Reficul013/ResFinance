@@ -2,19 +2,20 @@
 
 Status: Approved planning baseline for local implementation; cloud deployment is on hold
 
-Last reviewed: 2026-10-14
+Last reviewed: 2026-10-15
 
-Implementation status: Milestones 0–8 passed for local development and research. No forecasting model is currently promoted, so runtime portfolio recommendations remain gated. Milestone 9 production hardening and deployment remains on hold.
+Implementation status: Milestones 0–8 passed for local development and research. Milestone 9 Local Handoff is planned and has not started. No forecasting model is currently promoted, so runtime portfolio recommendations remain gated. Milestone 10 production hardening and deployment remains on hold.
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
 ## 1. Summary and Product Boundaries
 
-ExpoLab will be a wallet-authenticated finance platform with exactly three interconnected dashboards:
+ExpoLab will be a wallet-authenticated finance platform with three interconnected product dashboards and one read-only insights workspace:
 
 1. **Personal Finance** — income, expenses, budgets, savings, receivables, payables, and financial insights.
 2. **Friends & Groups** — shared expenses, participant approval, obligations, internal-credit settlements, and immutable receipts.
 3. **Crypto Investments** — BTC, ETH, and SOL market analysis, forecasts, risk profiling, portfolio allocation, scenarios, and AI explanations.
+4. **Smart Insights** — wallet-authorized, evidence-linked explanations and cross-dashboard notifications without write or wallet authority.
 
 Non-negotiable boundaries:
 
@@ -312,7 +313,7 @@ Go/no-go validation must prove:
 
 ### Milestone 0 — Architecture and feasibility gate
 
-Milestone 0 implementations are narrow, disposable feasibility spikes unless a later milestone explicitly adopts them. They must exercise the real pinned boundaries and preserve every security and storage invariant, but they do not need the complete product UI, domain breadth, or operational hardening assigned to later milestones. Passing a spike proves that the dependency can support the planned design; it does not replace the maintainable implementation or tests required by Milestones 1–8.
+Milestone 0 implementations are narrow, disposable feasibility spikes unless a later milestone explicitly adopts them. They must exercise the real pinned boundaries and preserve every security and storage invariant, but they do not need the complete product UI, domain breadth, or operational hardening assigned to later milestones. Passing a spike proves that the dependency can support the planned design; it does not replace the maintainable implementation or tests required by Milestones 1–9.
 
 - Populate the root `AGENTS.md` and add reviewed architecture, feasibility, REST-contract, security, and research-protocol documents.
 - Pin the ResilientDB, ResContract, ResVault, compiler, Python, Node, and model revisions.
@@ -393,7 +394,7 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 
 **Acceptance:** weights satisfy every constraint, dollar allocations reconcile to the input amount, stale forecasts are rejected, and scenarios leave Finance unchanged.
 
-### Milestone 8 — Read-only AI and end-to-end integration
+### Milestone 8 — Read-only AI and cross-dashboard integration
 
 **Status:** complete for local development; evidence is recorded in [`milestone8-read-only-ai-integration.md`](milestone8-read-only-ai-integration.md). The local model selects authorized facts only; validated server templates render final claims.
 
@@ -403,20 +404,32 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 
 **Acceptance:** responses cite only supplied facts, unsupported questions trigger a caveat/fallback, and no AI path can invoke a write or wallet operation.
 
-### Milestone 9 — Production hardening and deployment — ON HOLD
+### Milestone 9 — Local Handoff
+
+**Status:** planned; implementation has not started. Scope and acceptance are defined in [`milestone9-local-handoff.md`](milestone9-local-handoff.md).
+
+- Package a one-command local startup with preflight checks, bounded health waits, status, clean shutdown, and an explicitly confirmed reset path.
+- Prove one continuous, non-mocked browser journey through the real ResVault extension, React client, FastAPI API, four-replica ResilientDB stack, ResContract, local workers, and read-only AI path.
+- Provide isolated multi-wallet browser profiles and deterministic non-secret fixtures for Finance, Groups, settlement, Crypto, notifications, and Smart Insights.
+- Run approved full-scale BTC/ETH/SOL research and promote a forecast only if it passes the existing immutable evaluation criteria. Never weaken the gate merely to complete the milestone.
+- Produce an operator handoff covering prerequisites, resource requirements, model/data provisioning, troubleshooting, restart recovery, cleanup, known limitations, and acceptance evidence.
+
+**Acceptance:** after documented prerequisites, one command starts the complete local stack and reaches healthy state; a real-browser test without API interception completes the wallet-authenticated Finance → Groups → settlement → Finance → Crypto → Insights journey and survives a controlled restart; and the normal Crypto dashboard displays a live recommendation only when backed by an eligible immutable promotion event. If no candidate passes promotion, the gated Crypto state remains correct but the live-recommendation objective—and therefore the full Local Handoff milestone—remains incomplete.
+
+### Milestone 10 — Production hardening and deployment — ON HOLD
 
 - Do not provision cloud infrastructure or implement a production deployment pipeline until this milestone is explicitly resumed.
 - Before resumption, validate the pinned ResilientDB stack in the proposed cloud environment, including networking, persistent storage, restart recovery, replica failure, operational support, and independent failure domains.
 - If that validation passes, define the deployment architecture in an ADR before implementing TLS/reverse proxy, static frontend hosting, API/workers, private ResContract, KMS integration, backups, observability, or deployment automation.
 - Local load, accessibility, browser, chaos, and security testing may continue because it also supports implementation quality.
 
-**Acceptance:** deferred. When resumed, acceptance criteria must be re-approved using evidence from the selected cloud environment. Until then, completion of Milestones 0–8 does not imply production readiness or cloud support.
+**Acceptance:** deferred. When resumed, acceptance criteria must be re-approved using evidence from the selected cloud environment. Until then, completion of Milestones 0–9 does not imply production readiness or cloud support.
 
 ## 5. Test Strategy and Risk Gates
 
 Required suites:
 
-- **Frontend:** Vitest component/state tests, generated-client compatibility, accessibility, and Playwright journeys across all three dashboards.
+- **Frontend:** Vitest component/state tests, generated-client compatibility, accessibility, and Playwright journeys across all four authenticated workspaces.
 - **Backend:** Pytest unit, REST contract, authorization, encryption, idempotency, reducer, and provider-adapter tests.
 - **ResilientDB:** real four-node integration, restart durability, range/history behavior, blob reconstruction, projection repair, and replica-loss tests.
 - **Wallet/security:** origin isolation, private-key non-disclosure, locked-state behavior, replay/tamper/expiry rejection, and session revocation.
