@@ -1,6 +1,6 @@
 # REST API Contract
 
-Status: Milestone 7 authentication, Finance, Groups, contractual settlement, and Crypto portfolio boundaries implemented; read-only AI remains milestone-ordered
+Status: Milestone 8 authentication, Finance, Groups, contractual settlement, Crypto portfolio, and read-only AI boundaries implemented for local development
 
 ## Boundary
 
@@ -113,6 +113,27 @@ forecasts. The normal runtime also rejects synthetic acceptance fixtures. A
 recommendation carries the risk event, forecast snapshot, promotion event,
 portfolio policy, Finance calculation, Finance source events, solver path, caps,
 weights, exact integer-cent allocations, and a no-trading warning.
+
+## Read-only Smart Savings Insights
+
+- `GET /api/v1/insights/overview?month=YYYY-MM` returns a wallet-authorized,
+  content-addressed fact bundle, an initial Smart Savings Insight, and in-app
+  notifications linking to Finance, Groups, or Crypto.
+- `POST /api/v1/insights/query` accepts a month and a question of at most 500
+  characters. The POST is computational only: it appends no event and changes
+  no projection.
+
+The server assembles facts through the authenticated Finance, Groups, and
+Portfolio application services. The pinned local instruction model may select
+one through four fact IDs; it cannot author final financial claims. The server
+rejects unknown, duplicate, off-topic, or low-confidence selections and renders
+the answer from validated fact statements. Each returned evidence item includes
+its fact ID, source kind, source IDs, and as-of time.
+
+Prompt-control text, prohibited action requests, and unsupported topics return
+a refusal or deterministic fallback. The insights application has no mutation,
+wallet, signing, ResContract, trading, direct ResilientDB, or external network
+port. Model unavailability also falls back without weakening these boundaries.
 
 ## Errors
 

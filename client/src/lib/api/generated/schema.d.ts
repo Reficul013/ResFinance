@@ -379,6 +379,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/insights/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Overview */
+        get: operations["overview_api_v1_insights_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/insights/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Query */
+        post: operations["query_api_v1_insights_query_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -594,6 +628,24 @@ export interface components {
             /** Receipt Ids */
             receipt_ids: string[];
         };
+        /** EvidenceModel */
+        EvidenceModel: {
+            /** As Of Utc */
+            as_of_utc: string | null;
+            /** Fact Id */
+            fact_id: string;
+            /** Source Ids */
+            source_ids: string[];
+            /** Source Kind */
+            source_kind: string;
+            /** Statement */
+            statement: string;
+            /**
+             * Topic
+             * @enum {string}
+             */
+            topic: "savings" | "budgets" | "obligations" | "crypto" | "general";
+        };
         /** FinanceOverviewModel */
         FinanceOverviewModel: {
             /** Budgets */
@@ -782,6 +834,66 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** InsightNotificationModel */
+        InsightNotificationModel: {
+            /** Fact Ids */
+            fact_ids: string[];
+            /**
+             * Href
+             * @enum {string}
+             */
+            href: "/finance" | "/groups" | "/crypto" | "/insights";
+            /** Message */
+            message: string;
+            /** Notification Id */
+            notification_id: string;
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "info" | "warning" | "urgent";
+            /** Title */
+            title: string;
+        };
+        /** InsightQueryModel */
+        InsightQueryModel: {
+            /** Month */
+            month: string;
+            /** Question */
+            question: string;
+        };
+        /** InsightResponseModel */
+        InsightResponseModel: {
+            /** Caveats */
+            caveats: string[];
+            /** Evidence */
+            evidence: components["schemas"]["EvidenceModel"][];
+            /** Follow Up Questions */
+            follow_up_questions: string[];
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "local-model" | "template-fallback" | "refusal";
+            /** Model Id */
+            model_id: string;
+            /** Model Revision */
+            model_revision: string;
+            /** Refused */
+            refused: boolean;
+            /** Summary */
+            summary: string;
+        };
+        /** InsightsOverviewModel */
+        InsightsOverviewModel: {
+            /** Fact Bundle Id */
+            fact_bundle_id: string;
+            insight: components["schemas"]["InsightResponseModel"];
+            /** Month */
+            month: string;
+            /** Notifications */
+            notifications: components["schemas"]["InsightNotificationModel"][];
         };
         /** MoneyModel */
         MoneyModel: {
@@ -2076,6 +2188,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    overview_api_v1_insights_overview_get: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: {
+                Authorization?: string | null;
+                Origin?: string | null;
+                Referer?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightsOverviewModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    query_api_v1_insights_query_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InsightQueryModel"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightResponseModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

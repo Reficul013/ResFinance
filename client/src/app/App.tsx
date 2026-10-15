@@ -5,6 +5,7 @@ import { AuthCard } from "../components/AuthCard";
 import { StatusCard } from "../components/StatusCard";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useAuthentication } from "../features/auth/useAuthentication";
+import { NotificationCenter } from "../features/insights/NotificationCenter";
 import { usePlatformHealth } from "../features/platform/usePlatformHealth";
 
 const FinanceDashboard = lazy(() =>
@@ -22,6 +23,11 @@ const CryptoDashboard = lazy(() =>
     default: module.CryptoDashboard,
   })),
 );
+const InsightsDashboard = lazy(() =>
+  import("../features/insights/InsightsDashboard").then((module) => ({
+    default: module.InsightsDashboard,
+  })),
+);
 
 export function App() {
   const health = usePlatformHealth();
@@ -35,7 +41,7 @@ export function App() {
       <ThemeToggle />
       {!authenticated && (
         <>
-          <p className="eyebrow">Milestone 7 · Risk-aware portfolio</p>
+          <p className="eyebrow">Milestone 8 · Read-only insights</p>
           <h1>ResFinance</h1>
           <p className="lede">
             Connect the hardened ResVault extension to open your encrypted
@@ -53,11 +59,15 @@ export function App() {
       />
       {authenticated ? (
         <>
-          <nav className="dashboard-nav" aria-label="ResFinance dashboards">
-            <NavLink to="/finance">Personal Finance</NavLink>
-            <NavLink to="/groups">Friends &amp; Groups</NavLink>
-            <NavLink to="/crypto">Crypto</NavLink>
-          </nav>
+          <div className="app-navigation">
+            <nav className="dashboard-nav" aria-label="ResFinance dashboards">
+              <NavLink to="/finance">Personal Finance</NavLink>
+              <NavLink to="/groups">Friends &amp; Groups</NavLink>
+              <NavLink to="/crypto">Crypto</NavLink>
+              <NavLink to="/insights">Smart Insights</NavLink>
+            </nav>
+            <NotificationCenter accessToken={authentication.accessToken!} />
+          </div>
           <Routes>
             <Route
               path="/finance"
@@ -87,6 +97,18 @@ export function App() {
               element={
                 <Suspense fallback={<RouteLoading text="Opening Crypto…" />}>
                   <CryptoDashboard accessToken={authentication.accessToken!} />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/insights"
+              element={
+                <Suspense
+                  fallback={<RouteLoading text="Opening Smart Insights…" />}
+                >
+                  <InsightsDashboard
+                    accessToken={authentication.accessToken!}
+                  />
                 </Suspense>
               }
             />

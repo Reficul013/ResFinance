@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-15T05:07:43.370590Z",
+  "model": {
+    "id": "Qwen/Qwen2.5-1.5B-Instruct",
+    "revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+    "model_dir": "/private/tmp/resfinance-qwen2.5-1.5b",
+    "weights_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
+    "config_sha256": "98d2ff8cc47488d08a2b0b3acf4eb99ef210779b42bd48605f6b8e36acdbf670",
+    "tokenizer_config_sha256": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583"
+  },
+  "runtime": {
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "python": "3.13.2",
+    "torch": "2.14.1",
+    "transformers": "4.57.6",
+    "mps_available": false
+  },
+  "benchmark": {
+    "runs": 2,
+    "durations_seconds": [
+      10.043557375029195,
+      4.459598415996879
+    ],
+    "cold_seconds": 10.043557375029195,
+    "warm_median_seconds": 4.459598415996879,
+    "rss_before_bytes": 363020288,
+    "rss_after_bytes": 3479273472,
+    "rss_delta_bytes": 3116253184,
+    "selections": [
+      {
+        "fact_ids": [
+          "budget.groceries"
+        ],
+        "confidence": 1.0
+      },
+      {
+        "fact_ids": [
+          "budget.groceries"
+        ],
+        "confidence": 1.0
+      }
+    ],
+    "valid_fact_selection": true
+  },
+  "policy": {
+    "runtime_network_access": false,
+    "trust_remote_code": false,
+    "model_can_author_final_claims": false,
+    "template_fallback_required": true
+  }
+}

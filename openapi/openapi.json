@@ -583,6 +583,62 @@
         "title": "EventResponse",
         "type": "object"
       },
+      "EvidenceModel": {
+        "properties": {
+          "as_of_utc": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Utc"
+          },
+          "fact_id": {
+            "title": "Fact Id",
+            "type": "string"
+          },
+          "source_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Ids",
+            "type": "array"
+          },
+          "source_kind": {
+            "title": "Source Kind",
+            "type": "string"
+          },
+          "statement": {
+            "title": "Statement",
+            "type": "string"
+          },
+          "topic": {
+            "enum": [
+              "savings",
+              "budgets",
+              "obligations",
+              "crypto",
+              "general"
+            ],
+            "title": "Topic",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fact_id",
+          "topic",
+          "statement",
+          "source_kind",
+          "source_ids",
+          "as_of_utc"
+        ],
+        "title": "EvidenceModel",
+        "type": "object"
+      },
       "FinanceOverviewModel": {
         "properties": {
           "budgets": {
@@ -1081,6 +1137,172 @@
           "service"
         ],
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "InsightNotificationModel": {
+        "properties": {
+          "fact_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Fact Ids",
+            "type": "array"
+          },
+          "href": {
+            "enum": [
+              "/finance",
+              "/groups",
+              "/crypto",
+              "/insights"
+            ],
+            "title": "Href",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "notification_id": {
+            "title": "Notification Id",
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "info",
+              "warning",
+              "urgent"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "notification_id",
+          "severity",
+          "title",
+          "message",
+          "href",
+          "fact_ids"
+        ],
+        "title": "InsightNotificationModel",
+        "type": "object"
+      },
+      "InsightQueryModel": {
+        "additionalProperties": false,
+        "properties": {
+          "month": {
+            "pattern": "^\\d{4}-\\d{2}$",
+            "title": "Month",
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "month",
+          "question"
+        ],
+        "title": "InsightQueryModel",
+        "type": "object"
+      },
+      "InsightResponseModel": {
+        "properties": {
+          "caveats": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Caveats",
+            "type": "array"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceModel"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "follow_up_questions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Follow Up Questions",
+            "type": "array"
+          },
+          "mode": {
+            "enum": [
+              "local-model",
+              "template-fallback",
+              "refusal"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "model_revision": {
+            "title": "Model Revision",
+            "type": "string"
+          },
+          "refused": {
+            "title": "Refused",
+            "type": "boolean"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary",
+          "evidence",
+          "caveats",
+          "follow_up_questions",
+          "mode",
+          "model_id",
+          "model_revision",
+          "refused"
+        ],
+        "title": "InsightResponseModel",
+        "type": "object"
+      },
+      "InsightsOverviewModel": {
+        "properties": {
+          "fact_bundle_id": {
+            "title": "Fact Bundle Id",
+            "type": "string"
+          },
+          "insight": {
+            "$ref": "#/components/schemas/InsightResponseModel"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          },
+          "notifications": {
+            "items": {
+              "$ref": "#/components/schemas/InsightNotificationModel"
+            },
+            "title": "Notifications",
+            "type": "array"
+          }
+        },
+        "required": [
+          "month",
+          "fact_bundle_id",
+          "insight",
+          "notifications"
+        ],
+        "title": "InsightsOverviewModel",
         "type": "object"
       },
       "MoneyModel": {
@@ -4099,6 +4321,171 @@
         "summary": "Health",
         "tags": [
           "platform"
+        ]
+      }
+    },
+    "/api/v1/insights/overview": {
+      "get": {
+        "operationId": "overview_api_v1_insights_overview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "month",
+            "required": true,
+            "schema": {
+              "title": "Month",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Referer",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Referer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsightsOverviewModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Overview",
+        "tags": [
+          "insights"
+        ]
+      }
+    },
+    "/api/v1/insights/query": {
+      "post": {
+        "operationId": "query_api_v1_insights_query_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InsightQueryModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsightResponseModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Query",
+        "tags": [
+          "insights"
         ]
       }
     }

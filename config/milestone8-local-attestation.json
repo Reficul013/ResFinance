@@ -1,0 +1,22 @@
+{
+  "ai_path_resilientdb_writes": 0,
+  "budget_notification_present": true,
+  "citations_only_from_authorized_bundle": true,
+  "completed_at_utc": "2026-10-15T04:59:09Z",
+  "cross_user_isolation": true,
+  "fact_bundle_id": "facts_e31a5051a5bf4d77affd6d894e40ba8fdd4e966dfaf96fe327f3ba987770690f",
+  "fact_count": 7,
+  "forecast_gate_notification_present": true,
+  "generation_mode": "local-model",
+  "model_id": "Qwen/Qwen2.5-1.5B-Instruct",
+  "model_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+  "persistent_database": "Apache ResilientDB LevelDB backend",
+  "production_or_cloud_readiness": false,
+  "prohibited_action_refused": true,
+  "prompt_injection_refused": true,
+  "read_only": true,
+  "runtime_network_access": false,
+  "schema_version": 1,
+  "scope": "local-read-only-acceptance-on-real-resilientdb",
+  "unsupported_question_refused": true
+}

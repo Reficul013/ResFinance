@@ -2,7 +2,7 @@
 
 ResFinance is a planned wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
 
-> **Project status:** Milestones 0–7 are complete for local development and research. Risk scoring, constrained BTC/ETH/SOL optimization, Finance-linked capital, non-mutating scenarios, and the Crypto dashboard now pass acceptance. The deterministic Milestone 6 smoke candidate was not promoted, so the normal runtime correctly shows no portfolio recommendation until an eligible forecast is promoted. Milestone 8 read-only AI and end-to-end integration is next. Cloud and production deployment remain on hold.
+> **Project status:** Milestones 0–8 are complete for local development and research. Wallet-scoped Smart Savings Insights, verified evidence citations, deterministic refusals/fallbacks, cross-dashboard navigation, and in-app notifications now pass acceptance. The deterministic Milestone 6 smoke candidate was not promoted, so the normal runtime correctly shows no portfolio recommendation until an eligible forecast is promoted. Cloud and production deployment remain on hold.
 
 ## What the product will do
 
@@ -104,13 +104,17 @@ Milestone 5 adds Coin Metrics market and BTC/ETH on-chain adapters, CoinGecko cu
 
 Milestone 6 adds deterministic smoke-data generation; naive, linear, and LSTM baselines; the clean-room three-asset MSPCIFormer adaptation; masked Adaptive Multi-Source Gating; market-only, fixed-fusion, and source-removal ablations; five expanding walk-forward folds; validation-only conformal intervals; full statistical and portfolio-relevant metrics; deterministic checkpoints and plots; immutable model-promotion rules; and encrypted artifact persistence in ResilientDB. Two CPU smoke runs produced identical dataset and prediction hashes, and all 39 artifacts were restored byte-for-byte from the real four-replica stack. The adaptive smoke candidate was correctly rejected by the declared MAE gate, so no model-performance or statistical-significance claim is made. See the [Milestone 6 reproducible ML research evidence](docs/milestone6-reproducible-ml-research.md).
 
+Milestone 7 adds the versioned risk questionnaire, constrained BTC/ETH/SOL optimization, Finance-linked default capital, exact-cent allocations, immutable forecast provenance, non-mutating amount scenarios, and the Crypto dashboard. Stale, synthetic, and unpromoted forecasts fail closed in normal runtime. See the [Milestone 7 risk, portfolio, and Crypto dashboard evidence](docs/milestone7-risk-portfolio-crypto-dashboard.md).
+
+Milestone 8 adds wallet-authorized fact bundles, the pinned local Qwen instruction model, evidence-ID validation, prompt-injection and prohibited-action refusals, deterministic template fallback, Smart Savings Insights, cross-dashboard navigation, and a unified in-app notification center. The model ranks facts only; final claims are rendered from server-validated evidence. Real-stack acceptance recorded zero ResilientDB writes from the AI path. See the [Milestone 8 read-only AI and integration evidence](docs/milestone8-read-only-ai-integration.md).
+
 ## Local verification
 
 ```bash
 .venv/bin/python -m pip install \
   -r requirements-dev.txt -r requirements-milestone0.txt \
   -r requirements-api.txt -r requirements-ml.txt \
-  -r requirements-portfolio.txt
+  -r requirements-portfolio.txt -r requirements-ai.txt
 .venv/bin/ruff check .
 .venv/bin/mypy
 .venv/bin/pytest
@@ -167,6 +171,26 @@ docker compose --profile tools up -d --build --wait \
 .venv/bin/python -m scripts.milestone7.run_portfolio_acceptance \
   --docker "$(command -v docker)" \
   --output config/milestone7-local-attestation.json
+
+.venv/bin/python -m scripts.milestone8.benchmark_local_model \
+  --model-dir /private/tmp/resfinance-qwen2.5-1.5b \
+  --output config/milestone8-model-benchmark.json \
+  --allow-download
+.venv/bin/python -m scripts.milestone8.run_insights_acceptance \
+  --docker "$(command -v docker)" \
+  --model-dir /private/tmp/resfinance-qwen2.5-1.5b \
+  --output config/milestone8-local-attestation.json
+```
+
+The application defaults to the deterministic evidence template when local
+weights are not mounted. To enable the pinned model for the local API container,
+set `RESFINANCE_AI_MODEL_PATH` to the downloaded snapshot and add the local-only
+overlay:
+
+```bash
+RESFINANCE_AI_MODEL_PATH=/private/tmp/resfinance-qwen2.5-1.5b \
+  docker compose -f docker-compose.yml -f docker-compose.ai.yml \
+  --profile app up -d --build api
 ```
 
 ## Repository layout
@@ -193,6 +217,7 @@ docs/         Product, architecture, delivery, and development references
 - [Milestone 5 crypto ingestion and feature store](docs/milestone5-crypto-ingestion-feature-store.md)
 - [Milestone 6 reproducible ML research](docs/milestone6-reproducible-ml-research.md)
 - [Milestone 7 risk, portfolio, and Crypto dashboard](docs/milestone7-risk-portfolio-crypto-dashboard.md)
+- [Milestone 8 read-only AI and end-to-end integration](docs/milestone8-read-only-ai-integration.md)
 - [REST API contract](docs/rest-api-contract.md)
 - [Security contract](docs/security.md)
 - [Research protocol](docs/research-protocol.md)

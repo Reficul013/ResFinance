@@ -51,6 +51,9 @@ export type RiskProfileEvent =
 export type ScenarioCommand = components["schemas"]["ScenarioCommand"];
 export type PortfolioRecommendation =
   components["schemas"]["RecommendationModel"];
+export type InsightsOverview = components["schemas"]["InsightsOverviewModel"];
+export type InsightResponse = components["schemas"]["InsightResponseModel"];
+export type InsightQuery = components["schemas"]["InsightQueryModel"];
 
 export async function createChallenge(
   identity: WalletIdentity,
@@ -125,6 +128,37 @@ export async function getCryptoOverview(
     `/api/v1/crypto/overview?month=${encodeURIComponent(month)}`,
     request,
   );
+}
+
+export async function getInsightsOverview(
+  accessToken: string,
+  month: string,
+  signal?: AbortSignal,
+): Promise<InsightsOverview> {
+  const request: RequestInit = {
+    headers: authorizedHeaders(accessToken),
+    credentials: "include",
+  };
+  if (signal !== undefined) request.signal = signal;
+  return requestJson<InsightsOverview>(
+    `/api/v1/insights/overview?month=${encodeURIComponent(month)}`,
+    request,
+  );
+}
+
+export function queryInsights(
+  accessToken: string,
+  command: InsightQuery,
+): Promise<InsightResponse> {
+  return requestJson<InsightResponse>("/api/v1/insights/query", {
+    method: "POST",
+    headers: {
+      ...authorizedHeaders(accessToken),
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(command),
+  });
 }
 
 export function recordRiskProfile(

@@ -1,0 +1,10 @@
+services:
+  api:
+    environment:
+      RESFINANCE_AI_ENABLED: "true"
+      RESFINANCE_AI_MODEL_PATH: /models/qwen2.5-1.5b
+    volumes:
+      - type: bind
+        source: ${RESFINANCE_AI_MODEL_PATH:?Set RESFINANCE_AI_MODEL_PATH to the pinned local snapshot}
+        target: /models/qwen2.5-1.5b
+        read_only: true

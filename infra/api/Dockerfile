@@ -8,9 +8,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 COPY requirements-api.txt /app/requirements-api.txt
 COPY requirements-portfolio.txt /app/requirements-portfolio.txt
+COPY requirements-ml.txt /app/requirements-ml.txt
+COPY requirements-ai.txt /app/requirements-ai.txt
+RUN pip install --no-cache-dir \
+  --index-url https://download.pytorch.org/whl/cpu \
+  torch==2.14.1
 RUN pip install --no-cache-dir \
   --requirement /app/requirements-api.txt \
-  --requirement /app/requirements-portfolio.txt
+  --requirement /app/requirements-portfolio.txt \
+  --requirement /app/requirements-ml.txt \
+  --requirement /app/requirements-ai.txt
 
 COPY --from=resilientdb \
   /app/bazel-bin/service/tools/kv/api_tools/kv_service_tools \

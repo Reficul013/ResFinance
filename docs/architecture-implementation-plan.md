@@ -4,7 +4,7 @@ Status: Approved planning baseline for local implementation; cloud deployment is
 
 Last reviewed: 2026-10-14
 
-Implementation status: Milestones 0–7 passed for local development and research; Milestone 8 may begin. No model is currently promoted, so runtime portfolio recommendations remain gated.
+Implementation status: Milestones 0–8 passed for local development and research. No forecasting model is currently promoted, so runtime portfolio recommendations remain gated. Milestone 9 production hardening and deployment remains on hold.
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
@@ -394,6 +394,8 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 **Acceptance:** weights satisfy every constraint, dollar allocations reconcile to the input amount, stale forecasts are rejected, and scenarios leave Finance unchanged.
 
 ### Milestone 8 — Read-only AI and end-to-end integration
+
+**Status:** complete for local development; evidence is recorded in [`milestone8-read-only-ai-integration.md`](milestone8-read-only-ai-integration.md). The local model selects authorized facts only; validated server templates render final claims.
 
 - Benchmark and pin the local Hugging Face instruction model.
 - Implement authorized fact bundles, evidence-linked generation, refusal rules, template fallback, and prompt-injection defenses.

@@ -9,6 +9,7 @@ Status: Milestones 1 and 2 application encryption, wallet hardening, and authent
 3. FastAPI authenticates users, authorizes resources, verifies signed intents, and exposes `/api/v1`.
 4. ResContract and ResilientDB are private services reachable only by application services and controlled workers.
 5. External data/model providers are untrusted inputs and cannot initiate writes outside their ingestion commands.
+6. The local instruction model receives only the authenticated user's structured fact bundle. It selects fact IDs but cannot author unchecked claims or call application tools.
 
 ## Wallet invariants
 
@@ -38,6 +39,7 @@ Milestone 1 implements authenticated encryption for event and blob repositories.
 - ResContract caller addresses are accepted only through the private gateway after verification.
 - Contract state is authoritative. Finance changes only after a confirmed receipt.
 - Workers use least-privilege identities and singleton leases stored in ResilientDB.
+- Smart Savings Insights expose read-only application-service methods only. Prompt text and model output are untrusted; unknown evidence IDs, prompt injection, low confidence, and prohibited actions fail closed to a deterministic template or refusal.
 
 ## Logging and evidence
 

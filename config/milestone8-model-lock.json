@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "model": {
+    "id": "Qwen/Qwen2.5-1.5B-Instruct",
+    "revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+    "license": "Apache-2.0",
+    "weights_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
+    "config_sha256": "98d2ff8cc47488d08a2b0b3acf4eb99ef210779b42bd48605f6b8e36acdbf670",
+    "tokenizer_config_sha256": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583",
+    "runtime_network_access": false,
+    "trust_remote_code": false
+  },
+  "runtime": {
+    "python": "3.13",
+    "torch": "2.14.1",
+    "transformers": "4.57.6",
+    "huggingface_hub": "0.36.2",
+    "tokenizers": "0.22.2",
+    "safetensors": "0.8.0",
+    "accelerate": "1.15.0"
+  },
+  "generation_policy": {
+    "do_sample": false,
+    "max_new_tokens": 96,
+    "minimum_selection_confidence": 0.65,
+    "maximum_selected_facts": 4,
+    "unchecked_model_claims_allowed": false
+  }
+}
