@@ -1,0 +1,168 @@
+# Milestone 9 Local Operator Guide
+
+This guide runs the complete ResFinance application locally on the validated
+Apple Silicon development architecture. Cloud and production deployment remain
+on hold.
+
+## Prerequisites and resource expectations
+
+- macOS on `arm64` with Docker Desktop running. The validated engine is
+  29.8.2 with Compose 5.5.1.
+- Python 3.13.2 in `.venv`, Node 22.14.0, and npm dependencies installed with
+  `npm ci` in both `client/` and `resvault/`.
+- The source-pinned `resfinance/resilientdb:4de5cb4-m0` image described in the
+  Milestone 0 documentation.
+- Chromium installed for Playwright when running browser acceptance.
+- Optional pinned Qwen weights at an operator-selected path outside Git.
+
+On the acceptance host, the Qwen snapshot occupies 2.9 GB. Active Docker
+images, containers, and volumes occupied about 14.2 GB; rebuild cache could add
+about 18 GB. Keep roughly 35 GB free for a comfortable clean rebuild. The local
+model benchmark measured approximately 3.12 GB of resident-memory growth, so a
+16 GB host is the practical operator target, not a formally established hard
+minimum. Cached startup took about 24 seconds in the final implementation run;
+first builds depend on Docker cache and host performance.
+
+## Install once
+
+```bash
+.venv/bin/python -m pip install \
+  -r requirements-dev.txt -r requirements-milestone0.txt \
+  -r requirements-api.txt -r requirements-ml.txt \
+  -r requirements-portfolio.txt -r requirements-ai.txt
+
+(cd client && npm ci && npx playwright install chromium)
+(cd resvault && npm ci)
+```
+
+Startup never downloads dependencies, model weights, or provider data.
+
+## Preflight and start
+
+Use deterministic evidence templates without mounting a local language model:
+
+```bash
+.venv/bin/python -m scripts.milestone9.local_handoff preflight
+.venv/bin/python -m scripts.milestone9.local_handoff start
+```
+
+Or verify and mount the pinned model read-only:
+
+```bash
+.venv/bin/python -m scripts.milestone9.local_handoff \
+  --model-dir /private/tmp/resfinance-qwen2.5-1.5b \
+  --require-model preflight
+.venv/bin/python -m scripts.milestone9.local_handoff \
+  --model-dir /private/tmp/resfinance-qwen2.5-1.5b \
+  --require-model start
+```
+
+Open `http://127.0.0.1:5173`. Load `resvault/dist` as an unpacked Chromium
+extension if operating manually. Use a separate browser profile for each group
+participant; create each wallet inside that profile and never export its seed.
+
+## Lifecycle
+
+Global options such as `--model-dir` precede the subcommand.
+
+```bash
+.venv/bin/python -m scripts.milestone9.local_handoff status
+.venv/bin/python -m scripts.milestone9.local_handoff logs --tail 100
+.venv/bin/python -m scripts.milestone9.local_handoff restart
+.venv/bin/python -m scripts.milestone9.local_handoff stop
+```
+
+`stop` and `restart` preserve ResilientDB and ResContract volumes. Reset is
+destructive and intentionally requires the exact phrase:
+
+```bash
+.venv/bin/python -m scripts.milestone9.local_handoff reset \
+  --confirm DELETE_LOCAL_RESFINANCE_STATE
+```
+
+## Browser acceptance
+
+Start the stack first, then run:
+
+```bash
+cd client
+npm run test:e2e:local
+```
+
+The test creates disposable browser profiles under the operating system's
+temporary directory. It uses the real extension, API, four-replica stores, and
+contract; no request routing is mocked. Local model inference is allowed up to
+120 seconds per Insights request, while the whole journey remains bounded to
+10 minutes. The definitive Milestone 9 acceptance uses the no-model startup so
+Smart Insights follows its deterministic evidence-template path; model hashes
+and model-overlay startup are verified separately.
+
+## Local jobs
+
+Jobs are manually triggered in V1; no hidden scheduler is started. Current
+market ingestion uses the existing provider adapters. Reconciliation reads
+authoritative ResContract state and appends only missing confirmation events.
+
+```bash
+.venv/bin/python -m scripts.milestone9.run_local_workers ingest-current
+.venv/bin/python -m scripts.milestone9.run_local_workers \
+  reconcile --group-id group-REPLACE_ME
+.venv/bin/python -m scripts.milestone9.run_local_workers status
+```
+
+Running, completed, and failed job records are stored in ResilientDB under the
+`job:local:` prefix. Provider failures append failed status without deleting
+accepted observations.
+
+## Full research attempt
+
+The full runner requires either an approved GDELT CSV for fresh ingestion or a
+known provider-backed feature-dataset hash already in ResilientDB. Generate a
+temporary 32-byte artifact-encryption key in the shell; do not commit or log it.
+
+```bash
+export RESFINANCE_RESEARCH_ENCRYPTION_KEY="$(openssl rand -hex 32)"
+.venv/bin/python -m scripts.milestone9.run_full_research \
+  --ingest \
+  --gdelt-csv /absolute/path/to/approved-gdelt-daily.csv \
+  --output /private/tmp/milestone9-full-research.json
+unset RESFINANCE_RESEARCH_ENCRYPTION_KEY
+```
+
+To reuse a provider-backed feature dataset:
+
+```bash
+export RESFINANCE_RESEARCH_ENCRYPTION_KEY="$(openssl rand -hex 32)"
+.venv/bin/python -m scripts.milestone9.run_full_research \
+  --dataset-hash REPLACE_WITH_64_HEX_DATASET_HASH \
+  --output /private/tmp/milestone9-full-research.json
+unset RESFINANCE_RESEARCH_ENCRYPTION_KEY
+```
+
+Exit status 0 means the evaluated adaptive candidate passed and an immutable
+model-promotion event was appended. Exit status 2 means the run completed but
+the candidate failed safely. Neither status alone publishes a current-cutoff
+forecast; the normal application remains gated until such a snapshot exists.
+
+## Troubleshooting
+
+- `docker-engine: unavailable`: start Docker Desktop and rerun preflight.
+- Architecture, Python, or Node failure: use the pinned versions; do not bypass
+  the check with a different database or image.
+- Model hash mismatch: remove the suspect snapshot and provision the exact
+  locked revision outside startup. Do not edit the lock to fit local weights.
+- Port 5173 ownership failure: stop the foreign process, then rerun `start`.
+- Health timeout: run `logs --tail 200`; Compose identifies unhealthy services
+  and the client log is `.resfinance-local/client.log`.
+- ResVault does not respond: confirm `resvault/dist` is the loaded unpacked
+  extension, use exactly `http://127.0.0.1:5173`, and unlock the wallet.
+- Contract action fails with a version conflict: wait for the current Group
+  projection to render before retrying; never reuse the signed intent.
+- Research input error: verify the GDELT file is the approved bounded aggregate
+  and retain its SHA-256/provenance. Synthetic fixtures cannot satisfy this
+  gate.
+
+Known limitations: local-only topology, personal non-commercial provider
+scope, manual worker scheduling, no trade execution or exchange custody, no
+fiat/native-crypto transfer, and no live recommendation until both promotion
+and current-cutoff forecast evidence exist.

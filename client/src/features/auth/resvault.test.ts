@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hashParameters } from "./resvault";
+import { formatIntentTimestamp, hashParameters } from "./resvault";
 
 describe("ResVault page contract", () => {
   it("hashes challenge parameters exactly like the extension and backend", async () => {
@@ -11,6 +11,12 @@ describe("ResVault page contract", () => {
       }),
     ).resolves.toBe(
       "6216c467286569fc1d5ac542de67d940dcc585a7b0811c142a464bbf75c19eac",
+    );
+  });
+
+  it("uses whole-second UTC timestamps for cross-language signatures", () => {
+    expect(formatIntentTimestamp(new Date("2026-10-15T10:43:12.987Z"))).toBe(
+      "2026-10-15T10:43:12Z",
     );
   });
 });

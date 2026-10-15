@@ -119,8 +119,9 @@ weights stay outside Git and are mounted read-only for local runtime.
 
 No forecasting model is currently promoted, so Insights explains the Crypto
 promotion gate and cannot provide a portfolio recommendation. That is the
-correct evidence-safe behavior. Milestone 9 Local Handoff is planned but has
-not started; it owns the one-command local lifecycle, continuous real-browser
-proof, and honest attempt to produce a promoted forecast. Milestone 10 remains
+correct evidence-safe behavior. Milestone 9 subsequently implemented the
+one-command local lifecycle and continuous real-browser proof, while its full
+provider-data research and live-recommendation gates remain incomplete.
+Milestone 10 remains
 explicitly on hold. Milestone 8 does not establish cloud, production,
 commercial, BFT, or investment-performance readiness.

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  formatIntentTimestamp,
   hashParameters,
   signIntent,
   type JsonValue,
@@ -276,7 +277,7 @@ function AddMemberPanel({
             required
           />
         </label>
-        <button disabled={dashboard.member.isPending}>Add member</button>
+        <button disabled={isGroupWritePending(dashboard)}>Add member</button>
       </form>
       <MutationError error={dashboard.member.error} />
     </section>
@@ -337,7 +338,7 @@ function FundCreditsPanel({
             required
           />
         </label>
-        <button disabled={dashboard.credits.isPending}>
+        <button disabled={isGroupWritePending(dashboard)}>
           Approve funding in ResVault
         </button>
       </form>
@@ -467,7 +468,7 @@ function CreateExpensePanel({
             required
           />
         </label>
-        <button disabled={dashboard.expense.isPending}>
+        <button disabled={isGroupWritePending(dashboard)}>
           Approve split in ResVault
         </button>
       </form>
@@ -536,7 +537,7 @@ function ObligationsPanel({
                       <button
                         key={decision}
                         className={decision === "reject" ? "secondary" : ""}
-                        disabled={dashboard.decision.isPending}
+                        disabled={isGroupWritePending(dashboard)}
                         onClick={() =>
                           void decideObligation(
                             dashboard,
@@ -585,7 +586,7 @@ function ObligationsPanel({
                         required
                       />
                     </label>
-                    <button disabled={dashboard.settlement.isPending}>
+                    <button disabled={isGroupWritePending(dashboard)}>
                       Settle with credits
                     </button>
                   </form>
@@ -691,6 +692,16 @@ async function settleObligation(
 
 type ContractAction = "split.approve" | "credits.fund" | "settlement.authorize";
 
+function isGroupWritePending(dashboard: Dashboard): boolean {
+  return (
+    dashboard.member.isPending ||
+    dashboard.expense.isPending ||
+    dashboard.decision.isPending ||
+    dashboard.credits.isPending ||
+    dashboard.settlement.isPending
+  );
+}
+
 async function requestSignature(
   action: ContractAction,
   resourceId: string,
@@ -705,8 +716,10 @@ async function requestSignature(
     parameters,
     parameters_hash: await hashParameters(parameters),
     nonce: crypto.randomUUID(),
-    issued_at: issuedAt.toISOString(),
-    expires_at: new Date(issuedAt.getTime() + 5 * 60 * 1000).toISOString(),
+    issued_at: formatIntentTimestamp(issuedAt),
+    expires_at: formatIntentTimestamp(
+      new Date(issuedAt.getTime() + 5 * 60 * 1000),
+    ),
     origin: window.location.origin,
     audience: "resfinance-api",
     network_id: "pinned-local-network",

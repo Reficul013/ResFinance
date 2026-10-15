@@ -7,6 +7,7 @@ import {
   refreshSession,
 } from "../../lib/api/client";
 import {
+  formatIntentTimestamp,
   getWalletIdentity,
   hashParameters,
   lockWallet,
@@ -25,6 +26,15 @@ interface Authentication {
   accessToken: string | null;
   connect(): Promise<void>;
   logout(): Promise<void>;
+}
+
+let pendingInitialRefresh: ReturnType<typeof refreshSession> | null = null;
+
+function refreshInitialSession(): ReturnType<typeof refreshSession> {
+  pendingInitialRefresh ??= refreshSession().finally(() => {
+    pendingInitialRefresh = null;
+  });
+  return pendingInitialRefresh;
 }
 
 export function useAuthentication(): Authentication {
@@ -54,7 +64,10 @@ export function useAuthentication(): Authentication {
 
   useEffect(() => {
     let active = true;
-    refreshSession()
+    // React Strict Mode intentionally remounts effects in development. Share the
+    // rotating refresh request so the remount cannot consume the same cookie
+    // twice and let a racing 401 overwrite the valid refreshed session.
+    refreshInitialSession()
       .then((session) => {
         if (!active) return;
         setAccessToken(session.access_token);
@@ -89,8 +102,10 @@ export function useAuthentication(): Authentication {
         parameters,
         parameters_hash: await hashParameters(parameters),
         nonce: crypto.randomUUID(),
-        issued_at: issuedAt.toISOString(),
-        expires_at: new Date(issuedAt.getTime() + 5 * 60 * 1000).toISOString(),
+        issued_at: formatIntentTimestamp(issuedAt),
+        expires_at: formatIntentTimestamp(
+          new Date(issuedAt.getTime() + 5 * 60 * 1000),
+        ),
         origin,
         audience: "resfinance-api",
         network_id: "pinned-local-network",

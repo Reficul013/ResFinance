@@ -1,8 +1,8 @@
 # ResFinance
 
-ResFinance is a planned wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
+ResFinance is a locally implemented wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
 
-> **Project status:** Milestones 0–8 are complete for local development and research. Milestone 9 Local Handoff is planned and has not started; it will package one-command startup, prove one continuous real-browser/full-stack journey, and attempt a live recommendation through the existing model-promotion gate. The deterministic Milestone 6 smoke candidate was not promoted, so the normal runtime correctly shows no portfolio recommendation until an eligible forecast is promoted. Milestone 10 cloud and production deployment remains on hold.
+> **Project status:** Milestones 0–8 are complete for local development and research. Milestone 9 now provides the one-command local lifecycle, explicit workers, operator guide, and continuous real ResVault/full-stack browser proof. It remains incomplete because the approved full-period GDELT input is unavailable, so no provider-backed full research run, eligible promotion, or current-cutoff live forecast has been produced. The normal runtime correctly shows no portfolio recommendation. Milestone 10 cloud and production deployment remains on hold.
 
 ## What the product will do
 
@@ -108,7 +108,7 @@ Milestone 7 adds the versioned risk questionnaire, constrained BTC/ETH/SOL optim
 
 Milestone 8 adds wallet-authorized fact bundles, the pinned local Qwen instruction model, evidence-ID validation, prompt-injection and prohibited-action refusals, deterministic template fallback, Smart Savings Insights, cross-dashboard navigation, and a unified in-app notification center. The model ranks facts only; final claims are rendered from server-validated evidence. Real-stack acceptance recorded zero ResilientDB writes from the AI path. See the [Milestone 8 read-only AI and integration evidence](docs/milestone8-read-only-ai-integration.md).
 
-Milestone 9 Local Handoff is the final local delivery gate. It is planning-only today: implementation has not started. It will package the complete local stack behind one documented startup flow, replace mocked browser boundaries with one continuous real-service journey using ResVault, ResilientDB, and ResContract, and run approved full-scale research in pursuit of an honestly promoted BTC/ETH/SOL forecast. A failing model will remain unpromoted; the milestone will not weaken its evaluation gate to manufacture a recommendation. See the [Milestone 9 Local Handoff plan](docs/milestone9-local-handoff.md).
+Milestone 9 Local Handoff adds a bounded preflight/start/status/restart/logs/stop/reset lifecycle, hash-verified optional local-model mounting, append-only ResilientDB worker status, a full provider-data research runner, and a continuous two-wallet Chromium journey using the real ResVault extension, FastAPI, four-replica ResilientDB, and ResContract. The local product handoff is implemented; the full research and live-recommendation gates remain incomplete because the approved GDELT aggregate bytes are unavailable. Synthetic data is not accepted as a substitute and the forecast gate remains closed. See the [Milestone 9 Local Handoff evidence](docs/milestone9-local-handoff.md) and [operator guide](docs/milestone9-local-operator-guide.md).
 
 ## Local verification
 
@@ -182,6 +182,14 @@ docker compose --profile tools up -d --build --wait \
   --docker "$(command -v docker)" \
   --model-dir /private/tmp/resfinance-qwen2.5-1.5b \
   --output config/milestone8-local-attestation.json
+
+.venv/bin/python -m scripts.milestone9.local_handoff \
+  --model-dir /private/tmp/resfinance-qwen2.5-1.5b \
+  --require-model preflight
+.venv/bin/python -m scripts.milestone9.local_handoff start
+cd client && npm run test:e2e:local && cd ..
+.venv/bin/python -m scripts.milestone9.run_local_workers status
+.venv/bin/python -m scripts.milestone9.local_handoff status
 ```
 
 The application defaults to the deterministic evidence template when local
@@ -220,7 +228,8 @@ docs/         Product, architecture, delivery, and development references
 - [Milestone 6 reproducible ML research](docs/milestone6-reproducible-ml-research.md)
 - [Milestone 7 risk, portfolio, and Crypto dashboard](docs/milestone7-risk-portfolio-crypto-dashboard.md)
 - [Milestone 8 read-only AI and cross-dashboard integration](docs/milestone8-read-only-ai-integration.md)
-- [Milestone 9 Local Handoff plan](docs/milestone9-local-handoff.md)
+- [Milestone 9 Local Handoff evidence](docs/milestone9-local-handoff.md)
+- [Milestone 9 local operator guide](docs/milestone9-local-operator-guide.md)
 - [REST API contract](docs/rest-api-contract.md)
 - [Security contract](docs/security.md)
 - [Research protocol](docs/research-protocol.md)

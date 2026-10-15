@@ -286,20 +286,7 @@ def run_smoke_research(
         "reported_models": list(MODEL_ORDER),
         "required_comparisons_complete": set(MODEL_ORDER) == set(metrics),
         "statistical_significance_claim": None,
-        "warnings": [
-            (
-                "Synthetic smoke results validate mechanics and reproducibility, "
-                "not investment performance."
-            ),
-            (
-                "No statistical significance is claimed without a predeclared powered "
-                "test and correction."
-            ),
-            (
-                "This implementation is a clean-room three-asset adaptation; "
-                "no author repository code was copied."
-            ),
-        ],
+        "warnings": _warnings(config.purpose),
     }
     return ResearchResult(identifier, sequences.dataset_hash, prediction_hash, manifest, artifacts)
 
@@ -310,6 +297,29 @@ def _initialized_model(model: nn.Module, seed: int, fold: int, model_index: int)
         if hasattr(module, "reset_parameters"):
             cast(Any, module).reset_parameters()
     return model
+
+
+def _warnings(purpose: str) -> list[str]:
+    scope = (
+        "Synthetic smoke results validate mechanics and reproducibility, "
+        "not investment performance."
+        if "smoke" in purpose
+        else (
+            "Historical provider-data evaluation does not guarantee future returns and is "
+            "not investment advice."
+        )
+    )
+    return [
+        scope,
+        (
+            "No statistical significance is claimed without a predeclared powered "
+            "test and correction."
+        ),
+        (
+            "This implementation is a clean-room three-asset adaptation; "
+            "no author repository code was copied."
+        ),
+    ]
 
 
 def _configure_determinism(seed: int) -> None:

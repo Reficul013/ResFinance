@@ -69,7 +69,7 @@ def create_app(
     return app
 
 
-def _services_from_environment() -> tuple[
+def services_from_environment() -> tuple[
     AuthenticationService | None,
     FinanceService | None,
     GroupService | None,
@@ -140,7 +140,7 @@ def _insights_service(
     return InsightsService(finance, portfolio, groups, selector)
 
 
-_authentication, _finance, _groups, _portfolio, _insights = _services_from_environment()
+_authentication, _finance, _groups, _portfolio, _insights = services_from_environment()
 app = create_app(
     _authentication,
     _finance,

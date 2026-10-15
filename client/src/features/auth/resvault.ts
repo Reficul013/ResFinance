@@ -75,6 +75,10 @@ export async function hashParameters(
   ).join("");
 }
 
+export function formatIntentTimestamp(value: Date): string {
+  return value.toISOString().replace(/\.\d{3}Z$/, "Z");
+}
+
 function sendVaultRequest<T>(
   type: "GET_IDENTITY" | "SIGN_INTENT" | "LOCK",
   payload: object,

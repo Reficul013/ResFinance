@@ -11,6 +11,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:e2e": "NODE_PATH=./node_modules playwright test",
+    "test:e2e:local": "RESFINANCE_LOCAL_HANDOFF=1 NODE_PATH=./node_modules playwright test --config playwright.local.config.ts",
     "build": "tsc --noEmit && vite build"
   },
   "dependencies": {

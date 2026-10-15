@@ -68,11 +68,15 @@ async function decide(approved: boolean): Promise<void> {
 }
 
 async function request<T = unknown>(message: object): Promise<T> {
-  const response = (await chrome.runtime.sendMessage(message)) as {
-    ok: boolean;
-    result?: T;
-    error?: string;
-  };
+  const response = (await chrome.runtime.sendMessage(message)) as
+    | {
+        ok: boolean;
+        result?: T;
+        error?: string;
+      }
+    | undefined;
+  if (response === undefined)
+    throw new Error("ResVault background is unavailable");
   if (!response.ok)
     throw new Error(response.error ?? "ResVault request failed");
   return response.result as T;

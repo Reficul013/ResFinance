@@ -4,7 +4,7 @@ Status: Approved planning baseline for local implementation; cloud deployment is
 
 Last reviewed: 2026-10-15
 
-Implementation status: Milestones 0–8 passed for local development and research. Milestone 9 Local Handoff is planned and has not started. No forecasting model is currently promoted, so runtime portfolio recommendations remain gated. Milestone 10 production hardening and deployment remains on hold.
+Implementation status: Milestones 0–8 passed for local development and research. Milestone 9 now implements the local lifecycle, explicit workers, operator guide, and continuous real-service browser proof, but remains incomplete on full provider-data research and a live recommendation because the approved GDELT input is unavailable. No forecasting model is currently promoted, so runtime portfolio recommendations remain gated. Milestone 10 production hardening and deployment remains on hold.
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
@@ -406,7 +406,7 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 
 ### Milestone 9 — Local Handoff
 
-**Status:** planned; implementation has not started. Scope and acceptance are defined in [`milestone9-local-handoff.md`](milestone9-local-handoff.md).
+**Status:** local handoff implemented; full research and live-recommendation gates remain incomplete. Evidence and the remaining blocker are recorded in [`milestone9-local-handoff.md`](milestone9-local-handoff.md), with operating instructions in [`milestone9-local-operator-guide.md`](milestone9-local-operator-guide.md).
 
 - Package a one-command local startup with preflight checks, bounded health waits, status, clean shutdown, and an explicitly confirmed reset path.
 - Prove one continuous, non-mocked browser journey through the real ResVault extension, React client, FastAPI API, four-replica ResilientDB stack, ResContract, local workers, and read-only AI path.

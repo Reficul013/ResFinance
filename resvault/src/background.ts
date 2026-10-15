@@ -32,7 +32,15 @@ chrome.runtime.onConnect.addListener((port) => {
 
 chrome.runtime.onMessage.addListener(
   (message: unknown, sender, sendResponse) => {
-    if (sender.id !== chrome.runtime.id || sender.tab !== undefined)
+    // Trust only packaged extension pages. Content scripts share the extension
+    // ID but retain the web page URL, including when an extension page is
+    // opened in a normal tab by the browser acceptance harness.
+    const extensionRoot = chrome.runtime.getURL("");
+    if (
+      sender.id !== chrome.runtime.id ||
+      typeof sender.url !== "string" ||
+      !sender.url.startsWith(extensionRoot)
+    )
       return false;
     void handleExtensionMessage(message)
       .then((result) => sendResponse({ ok: true, result }))

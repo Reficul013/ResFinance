@@ -1,186 +1,161 @@
 # Milestone 9 — Local Handoff
 
-Status: planned; implementation has not started.
+Status: local handoff implementation complete; full provider-data research and
+live-recommendation gates remain incomplete.
 
 Production and cloud deployment remain out of scope and on hold for Milestone
-10. This document defines the final local delivery milestone only.
+10. This milestone establishes a reproducible local product handoff only; it
+does not establish commercial, custody, trading, production, or independent-BFT
+readiness.
 
-## Purpose
+## Outcome
 
-Milestone 9 turns the separately verified ResFinance components into a
-repeatable local product handoff. A new developer or evaluator should be able
-to start the stack predictably, use the actual ResVault extension in a real
-browser, complete the cross-product journey against real local services, and
-inspect trustworthy acceptance evidence.
+Milestone 9 packages the completed ResFinance components behind one bounded
+local lifecycle, exercises them in a continuous two-wallet Chromium journey,
+and makes manual ingestion and reconciliation jobs observable through
+append-only ResilientDB records. It also provides the full provider-data
+research runner without weakening the existing forecast-promotion policy.
 
-This milestone also owns the remaining attempt to produce a live BTC/ETH/SOL
-recommendation. A forecast may reach the normal application only through the
-existing immutable promotion policy. Research failure is reported honestly;
-the promotion gate must never be reduced, bypassed, or replaced by a fixture.
+The local application path is implemented and verified. The research runner
+was not executed because the approved 2020-04-10 through 2025-01-01 GDELT daily
+aggregate CSV is not present in the checkout or current ResilientDB volumes.
+The historical attestation proves its prior hash, but an attestation is not a
+substitute for the provider rows. Consequently no provider-backed candidate,
+promotion event, or current-cutoff live forecast was produced, and the normal
+Crypto experience continues to fail closed with no recommendation.
 
-## Non-negotiable boundaries
+## What was implemented
 
-- Apache ResilientDB remains the only persistent application and research
-  database.
-- Crypto remains exactly `BTC | ETH | SOL`, and USD monetary values remain
-  integer cents.
-- ResVault private keys and seeds remain extension-only and must not appear in
-  browser pages, network requests, server data, test artifacts, or logs.
-- ResContract remains authoritative for obligations and settlement state.
-- Internal settlement credits remain non-redeemable and non-monetary.
-- The browser uses generated `/api/v1` clients and never contacts ResilientDB,
-  ResContract GraphQL, or contract CLI endpoints directly.
-- Smart Insights remains read-only and evidence-bound.
-- No candidate is promoted unless it passes the existing evaluation criteria.
-- This milestone does not provision cloud infrastructure or claim production,
-  commercial, investment-performance, or independent-BFT readiness.
+- `scripts.milestone9.local_handoff` supplies `preflight`, `start`, `status`,
+  `restart`, `logs`, `stop`, and an exact-phrase-confirmed `reset` command.
+- Preflight verifies Apple Silicon, the live Docker engine and Compose, Node
+  22, Python 3.13, installed client/extension dependencies, and the pinned
+  local-model hashes when weights are present or required.
+- Startup builds ResVault and the React client, starts the four ResilientDB and
+  four ResContract replicas plus proxies, tools, contract initialization, and
+  FastAPI, then starts the locally owned Vite process. Compose health is bounded
+  to 180 seconds and API/client health polling to 120 seconds.
+- Shutdown preserves Compose volumes. Restart uses the existing containers and
+  volumes. Reset removes volumes only after the literal confirmation phrase
+  `DELETE_LOCAL_RESFINANCE_STATE` and also clears disposable local runtime logs.
+- A stale or foreign process on port 5173 now fails startup instead of being
+  mistaken for a lifecycle-owned client.
+- `scripts.milestone9.run_local_workers` runs current market ingestion and
+  group reconciliation explicitly. Running and terminal job records are
+  append-only ResilientDB values; no local JSON database was introduced.
+- `scripts.milestone9.run_full_research` accepts either an approved live
+  ingestion input or an existing provider-backed dataset hash, enforces the
+  fixed BTC/ETH/SOL period and adequate history, runs five chronological folds
+  with the required baselines and ablations, encrypts artifacts with a
+  runtime-supplied key, persists them in ResilientDB, and applies
+  `forecast-promotion-v1` without overrides.
+- The browser acceptance uses two isolated Chromium profiles and the built
+  ResVault extension. It contains no route interception and exercises the real
+  `/api/v1`, ResilientDB, and ResContract paths.
 
-## Workstream 1 — One-command local developer experience
+The live journey also exposed and fixed three integration defects:
 
-Package the existing local components into a documented lifecycle that:
+1. JavaScript millisecond timestamps did not match Python's canonical signed
+   representation. Signed intents now use whole-second UTC values.
+2. React Strict Mode could issue two concurrent rotating refresh requests and
+   let a racing 401 disconnect a valid session. Initial refresh is now
+   single-flight.
+3. A user could begin the next Group mutation before the prior projection
+   refresh rendered. Contract-affecting controls now remain disabled across
+   every in-flight Group write.
 
-1. validates pinned Docker, Python, Node, browser, extension, model, and local
-   resource prerequisites before changing state;
-2. starts the four ResilientDB replicas, proxy, ResContract replicas and proxy,
-   contract initialization, FastAPI, React client, required local workers, and
-   optional pinned AI-model overlay;
-3. uses bounded health checks and reports the exact failing component instead
-   of relying on fixed sleeps;
-4. verifies the local model revision and hashes before mounting its weights
-   read-only from outside Git;
-5. provides concise status and logs for every component;
-6. provides clean shutdown without deleting persisted local evidence; and
-7. provides a separate, explicitly confirmed reset path for disposable local
-   state.
+## Real-browser acceptance scope
 
-The primary startup path must not silently download dependencies, model
-weights, or provider data. Any networked provisioning step must be explicit,
-documented, pinned, and independently repeatable.
+`npm run test:e2e:local` performs one continuous, non-mocked journey:
 
-## Workstream 2 — Local fixtures and browser identities
+1. create two extension-held wallets and prove the extension does not answer
+   the unapproved `localhost` origin;
+2. authenticate both wallets through extension-owned approvals;
+3. record income, expense, category, and budget data;
+4. create a group, add the second wallet, and create a signed shared expense;
+5. approve the obligation, fund non-redeemable credits, reject tampered and
+   replayed intents, and partially then fully settle;
+6. confirm the zero outstanding contract projection and Finance propagation;
+7. record the risk profile and confirm the no-eligible-forecast gate;
+8. attempt Analyze Another Amount, confirm it fails closed without an eligible
+   forecast, and confirm Finance savings remain unchanged;
+9. ask Smart Insights a supported question and confirm evidence is rendered;
+10. ask for a prohibited transfer/settlement action and confirm refusal;
+11. restart the lifecycle with volumes intact, reload the browser session, and
+    confirm the settled state rebuilds; and
+12. log out and verify the backend session is revoked and ResVault is locked.
 
-Provide deterministic, non-secret application fixtures and isolated browser
-profiles sufficient to exercise the complete product journey. Wallet keys must
-be generated and held inside the hardened extension boundary; no seed or
-private key may be committed as a fixture.
+Wallet seeds and private keys are generated inside each extension profile and
+are never fixtures. Playwright retains traces and screenshots only on failure;
+these generated directories remain ignored by Git.
 
-The local handoff must support at least two wallet identities so that a real
-group expense can be created, approved, partially settled, and fully settled.
-The fixture and cleanup design must remain idempotent and must not introduce a
-hidden database.
+The pinned Qwen overlay passed artifact-hash verification and API startup, but
+one browser run did not return its supported Insights answer within the
+explicit 120-second wait. The definitive bounded browser acceptance therefore
+uses the normal deterministic evidence-template fallback. This is the declared
+optional-model behavior, not a claim that local-model latency passed the final
+journey.
 
-## Workstream 3 — One continuous real-browser/full-stack proof
+## Research and promotion status
 
-Add a browser acceptance journey that does not intercept or mock application
-API calls. It must use the built React client, real FastAPI service, real
-four-replica ResilientDB topology, deployed ResContract, and hardened ResVault
-extension.
+The approved full research inputs remain exact:
 
-The journey must prove, in order:
+- assets: `BTC | ETH | SOL`;
+- inclusive period: `2020-04-10` through `2025-01-01`;
+- providers: Coin Metrics, DefiLlama, and the bounded approved GDELT daily
+  aggregate;
+- five expanding walk-forward folds, a 15-day embargo, 60 validation dates,
+  30 test dates per fold, deterministic CPU execution, and 20 epochs by
+  default; and
+- naive, linear, LSTM, market-only, fixed-fusion, adaptive-gating, and every
+  one-source-removed comparison.
 
-1. create or unlock an extension-held wallet and authenticate;
-2. record income, an expense, a budget, and any required recurring data;
-3. create a group and shared expense with a second isolated wallet;
-4. approve the obligation through explicit extension-owned signing;
-5. partially and fully settle with non-redeemable internal credits;
-6. confirm the matching Group and Finance projections and immutable receipt;
-7. confirm calculated savings reaches the Crypto experience by immutable source
-   reference;
-8. record a risk profile and inspect the current forecast gate or an eligible
-   promoted recommendation;
-9. run Analyze Another Amount without mutating Finance;
-10. ask Smart Insights a supported question and verify every citation belongs
-    to the authenticated wallet's fact bundle;
-11. verify cross-dashboard notifications and navigation; and
-12. restart the local stack and confirm the accepted state rebuilds without
-    duplicate events or settlement effects.
+The earlier GDELT CSV had SHA-256
+`5c6aa7f22c8e4595ab68944276b0abe4867ea71967bfb52c1469911bde2f541a`,
+but the CSV bytes are not currently recoverable. The current ResilientDB lookup
+for its Milestone 0 manifest returned no value. Re-querying or supplying that
+approved export is an explicit provider-data provisioning step and is not
+performed silently by startup.
 
-The journey must also demonstrate locked-wallet, wrong-origin, tampered-intent,
-replay, cross-wallet isolation, and prohibited AI-action defenses without
-exposing secret material in screenshots, traces, videos, or logs.
+Even if the adaptive model passes promotion, held-out evaluation predictions
+are not a current live forecast. A separately reproducible current-cutoff
+inference artifact must still be published before the normal application may
+show a live recommendation. Until then, no recommendation is the required safe
+state.
 
-## Workstream 4 — Local ingestion and worker lifecycle
+## Acceptance matrix
 
-Package the existing ingestion and reconciliation capabilities as explicit
-local jobs or workers with visible health and run status. The handoff must
-document which processes are continuous, scheduled, or manually triggered.
+| Criterion | Result | Evidence |
+|---|---|---|
+| One-command bounded startup and lifecycle | Pass | Hash-verified model startup reached both health endpoints; lifecycle-owned status passed. |
+| Continuous real ResVault/browser/full-stack journey | Pass | Two profiles exercised Finance, Groups, ResContract, Crypto gate, deterministic Insights fallback, tamper/replay defenses, restart, and logout without API interception. |
+| Restart persistence and projection rebuild | Pass | The settled obligation remained at `$0.00 outstanding` after the controlled stack restart. |
+| Observable ingestion and reconciliation jobs | Pass | A reconciliation of the settled acceptance group completed with zero duplicate events; running/terminal records read back from ResilientDB. |
+| Full non-smoke provider research | Blocked | Approved GDELT CSV bytes are unavailable; the runner refuses to substitute synthetic data. |
+| Eligible live recommendation | Fail safe | No provider-backed promotion/current-cutoff forecast exists; the UI keeps the forecast gate closed. |
+| Complete repository suites | Pass for implemented scope | Ruff, mypy, 107 Python tests, 9 client tests, 5 ResVault tests, both builds, extension inspection, 5 dashboard browser tests, and the live journey passed. Full provider research remains separately blocked above. |
+| Reproducible operator guide | Pass | See [Milestone 9 local operator guide](milestone9-local-operator-guide.md). |
 
-Provider requests must retain provenance, availability timestamps, checksums,
-missing-source masks, and the approved local non-commercial terms boundary.
-Failed provider calls must not damage accepted observations or features.
+Milestone 9 therefore remains incomplete by design on the research and live
+recommendation criteria. The missing approved dataset is the only input needed
+to attempt the full run; passing the immutable gate is not guaranteed and must
+not be manufactured.
 
-## Workstream 5 — Full research run and promotion decision
+## Final verification
 
-Run the declared non-smoke research protocol on approved BTC/ETH/SOL data:
+The implementation handoff passed:
 
-- preserve chronological splits, embargoes, fixed seeds, masks, and complete
-  manifests;
-- evaluate the adaptive model against every required baseline and ablation;
-- persist data, configuration, environment, dependency, code, model, and
-  artifact hashes in ResilientDB;
-- record statistical and portfolio-relevant results without guaranteed-return
-  or investment-performance language; and
-- append an immutable promotion event only when every existing promotion rule
-  passes.
+```text
+.venv/bin/ruff check .                              pass
+.venv/bin/mypy                                      pass (95 files)
+.venv/bin/pytest                                    pass (107 tests)
+client: check, lint, format, unit tests, build       pass (9 tests)
+resvault: check, lint, format, tests, build, inspect pass (5 tests)
+client npm run test:e2e                             pass (5 Chromium tests)
+client npm run test:e2e:local                       pass (1 live journey, 2.8m)
+local reconciliation worker                         pass (0 duplicate events)
+local lifecycle status                              pass (API/client and replicas healthy)
+```
 
-If no candidate passes, the correct result is no promotion. The normal Crypto
-dashboard and Smart Insights must continue to display the evidence-safe gate.
-The live-recommendation objective, and therefore full completion of this
-milestone, remains incomplete until an eligible candidate exists; fixtures and
-manual database edits cannot satisfy it.
-
-When a candidate does pass, the normal authenticated application must display
-its freshness, uncertainty, model/run identity, promotion event, Finance source
-event, risk-policy version, solver path, constrained BTC/ETH/SOL weights, and
-exact-cent allocations. No trade is executed.
-
-## Workstream 6 — Operator handoff and evidence
-
-Document and verify:
-
-- exact prerequisites and supported local architecture;
-- expected CPU, memory, disk, and cold-start requirements;
-- extension build, loading, locking, unlocking, and multi-profile setup;
-- explicit model and provider-data provisioning;
-- startup, status, restart, shutdown, and confirmed reset behavior;
-- first-run setup and a deterministic demonstration path;
-- common failures and component-specific troubleshooting;
-- known limitations, including local-only and non-commercial boundaries; and
-- a content-addressed acceptance attestation covering the complete handoff.
-
-Generated data, model weights, browser profiles, private material, and large
-test artifacts remain outside Git. Checked-in evidence contains hashes,
-manifests, bounded logs, and sanitized results only.
-
-## Acceptance criteria
-
-Milestone 9 is complete only when all of the following hold:
-
-1. After documented prerequisites and explicit provisioning, one documented
-   command starts the entire local application and reaches bounded healthy
-   state; status, shutdown, restart, and confirmed reset paths also pass.
-2. A continuous Chromium journey with the real ResVault extension completes
-   the Finance → Groups → settlement → Finance → Crypto → Insights flow without
-   API interception, a substitute database, leaked secret material, or manual
-   state edits.
-3. The journey survives a controlled full-stack restart and rebuilds the same
-   accepted projections without replay or duplication.
-4. Local ingestion and reconciliation execution is documented, observable,
-   idempotent, and failure-safe.
-5. A full non-smoke research run produces complete reproducibility evidence and
-   an honest promotion decision.
-6. A live Crypto recommendation appears only from a non-stale eligible
-   promotion event and reconciles exactly to Finance-derived integer cents. If
-   no candidate qualifies, this criterion fails safely and the milestone stays
-   incomplete rather than weakening the gate.
-7. The complete backend, frontend, extension, contract, ML, portfolio, AI,
-   accessibility, browser, restart, security, and local load suites pass.
-8. The final operator guide and sanitized attestation allow another developer
-   to reproduce the local handoff from a clean checkout.
-
-## Explicitly not started
-
-This planning update does not add or change startup scripts, Compose services,
-fixtures, browser automation, wallet behavior, provider jobs, research runs,
-model promotions, application code, or runtime state. Implementation begins
-only after this milestone plan is reviewed and approved.
+No full-research result or local attestation was fabricated because the
+required provider input was absent.
