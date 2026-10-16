@@ -94,7 +94,19 @@ body {
 
 .app-shell > .auth-card .auth-button {
   min-height: 2.25rem;
-  margin-right: 6.5rem;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+.app-shell > .auth-card .auth-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.app-shell > .auth-card .theme-toggle {
+  position: static;
+  min-height: 2.25rem;
   padding: 0.45rem 0.8rem;
   font-size: 0.8rem;
 }
@@ -1435,7 +1447,11 @@ td.expense {
   }
 
   .app-shell > .auth-card .auth-button {
-    margin-right: 5rem;
+    width: auto;
+  }
+
+  .app-shell > .auth-card .auth-actions {
+    gap: 0.35rem;
   }
 }
 

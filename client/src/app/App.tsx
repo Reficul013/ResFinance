@@ -38,7 +38,7 @@ export function App() {
 
   return (
     <main className={authenticated ? "app-shell" : "shell"}>
-      <ThemeToggle />
+      {!authenticated && <ThemeToggle />}
       {!authenticated && (
         <>
           <p className="eyebrow">Milestone 8 · Read-only insights</p>

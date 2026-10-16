@@ -1,4 +1,5 @@
 import type { AuthenticationState } from "../features/auth/useAuthentication";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface AuthCardProps {
   state: AuthenticationState;
@@ -32,13 +33,16 @@ export function AuthCard({
         )}
       </div>
       {authenticated ? (
-        <button
-          className="auth-button secondary"
-          type="button"
-          onClick={onLogout}
-        >
-          Log out
-        </button>
+        <div className="auth-actions">
+          <button
+            className="auth-button secondary"
+            type="button"
+            onClick={onLogout}
+          >
+            Log out
+          </button>
+          <ThemeToggle />
+        </div>
       ) : (
         <button
           className="auth-button"

@@ -175,6 +175,55 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     page.getByRole("button", { name: "Switch to dark mode" }),
   ).toBeVisible();
+  const sessionCardBox = await page.locator(".auth-card").boundingBox();
+  const logoutButtonBox = await page
+    .getByRole("button", { name: "Log out" })
+    .boundingBox();
+  const themeToggleBox = await page
+    .getByRole("button", { name: "Switch to dark mode" })
+    .boundingBox();
+  expect(sessionCardBox).not.toBeNull();
+  expect(logoutButtonBox).not.toBeNull();
+  expect(themeToggleBox).not.toBeNull();
+  expect(themeToggleBox!.x).toBeGreaterThanOrEqual(
+    logoutButtonBox!.x + logoutButtonBox!.width,
+  );
+  expect(themeToggleBox!.x + themeToggleBox!.width).toBeLessThanOrEqual(
+    sessionCardBox!.x + sessionCardBox!.width,
+  );
+  expect(themeToggleBox!.y).toBeGreaterThanOrEqual(sessionCardBox!.y);
+  expect(themeToggleBox!.y + themeToggleBox!.height).toBeLessThanOrEqual(
+    sessionCardBox!.y + sessionCardBox!.height,
+  );
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(
+    page.getByRole("button", { name: "Switch to light mode" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Switch to light mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+
+  await page.setViewportSize({ width: 375, height: 812 });
+  const compactSessionCardBox = await page.locator(".auth-card").boundingBox();
+  const compactThemeToggleBox = await page
+    .getByRole("button", { name: "Switch to dark mode" })
+    .boundingBox();
+  expect(compactSessionCardBox).not.toBeNull();
+  expect(compactThemeToggleBox).not.toBeNull();
+  expect(
+    compactThemeToggleBox!.x + compactThemeToggleBox!.width,
+  ).toBeLessThanOrEqual(
+    compactSessionCardBox!.x + compactSessionCardBox!.width,
+  );
+  expect(compactThemeToggleBox!.y).toBeGreaterThanOrEqual(
+    compactSessionCardBox!.y,
+  );
+  expect(
+    compactThemeToggleBox!.y + compactThemeToggleBox!.height,
+  ).toBeLessThanOrEqual(
+    compactSessionCardBox!.y + compactSessionCardBox!.height,
+  );
+  await page.setViewportSize({ width: 1280, height: 720 });
   await expect(page.getByText("$4,100.00", { exact: true })).toBeVisible();
   await expect(page.getByText("$5,000.00", { exact: true })).toBeVisible();
   await expect(
