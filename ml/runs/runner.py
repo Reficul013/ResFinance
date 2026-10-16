@@ -496,7 +496,7 @@ def _provenance(root: Path) -> dict[str, object]:
         path for path in (root / "ml").rglob("*.py") if path.is_file()
     )
     code_hash = _files_hash(code_files, root)
-    dependency_file = root / "requirements-ml.txt"
+    dependency_file = root / "requirements" / "requirements-ml.txt"
     dependency_content = dependency_file.read_text()
     dependency_hash = hashlib.sha256(dependency_content.encode()).hexdigest()
     lock = json.loads((root / "config/milestone0-lock.json").read_text())

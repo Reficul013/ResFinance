@@ -81,12 +81,12 @@ Skip this section when the dependencies are already installed.
 
 ```bash
 .venv/bin/python -m pip install \
-  -r requirements-dev.txt \
-  -r requirements-milestone0.txt \
-  -r requirements-api.txt \
-  -r requirements-ml.txt \
-  -r requirements-portfolio.txt \
-  -r requirements-ai.txt
+  -r requirements/requirements-dev.txt \
+  -r requirements/requirements-milestone0.txt \
+  -r requirements/requirements-api.txt \
+  -r requirements/requirements-ml.txt \
+  -r requirements/requirements-portfolio.txt \
+  -r requirements/requirements-ai.txt
 
 (cd client && npm ci && npx playwright install chromium)
 (cd resvault && npm ci)

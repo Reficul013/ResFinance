@@ -114,9 +114,12 @@ Milestone 9 Local Handoff adds a bounded preflight/start/status/restart/logs/sto
 
 ```bash
 .venv/bin/python -m pip install \
-  -r requirements-dev.txt -r requirements-milestone0.txt \
-  -r requirements-api.txt -r requirements-ml.txt \
-  -r requirements-portfolio.txt -r requirements-ai.txt
+  -r requirements/requirements-dev.txt \
+  -r requirements/requirements-milestone0.txt \
+  -r requirements/requirements-api.txt \
+  -r requirements/requirements-ml.txt \
+  -r requirements/requirements-portfolio.txt \
+  -r requirements/requirements-ai.txt
 .venv/bin/ruff check .
 .venv/bin/mypy
 .venv/bin/pytest
@@ -214,6 +217,7 @@ resvault/     Hardened ResVault-compatible browser extension
 server/       FastAPI API, domain services, adapters, and workers
 blockchain/   ResContract contracts, gateway adapter, wallet work, and tests
 ml/           Data, features, forecasting, evaluation, and portfolio optimization
+requirements/ Pinned Python dependency sets for development and runtime areas
 tests/        Cross-module contract, integration, and end-to-end tests
 docs/         Product, architecture, delivery, and development references
 ```
