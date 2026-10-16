@@ -29,6 +29,9 @@ class PortfolioResearchRepository:
             raise ValueError("forecast run does not match its promotion event")
         if promotion.get("model_name") != snapshot.model_name:
             raise ValueError("forecast model does not match its promotion event")
+        promoted_model_hash = promotion.get("deployment_model_hash")
+        if promoted_model_hash is not None and promoted_model_hash != snapshot.model_hash:
+            raise ValueError("forecast model does not match the promoted deployment artifact")
         run = self._research_runs.run_manifest(snapshot.run_id)
         artifacts = run.get("artifact_hashes")
         if not isinstance(artifacts, dict) or snapshot.model_hash not in artifacts.values():

@@ -42,6 +42,26 @@ class ResearchSequenceDataset:
 
 
 @dataclass(frozen=True)
+class InferenceBatch:
+    features: Tensor
+    masks: Tensor
+    asset_indices: Tensor
+    decision_time_utc: str
+    assets: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if self.features.ndim != 4 or self.features.shape[0] != 3 or self.features.shape[2:] != (
+            3,
+            SOURCE_WIDTH,
+        ):
+            raise ValueError("inference features must contain BTC, ETH, and SOL")
+        if self.masks.shape != self.features.shape:
+            raise ValueError("inference masks must match features")
+        if self.asset_indices.tolist() != [0, 1, 2]:
+            raise ValueError("inference assets must use canonical BTC, ETH, SOL order")
+
+
+@dataclass(frozen=True)
 class MaskedStandardizer:
     means: Tensor
     scales: Tensor
@@ -123,6 +143,39 @@ def build_sequence_dataset(
         assets=tuple(sample_assets[index] for index in order),
         dataset_hash=dataset.dataset_hash,
         source_record_ids=tuple(cast(list[str], source_ids)),
+    )
+
+
+def build_inference_batch(dataset: FeatureDataset, *, lookback: int = 16) -> InferenceBatch:
+    if lookback < 8:
+        raise ValueError("lookback must contain at least eight daily observations")
+    if dataset.manifest.get("assets") != [asset.value for asset in ASSETS]:
+        raise ValueError("feature manifest must contain exactly BTC, ETH, and SOL")
+    by_asset: dict[str, list[dict[str, object]]] = {asset.value: [] for asset in ASSETS}
+    for row in dataset.rows:
+        by_asset[CryptoAsset.parse(str(row["asset"])).value].append(row)
+    windows: list[Tensor] = []
+    masks: list[Tensor] = []
+    decision_times: set[str] = set()
+    for asset in ASSETS:
+        rows = sorted(by_asset[asset.value], key=lambda row: str(row["timestamp_utc"]))
+        if len(rows) < lookback:
+            raise ValueError("inference dataset has insufficient history")
+        window = rows[-lookback:]
+        if any(_required_price(row) <= 0 for row in window):
+            raise ValueError("inference window requires complete market prices")
+        encoded = [_encode_row(row) for row in window]
+        windows.append(torch.stack([item[0] for item in encoded]))
+        masks.append(torch.stack([item[1] for item in encoded]))
+        decision_times.add(str(window[-1]["decision_time_utc"]))
+    if len(decision_times) != 1:
+        raise ValueError("inference assets must share one point-in-time cutoff")
+    return InferenceBatch(
+        features=torch.stack(windows),
+        masks=torch.stack(masks),
+        asset_indices=torch.arange(3, dtype=torch.long),
+        decision_time_utc=decision_times.pop(),
+        assets=tuple(asset.value for asset in ASSETS),
     )
 
 

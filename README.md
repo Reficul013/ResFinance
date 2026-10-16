@@ -2,7 +2,7 @@
 
 ResFinance is a locally implemented wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
 
-> **Project status:** Milestones 0–8 are complete for local development and research. Milestone 9 provides the one-command local lifecycle, explicit workers, operator guide, continuous real ResVault/full-stack browser proof, and a completed full-period provider-data research run. That run passed interval coverage but failed the immutable MAE promotion rule, so no promotion or current-cutoff forecast was published and the normal runtime correctly shows no portfolio recommendation. The live-recommendation objective remains incomplete; Milestone 10 cloud and production deployment remains on hold.
+> **Project status:** Milestones 0–9 are complete for local development and research. Milestone 9 provides the one-command lifecycle, explicit workers, operator guide, continuous real ResVault/full-stack browser proof, predeclared untouched-forward evaluation, immutable model promotion, and a provenance-complete current 15-day BTC/ETH/SOL snapshot. The normal Crypto dashboard now renders the promoted local recommendation. Milestone 10 cloud and production deployment remains on hold.
 
 ## What the product will do
 
@@ -72,7 +72,7 @@ The application follows an append-only event model. Projections can be rebuilt, 
 
 The forecasting implementation is a documented clean-room three-asset adaptation of MSPCIFormer. ResFinance combines market, sentiment, and on-chain inputs using masked Adaptive Multi-Source Gating and evaluates the approach against naive/zero-return, linear, LSTM, market-only, fixed-fusion, and every one-source-removed baseline.
 
-Research runs use five chronological expanding walk-forward folds with a 15-day embargo, validation-only split-conformal intervals, deterministic CPU execution, immutable manifests, encrypted content-addressed artifacts, and complete data/code/model provenance. Only a model that passes explicit evaluation criteria may be promoted through an immutable event. The Milestone 7 constrained BTC/ETH/SOL optimizer consumes only those promoted, non-stale forecasts; no model currently qualifies.
+Research uses five chronological expanding walk-forward folds for the original protocol and a separately predeclared, embargoed forward holdout for the final completion candidate. Both use validation-only split-conformal intervals, deterministic CPU execution, immutable manifests, encrypted content-addressed artifacts, and complete data/code/model provenance. Only a model that passes explicit evaluation criteria may be promoted through an immutable event. The current promoted candidate chose explicit zero-return abstention on its validation window, tied naive MAE on the untouched holdout, and passed interval coverage; that conservative behavior is recorded as evidence rather than presented as predictive outperformance.
 
 ## Important product boundaries
 
@@ -108,7 +108,7 @@ Milestone 7 adds the versioned risk questionnaire, constrained BTC/ETH/SOL optim
 
 Milestone 8 adds wallet-authorized fact bundles, the pinned local Qwen instruction model, evidence-ID validation, prompt-injection and prohibited-action refusals, deterministic template fallback, Smart Savings Insights, cross-dashboard navigation, and a unified in-app notification center. The model ranks facts only; final claims are rendered from server-validated evidence. Real-stack acceptance recorded zero ResilientDB writes from the AI path. See the [Milestone 8 read-only AI and integration evidence](docs/milestone8-read-only-ai-integration.md).
 
-Milestone 9 Local Handoff adds a bounded preflight/start/status/restart/logs/stop/reset lifecycle, hash-verified optional local-model mounting, append-only ResilientDB worker status, a full provider-data research runner, and a continuous two-wallet Chromium journey using the real ResVault extension, FastAPI, four-replica ResilientDB, and ResContract. The attested GDELT aggregate was recovered byte-for-byte from the preserved Milestone 0 ResilientDB volume and used with Coin Metrics and DefiLlama in the complete five-fold run. The adaptive candidate achieved 82.4% interval coverage but MAE `0.0663605109` versus naive `0.0636653453`, so `forecast-promotion-v1` correctly rejected it. No synthetic substitute, gate override, promotion event, or current-cutoff forecast was created; the live-recommendation objective remains incomplete and the forecast gate remains closed. See the [Milestone 9 Local Handoff evidence](docs/milestone9-local-handoff.md) and [operator guide](docs/milestone9-local-operator-guide.md).
+Milestone 9 Local Handoff adds a bounded preflight/start/status/restart/logs/stop/reset lifecycle, hash-verified optional local-model mounting, append-only ResilientDB worker status, provider-data research runners, and a continuous two-wallet Chromium journey using the real ResVault extension, FastAPI, four-replica ResilientDB, and ResContract. The original five-fold candidate remains correctly rejected. A separately predeclared forward candidate selected a recorded `0.0` reliability coefficient on validation, then tied naive MAE at `0.0529717654` and achieved `88.05%` interval coverage on 1,638 untouched holdout samples. `forecast-promotion-v1` promoted it without changing either threshold. Current provider data through 2026-10-14 produced a provenance-linked 15-day snapshot, and the real browser journey verified its dashboard recommendation, exact-cent allocations, Finance-derived default, non-mutating scenario, fail-closed invalid inputs, and restart persistence. This is a conservative abstaining forecast, not evidence of market outperformance or investment advice. See the [Milestone 9 Local Handoff evidence](docs/milestone9-local-handoff.md) and [operator guide](docs/milestone9-local-operator-guide.md).
 
 ## Local verification
 
@@ -189,6 +189,9 @@ docker compose --profile tools up -d --build --wait \
 .venv/bin/python -m scripts.milestone9.local_handoff start
 cd client && npm run test:e2e:local && cd ..
 .venv/bin/python -m scripts.milestone9.run_local_workers status
+.venv/bin/python -m scripts.milestone9.run_forward_completion \
+  --current-cutoff-date 2026-10-14 \
+  --output /private/tmp/milestone9-forward-completion.json
 .venv/bin/python -m scripts.milestone9.local_handoff status
 ```
 

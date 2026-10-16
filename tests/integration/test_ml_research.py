@@ -13,6 +13,7 @@ from ml.data.synthetic import generate_synthetic_feature_dataset
 from ml.evaluation.protocol import expanding_walk_forward
 from ml.models.mspciformer import FusionMode, ThreeAssetMSPCIFormer
 from ml.runs.checkpoints import deterministic_checkpoint, restore_checkpoint
+from ml.runs.forward import ForwardRunConfig, run_forward_research
 from ml.runs.runner import MODEL_ORDER, SmokeRunConfig, run_smoke_research
 from server.app.infrastructure.blob_repository import EncryptedBlobRepository
 from server.app.infrastructure.encryption import AesGcmCipher, canonical_json_bytes
@@ -229,3 +230,53 @@ def test_fourth_asset_and_incomplete_ablation_report_are_rejected(
     )
     with pytest.raises(ValueError, match="baseline or ablation"):
         repository.put_completed_run(manifest, result.artifacts)  # type: ignore[attr-defined]
+
+
+def test_forward_protocol_uses_frozen_windows_and_immutable_promotion() -> None:
+    dataset = generate_synthetic_feature_dataset(day_count=700)
+    result = run_forward_research(
+        dataset,
+        config=ForwardRunConfig(epochs=1),
+        run_id="forward-protocol-test",
+    )
+    manifest = result.manifest
+    holdout = manifest["forward_holdout"]
+    calibration = manifest["adaptive_calibration"]
+    metrics = manifest["metrics"]
+
+    assert isinstance(holdout, dict)
+    assert holdout["training_end"] == "2024-12-17"
+    assert holdout["validation_start"] == "2025-01-02"
+    assert holdout["holdout_start"] == "2025-04-02"
+    assert holdout["post_holdout_tuning_permitted"] is False
+    assert isinstance(calibration, dict)
+    assert calibration["grid"] == [0.0, 0.25, 0.5, 0.75, 1.0]
+    assert isinstance(metrics, dict)
+    assert metrics["adaptive-gating"]["mae"] <= metrics["naive-zero-return"]["mae"]
+    assert metrics["adaptive-gating"]["interval_coverage"] >= 0.70
+
+    store = MemoryKeyValueStore()
+    repository = ResearchRunRepository(
+        store,
+        EncryptedBlobRepository(store, AesGcmCipher(b"f" * 32, key_id="forward-test-v1")),
+    )
+    tampered_manifest = {
+        **manifest,
+        "adaptive_calibration": {**calibration, "selected_coefficient": 0.25},
+    }
+    with pytest.raises(ValueError, match="calibration artifact"):
+        repository.put_completed_run(tampered_manifest, result.artifacts)
+    repository.put_completed_run(manifest, result.artifacts)
+    promotion = repository.promote_model(
+        run_id=result.run_id,
+        model_name="adaptive-gating",
+        criteria=PromotionCriteria(),
+        promoted_at_utc=datetime(2026, 10, 15, tzinfo=UTC),
+        approved_by="forward-protocol-test",
+    )
+    event = repository.promotion_event(promotion.key.removeprefix("promotion:forecast:"))
+    assert event["checks"]["untouched_forward_holdout"] is True
+    assert (
+        event["deployment_model_hash"]
+        == manifest["artifact_hashes"]["deployment-checkpoint-adaptive-gating.json"]
+    )

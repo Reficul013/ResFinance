@@ -68,29 +68,57 @@ test("real ResVault and services preserve the local journey through restart", as
       default_capital: { minor_units: number };
       savings_formula_version: string;
       savings_source_event_ids: string[];
+      forecast: { promotion_event_id: string; horizon_days: number } | null;
+      recommendation: Recommendation | null;
     };
     expect(crypto.default_capital.minor_units).toBe(400_000);
     expect(crypto.savings_formula_version).toBe("finance-savings-v1");
     expect(crypto.savings_source_event_ids.length).toBeGreaterThanOrEqual(2);
+    expect(crypto.forecast).toEqual(
+      expect.objectContaining({ promotion_event_id: expect.any(String), horizon_days: 15 }),
+    );
+    expect(crypto.recommendation).toBeNull();
+    const promotedOverview = waitForGet(ownerPage, /\/crypto\/overview\?/);
     await ownerPage.getByRole("button", { name: "Save risk profile" }).click();
+    const promoted = (await (await promotedOverview).json()) as {
+      default_capital: { minor_units: number };
+      recommendation: Recommendation | null;
+    };
+    expect(promoted.default_capital.minor_units).toBe(400_000);
+    expect(promoted.recommendation?.source_kind).toBe("finance_savings");
+    expect(allocationTotal(promoted.recommendation)).toBe(400_000);
     await expect(ownerPage.getByText(/Score 50/)).toBeVisible();
     await expect(
-      ownerPage.getByRole("heading", { name: /No forecast is eligible/ }),
+      ownerPage.getByRole("heading", { name: "Portfolio allocation" }),
     ).toBeVisible();
+    await expect(ownerPage.getByRole("heading", { name: "Price outlook" })).toBeVisible();
     await ownerPage.getByLabel("Scenario amount (USD)").fill("2500.00");
-    const gatedScenario = waitForPost(ownerPage, /\/crypto\/scenarios$/);
+    const scenarioResponse = waitForPost(ownerPage, /\/crypto\/scenarios$/);
     await ownerPage.getByRole("button", { name: "Analyze amount" }).click();
-    expect((await gatedScenario).status()).toBe(422);
-    await expect(ownerPage.getByRole("alert")).toContainText(
-      "no promoted forecast is available",
-    );
+    const scenarioHttp = await scenarioResponse;
+    expect(scenarioHttp.status()).toBe(200);
+    const scenario = (await scenarioHttp.json()) as Recommendation;
+    expect(scenario.source_kind).toBe("scenario");
+    expect(scenario.savings_calculation_id).toBeNull();
+    expect(allocationTotal(scenario)).toBe(250_000);
+    await expect(ownerPage.getByText(/Scenario active: \$2,500.00/)).toBeVisible();
+    await expect(
+      ownerPage.getByText("Your Finance default is unchanged.", { exact: false }),
+    ).toBeVisible();
+    const financeAfterScenario = waitForGet(ownerPage, /\/finance\/overview\?/);
     await ownerPage.getByRole("link", { name: "Personal Finance" }).click();
+    const unchangedFinance = (await (await financeAfterScenario).json()) as {
+      summary: { savings: { available: { minor_units: number } } };
+    };
+    expect(unchangedFinance.summary.savings.available.minor_units).toBe(400_000);
     const savingsCard = ownerPage
       .getByLabel("Finance summary")
       .locator("article")
       .filter({ hasText: "Available savings" });
     await expect(savingsCard).toContainText("$4,000.00");
-    console.log("milestone9:e2e crypto gate verified");
+    console.log(
+      "milestone9:e2e promoted forecast, exact-cent allocations, and non-mutating scenario verified",
+    );
 
     await ownerPage.getByRole("link", { name: "Smart Insights" }).click();
     await ownerPage.getByRole("textbox", { name: "Question" }).fill(
@@ -130,6 +158,10 @@ test("real ResVault and services preserve the local journey through restart", as
     await selectGroup(ownerPage, groupName);
     await expect(ownerPage.getByText("$0.00 outstanding")).toBeVisible();
     await expect(ownerPage.getByText("settled", { exact: true })).toBeVisible();
+    await ownerPage.getByRole("link", { name: "Crypto" }).click();
+    await expect(
+      ownerPage.getByRole("heading", { name: "Portfolio allocation" }),
+    ).toBeVisible();
 
     const loggedOut = ownerPage.waitForResponse(
       (response) =>
@@ -146,6 +178,20 @@ test("real ResVault and services preserve the local journey through restart", as
     await second.close();
   }
 });
+
+type Recommendation = {
+  source_kind: "finance_savings" | "scenario";
+  savings_calculation_id: string | null;
+  allocations: Array<{ amount: { minor_units: number } }>;
+};
+
+function allocationTotal(recommendation: Recommendation | null): number {
+  if (recommendation === null) throw new Error("recommendation was not returned");
+  return recommendation.allocations.reduce(
+    (total, allocation) => total + allocation.amount.minor_units,
+    0,
+  );
+}
 
 async function walletContext(label: string): Promise<BrowserContext> {
   const profile = mkdtempSync(join(tmpdir(), `resfinance-${label}-`));

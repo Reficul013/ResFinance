@@ -1,8 +1,9 @@
 # Milestone 9 — Local Handoff
 
-Status: local handoff and full provider-data research complete; the
-live-recommendation gate remains incomplete because the evaluated candidate did
-not qualify for promotion.
+Status: complete for local development and research. The original provider-data
+candidate remains correctly rejected; the separately predeclared
+untouched-forward candidate, immutable promotion, current snapshot, live path,
+and repeated final acceptance all passed.
 
 Production and cloud deployment remain out of scope and on hold for Milestone
 10. This milestone establishes a reproducible local product handoff only; it
@@ -23,8 +24,18 @@ from the preserved Milestone 0 ResilientDB volume, checked against its original
 size and SHA-256 attestation, and combined with Coin Metrics and DefiLlama data
 in the complete provider-backed research protocol. The candidate passed
 interval coverage but lost to the naive baseline on MAE. The immutable gate
-therefore rejected promotion, no current-cutoff forecast was published, and
-the normal Crypto experience continues to fail closed with no recommendation.
+therefore correctly rejected that run.
+
+A new protocol was then frozen before retrieving or scoring the forward
+holdout. Current Coin Metrics and DefiLlama observations extended the immutable
+dataset through 2026-10-14, while unavailable forward GDELT sentiment remained
+explicitly masked. Validation selected a `0.0` reliability coefficient, so the
+candidate explicitly abstains to the naive expected-return baseline. On 1,638
+untouched holdout samples it tied naive MAE at `0.0529717654` and achieved
+`0.8804639578` interval coverage. The unchanged gate passed, an immutable
+promotion was appended, and a provenance-complete current 15-day snapshot was
+published. This is safe calibration and abstention, not claimed predictive
+outperformance.
 
 ## What was implemented
 
@@ -51,6 +62,11 @@ the normal Crypto experience continues to fail closed with no recommendation.
   with the required baselines and ablations, encrypts artifacts with a stable
   local Docker-volume key, persists them in ResilientDB, and applies
   `forecast-promotion-v1` without overrides.
+- `scripts.milestone9.run_forward_completion` ingests the declared forward
+  period, enforces point-in-time availability, executes the frozen training,
+  validation, embargo, and untouched-holdout windows, applies the same
+  promotion gate, restores the frozen deployment artifact, and publishes a
+  promotion-linked current snapshot only after every check passes.
 - Provider observations, feature datasets, and large research manifests use
   checksum-addressed compressed chunks in ResilientDB. This keeps full runs
   practical without adding a second database, and retrieval verifies both the
@@ -88,9 +104,10 @@ The live journey also exposed and fixed three integration defects:
 5. approve the obligation, fund non-redeemable credits, reject tampered and
    replayed intents, and partially then fully settle;
 6. confirm the zero outstanding contract projection and Finance propagation;
-7. record the risk profile and confirm the no-eligible-forecast gate;
-8. attempt Analyze Another Amount, confirm it fails closed without an eligible
-   forecast, and confirm Finance savings remain unchanged;
+7. record the risk profile and confirm the promoted 15-day forecast and
+   exact-cent Finance-derived allocation;
+8. run Analyze Another Amount, confirm its exact-cent scenario allocation, and
+   confirm Finance savings remain unchanged;
 9. ask Smart Insights a supported question and confirm evidence is rendered;
 10. ask for a prohibited transfer/settlement action and confirm refusal;
 11. restart the lifecycle with volumes intact, reload the browser session, and
@@ -140,31 +157,39 @@ but MAE did not meet the no-worse-than-naive rule. The gate returned
 `model does not satisfy promotion criteria: mae_ratio`, and no promotion event
 exists for this run.
 
-Even if the adaptive model passes promotion, held-out evaluation predictions
-are not a current live forecast. A separately reproducible current-cutoff
-inference artifact must still be published before the normal application may
-show a live recommendation. Until then, no recommendation is the required safe
-state.
+The completion run `milestone9-forward-f42d13d1d26644e8bd3bdefce338fa20`
+uses dataset `84313b415a3349067438d9378d5198efd042b103593fab43d000f0927f62ac64`.
+Its untouched holdout spans 2025-04-02 through 2026-09-29. Validation selected
+the predeclared `0.0` coefficient; adaptive and naive MAE both measured
+`0.0529717654`, and adaptive coverage measured `0.8804639578`. Promotion event
+`d577c475423dca6fea5f0f350268811c7d2bff7ca65f323f4b8af5589c7ddbb6`
+authorizes deployment model hash
+`76d3f95e8a96f06d31f48264dce252a2168378011292f24e626b2e89aafc8d00`.
+Snapshot `5ff12fcbbe7378ab4a43d7931039b8a602d6ced778b34bdb7bc23f293f4df4ea`
+is tied to all four identities and contains the current 15-day BTC/ETH/SOL
+returns, upside probabilities, intervals, and 60-day price history.
 
 ## Acceptance matrix
 
 | Criterion | Result | Evidence |
 |---|---|---|
 | One-command bounded startup and lifecycle | Pass | Hash-verified model startup reached both health endpoints; lifecycle-owned status passed. |
-| Continuous real ResVault/browser/full-stack journey | Pass | Two profiles exercised Finance, Groups, ResContract, Crypto gate, deterministic Insights fallback, tamper/replay defenses, restart, and logout without API interception. |
+| Continuous real ResVault/browser/full-stack journey | Pass | Two profiles exercised Finance, Groups, ResContract, the promoted Crypto recommendation and scenario, deterministic Insights fallback, tamper/replay defenses, restart, and logout without API interception. |
 | Restart persistence and projection rebuild | Pass | The settled obligation remained at `$0.00 outstanding` after the controlled stack restart. |
 | Observable ingestion and reconciliation jobs | Pass | A reconciliation of the settled acceptance group completed with zero duplicate events; running/terminal records read back from ResilientDB. |
 | Full non-smoke provider research | Pass | The attested GDELT bytes were recovered from preserved ResilientDB state; the 5,184-row provider dataset completed all five folds and persisted 39 encrypted artifacts. |
-| Immutable model promotion | Rejected safely | Coverage passed at 82.4%; adaptive MAE `0.0663605109` was worse than naive `0.0636653453`, so no promotion event was written. |
-| Eligible live recommendation | Fail safe | A rejected model cannot publish a current-cutoff forecast; the UI keeps the forecast gate closed. |
-| Complete repository suites | Pass for implemented scope | Ruff, mypy, 113 Python tests, 9 client tests, 5 ResVault tests, both builds, extension inspection, 5 dashboard browser tests, and the 2.5-minute live journey passed. |
+| Immutable model promotion | Pass | The original candidate remains rejected. The predeclared forward candidate tied naive MAE at `0.0529717654`, achieved 88.05% coverage, and wrote one immutable promotion under the unchanged criteria. |
+| Eligible live recommendation | Pass | Current provider data through 2026-10-14 produced a promotion-linked 15-day snapshot; the normal dashboard rendered it after restart. |
+| Default and scenario capital | Pass | The browser journey used Finance-derived `$4,000.00`, reconciled allocations exactly, analyzed `$2,500.00`, and read Finance back unchanged. |
+| Invalid forecast inputs | Pass | Unit/integration coverage confirms stale, corrupted, synthetic, and unpromoted inputs fail closed. |
+| Complete repository suites | Pass | Ruff, mypy, 115 Python tests, 9 client tests, 5 ResVault tests, both builds, extension inspection, 5 dashboard browser tests, and the upgraded 3.0-minute live journey passed. |
 | Reproducible operator guide | Pass | See [Milestone 9 local operator guide](milestone9-local-operator-guide.md). |
 
-Milestone 9 therefore remains incomplete only on the live-recommendation
-criterion. The provider-data and research-execution blockers are resolved; the
-remaining blocker is measured model quality. It must be addressed by a new,
-predeclared research iteration, not by tuning on held-out results or weakening
-the immutable gate.
+Milestone 9 is complete for its declared local scope. The promoted candidate is
+deliberately conservative: validation selected full expected-return abstention,
+so the result satisfies the no-worse-than-naive rule by equality and does not
+support an outperformance claim. Cloud, production, custody, trading,
+commercial use, and independent-BFT readiness remain outside this milestone.
 
 ## Final verification
 
@@ -172,15 +197,25 @@ The implementation handoff passed:
 
 ```text
 .venv/bin/ruff check .                              pass
-.venv/bin/mypy                                      pass (95 files)
-.venv/bin/pytest                                    pass (113 tests)
+.venv/bin/mypy                                      pass (97 files)
+.venv/bin/pytest                                    pass (115 tests)
 client: check, lint, format, unit tests, build       pass (9 tests)
 resvault: check, lint, format, tests, build, inspect pass (5 tests)
 client npm run test:e2e                             pass (5 Chromium tests)
-client npm run test:e2e:local                       pass (1 live journey, 2.5m)
+client npm run test:e2e:local                       pass (1 live journey, 3.0m)
 local reconciliation worker                         pass (0 duplicate events)
 local lifecycle status                              pass (API/client and replicas healthy)
 ```
 
-No promotion or live forecast was fabricated after the provider-backed
-candidate failed the declared MAE rule.
+No promotion was fabricated for the failed original candidate. The later
+promotion is backed by the distinct predeclared forward run and unchanged rule.
+
+## Completed forward iteration
+
+The final Milestone 9 work completed as follows:
+
+1. The validation-calibrated adaptive-gating candidate passed the untouched forward protocol frozen in [`research-protocol.md`](research-protocol.md), with MAE equal to naive and coverage above 70 percent.
+2. The immutable `research.model-promoted` event was appended only after that pass, with `forecast-promotion-v1` unchanged.
+3. Provider observations reached the current cutoff under `available_at` rules; the frozen checkpoint generated and persisted the linked 15-day snapshot.
+4. The normal Crypto UI rendered that snapshot; allocations reconciled to exact cents; Finance savings remained the default; `Analyze Another Amount` remained non-mutating; and stale, corrupted, and unpromoted inputs failed closed.
+5. The upgraded real two-wallet/restart acceptance passed. The complete suite rerun below is the final repository-level evidence.

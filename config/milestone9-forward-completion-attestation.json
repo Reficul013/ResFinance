@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "scope": "milestone-9-forward-completion-on-real-resilientdb",
+  "completed_at_utc": "2026-10-16T04:25:22.748148Z",
+  "assets": ["BTC", "ETH", "SOL"],
+  "providers": ["coin-metrics", "defillama", "gdelt"],
+  "current_cutoff_date": "2026-10-14",
+  "dataset_hash": "84313b415a3349067438d9378d5198efd042b103593fab43d000f0927f62ac64",
+  "dataset_row_count": 7137,
+  "run_id": "milestone9-forward-f42d13d1d26644e8bd3bdefce338fa20",
+  "manifest_key": "run:milestone9-forward-f42d13d1d26644e8bd3bdefce338fa20:manifest",
+  "evaluation_protocol": "untouched-forward-holdout-v1",
+  "forward_holdout": {
+    "training_end": "2024-12-17",
+    "validation_start": "2025-01-02",
+    "validation_end": "2025-03-17",
+    "holdout_start": "2025-04-02",
+    "holdout_end": "2026-09-29",
+    "train_sample_count": 5094,
+    "validation_sample_count": 225,
+    "holdout_sample_count": 1638,
+    "embargo_days": 15,
+    "holdout_labels_consumed_once": true,
+    "post_holdout_tuning_permitted": false
+  },
+  "adaptive_calibration": {
+    "grid": [0.0, 0.25, 0.5, 0.75, 1.0],
+    "selected_coefficient": 0.0,
+    "validation_mae_by_coefficient": {
+      "0.00": 0.0660234615,
+      "0.25": 0.0686894804,
+      "0.50": 0.0718924999,
+      "0.75": 0.0756335482,
+      "1.00": 0.0798305497
+    },
+    "conformal_alpha": 0.2,
+    "conformal_adjustment": [
+      0.0460212752,
+      0.078201659,
+      0.1077080816,
+      0.1313750893,
+      0.1817392111
+    ]
+  },
+  "adaptive_metrics": {
+    "sample_count": 1638,
+    "mae": 0.0529717654,
+    "rmse": 0.079932794,
+    "interval_coverage": 0.8804639578,
+    "interval_mean_width": 0.2180180848
+  },
+  "naive_metrics": {
+    "sample_count": 1638,
+    "mae": 0.0529717654,
+    "rmse": 0.079932794,
+    "interval_coverage": 0.8804639578,
+    "interval_mean_width": 0.2180180848
+  },
+  "promotion_criteria": {
+    "version": "forecast-promotion-v1",
+    "maximum_mae_ratio_to_naive": 1.0,
+    "minimum_interval_coverage": 0.7
+  },
+  "promotion_event_id": "d577c475423dca6fea5f0f350268811c7d2bff7ca65f323f4b8af5589c7ddbb6",
+  "deployment_model_hash": "76d3f95e8a96f06d31f48264dce252a2168378011292f24e626b2e89aafc8d00",
+  "forecast_snapshot_id": "5ff12fcbbe7378ab4a43d7931039b8a602d6ced778b34bdb7bc23f293f4df4ea",
+  "forecast_snapshot_record_id": "0f1a16a0829588c33dda930a20d093555a6c7dc93bc00003e7f24389032d5c3f",
+  "forecast_as_of_utc": "2026-10-15T00:00:00Z",
+  "forecast_expires_at_utc": "2026-10-17T00:00:00Z",
+  "forecast_horizon_days": 15,
+  "live_forecast_snapshot_published": true,
+  "statistical_significance_claim": null,
+  "author_repository_code_copied": false
+}

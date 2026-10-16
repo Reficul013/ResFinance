@@ -117,11 +117,10 @@ weights stay outside Git and are mounted read-only for local runtime.
 
 ## Remaining boundary
 
-No forecasting model is currently promoted, so Insights explains the Crypto
-promotion gate and cannot provide a portfolio recommendation. That is the
-correct evidence-safe behavior. Milestone 9 subsequently implemented the
-one-command local lifecycle and continuous real-browser proof, while its full
-provider-data research and live-recommendation gates remain incomplete.
-Milestone 10 remains
-explicitly on hold. Milestone 8 does not establish cloud, production,
-commercial, BFT, or investment-performance readiness.
+At Milestone 8 acceptance, no forecasting model was promoted, so Insights
+correctly explained the Crypto gate rather than inventing a recommendation.
+Milestone 9 later completed the local lifecycle and promoted a distinct
+predeclared forward candidate; that later evidence does not change Milestone
+8's read-only AI boundary. Milestone 10 remains explicitly on hold. Milestone 8
+does not establish cloud, production, commercial, BFT, or
+investment-performance readiness.

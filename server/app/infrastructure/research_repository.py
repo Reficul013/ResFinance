@@ -75,6 +75,10 @@ class ResearchRunRepository:
             raise ValueError("metrics artifact does not match the run manifest")
         if json.loads(artifacts["gate-weights.json"]) != manifest.get("gate_weights"):
             raise ValueError("gate-weight artifact does not match the run manifest")
+        if manifest.get("schema_version") == 2 and json.loads(
+            artifacts["adaptive-calibration.json"]
+        ) != manifest.get("adaptive_calibration"):
+            raise ValueError("adaptive calibration artifact does not match the run manifest")
         artifact_records: dict[str, object] = {}
         for name, content in sorted(artifacts.items()):
             digest = hashlib.sha256(content).hexdigest()
@@ -187,6 +191,14 @@ class ResearchRunRepository:
             "interval_coverage": coverage >= criteria.minimum_interval_coverage,
             "artifact_hashes_present": bool(manifest.get("artifact_hashes")),
         }
+        if manifest.get("schema_version") == 2:
+            holdout = manifest.get("forward_holdout")
+            passed["untouched_forward_holdout"] = (
+                manifest.get("evaluation_protocol") == "untouched-forward-holdout-v1"
+                and isinstance(holdout, dict)
+                and holdout.get("holdout_labels_consumed_once") is True
+                and holdout.get("post_holdout_tuning_permitted") is False
+            )
         if not all(passed.values()):
             failed = ", ".join(name for name, value in passed.items() if not value)
             raise ValueError(f"model does not satisfy promotion criteria: {failed}")
@@ -202,6 +214,10 @@ class ResearchRunRepository:
                 "naive_mae": naive_mae,
                 "candidate_interval_coverage": coverage,
             },
+            "dataset_hash": manifest.get("dataset_hash"),
+            "evaluated_model_artifact": manifest.get("evaluated_model_artifact"),
+            "deployment_model_artifact": manifest.get("deployment_model_artifact"),
+            "deployment_model_hash": _deployment_model_hash(manifest),
             "checks": passed,
             "approved_by": approved_by,
             "promoted_at_utc": promoted.isoformat().replace("+00:00", "Z"),
@@ -275,8 +291,9 @@ class ResearchRunRepository:
 
 
 def _validate_manifest(manifest: Mapping[str, object]) -> None:
-    if manifest.get("schema_version") != 1 or manifest.get("status") != "completed":
-        raise ValueError("only completed schema-v1 research runs may be persisted")
+    schema_version = manifest.get("schema_version")
+    if schema_version not in (1, 2) or manifest.get("status") != "completed":
+        raise ValueError("only completed schema-v1 or schema-v2 research runs may be persisted")
     if manifest.get("assets") != ["BTC", "ETH", "SOL"]:
         raise ValueError("research run must contain exactly BTC, ETH, and SOL")
     reported = manifest.get("reported_models")
@@ -285,8 +302,44 @@ def _validate_manifest(manifest: Mapping[str, object]) -> None:
     if manifest.get("statistical_significance_claim") is not None:
         raise ValueError("unsubstantiated statistical significance claims are prohibited")
     folds = manifest.get("folds")
-    if not isinstance(folds, list) or len(folds) != 5:
-        raise ValueError("research run requires five walk-forward folds")
+    if not isinstance(folds, list):
+        raise ValueError("research run folds must be a list")
+    if schema_version == 1 and len(folds) != 5:
+        raise ValueError("schema-v1 research runs require five walk-forward folds")
+    if schema_version == 2:
+        holdout = manifest.get("forward_holdout")
+        if (
+            folds
+            or manifest.get("evaluation_protocol") != "untouched-forward-holdout-v1"
+            or not isinstance(holdout, dict)
+            or holdout.get("embargo_days") != 15
+            or holdout.get("holdout_labels_consumed_once") is not True
+            or holdout.get("post_holdout_tuning_permitted") is not False
+        ):
+            raise ValueError("schema-v2 research run violates the untouched-forward protocol")
+        artifacts = manifest.get("artifact_hashes")
+        if not isinstance(artifacts, dict):
+            raise ValueError("schema-v2 research artifact hashes are required")
+        for field in (
+            "adaptive_calibration",
+            "evaluated_model_artifact",
+            "deployment_model_artifact",
+            "standardizer_artifact",
+        ):
+            if not manifest.get(field):
+                raise ValueError(f"schema-v2 research manifest {field} is required")
+        for field in (
+            "evaluated_model_artifact",
+            "deployment_model_artifact",
+            "standardizer_artifact",
+        ):
+            artifact_name = manifest.get(field)
+            if not isinstance(artifact_name, str) or not _SHA256.fullmatch(
+                str(artifacts.get(artifact_name, ""))
+            ):
+                raise ValueError(f"schema-v2 research manifest {field} hash is invalid")
+        if not _SHA256.fullmatch(str(artifacts.get("adaptive-calibration.json", ""))):
+            raise ValueError("schema-v2 adaptive calibration artifact hash is invalid")
     for field in (
         "dataset_hash",
         "dataset_manifest_hash",
@@ -316,6 +369,15 @@ def _metric(metrics: dict[object, object], name: str) -> float:
     if not isinstance(value, int | float):
         raise ValueError(f"metric {name} is invalid")
     return float(value)
+
+
+def _deployment_model_hash(manifest: Mapping[str, object]) -> str | None:
+    name = manifest.get("deployment_model_artifact")
+    artifacts = manifest.get("artifact_hashes")
+    if not isinstance(name, str) or not isinstance(artifacts, dict):
+        return None
+    value = artifacts.get(name)
+    return value if isinstance(value, str) else None
 
 
 def _media_type(name: str) -> str:

@@ -1,6 +1,6 @@
 # Research Protocol
 
-Status: implemented through Milestone 6 for local, non-commercial research
+Status: Milestone 9 forward-completion protocol predeclared on 2026-10-15; local, non-commercial research only
 
 ## Scope
 
@@ -56,3 +56,19 @@ The local 100 MiB reconstruction smoke test does not satisfy persistence accepta
 The checked-in implementation uses pinned NumPy and PyTorch dependencies, CPU-only deterministic algorithms, one framework thread, no random data shuffling, five expanding walk-forward folds, a 15-day embargo, fold-local masked standardization, and validation-only split-conformal calibration. The clean-room MSPCIFormer adaptation uses separate market, sentiment, and on-chain encoders, masked adaptive gating, multi-scale temporal patches, shared channel-independent Transformer processing, learned scale aggregation, asset embeddings, and five-horizon return, direction, and quantile heads.
 
 Synthetic smoke results validate deterministic mechanics, model contracts, comparisons, and persistence. They do not establish real-data performance, statistical significance, financial advice, or promotion eligibility. A full research run must use the fixed point-in-time provider dataset, retain the same manifest contract, and pass the declared promotion criteria before its model can become an approved forecast source.
+
+## Milestone 9 untouched-forward completion protocol
+
+This protocol is frozen before retrieving or scoring the forward holdout. It is a new evaluation, not a reinterpretation of the already-observed 2020-04-10 through 2025-01-01 five-fold results.
+
+- Candidate: the same clean-room adaptive-gating architecture with a validation-locked reliability shrinkage coefficient selected from the fixed grid `0.00, 0.25, 0.50, 0.75, 1.00`. The coefficient scales predicted returns and direction confidence toward the naive zero-return/50-percent baseline. A coefficient of zero is an explicit, recorded abstention; it may tie but cannot outperform naive MAE by construction. The smallest coefficient wins an exact validation tie.
+- Training decisions: all labeled samples through 2024-12-17. No record after that cutoff may fit weights or feature transforms.
+- Embargo: 15 calendar days after the training cutoff.
+- Validation/calibration decisions: 2025-01-02 through 2025-03-17. This window selects the fixed shrinkage coefficient and calibrates split-conformal intervals only.
+- Forward embargo: 15 calendar days after the validation cutoff.
+- Untouched holdout decisions: 2025-04-02 through the latest decision date whose 15-day target is fully observed. Holdout labels may be read exactly once by the immutable evaluation run and may not change the candidate, coefficient, transforms, epochs, loss, or promotion criteria.
+- Current inference cutoff: the latest complete provider decision time whose inputs satisfy `available_at <= decision cutoff`. Labels are not required for this final inference row.
+- Promotion remains `forecast-promotion-v1`: adaptive MAE must be less than or equal to naive MAE and adaptive interval coverage must be at least 70 percent. No tolerance, override, synthetic substitution, or post-holdout tuning is permitted.
+- After a pass, a deployment checkpoint may be refit on all labels mature at the current cutoff using the frozen configuration. Its hash, standardizer, calibration, evaluated checkpoint, dataset, run, and promotion event must be recorded before a forecast snapshot is eligible.
+
+The completion run must report per-model forward metrics, the chosen coefficient and validation scores for every grid value, exact window boundaries, input record IDs, point-in-time cutoff checks, conformal adjustment, evaluated and deployment artifact hashes, and whether holdout labels were consumed. A failed forward run remains useful immutable evidence but cannot publish a live recommendation.

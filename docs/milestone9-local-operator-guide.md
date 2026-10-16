@@ -142,12 +142,34 @@ To reuse a provider-backed feature dataset:
 Exit status 0 means the evaluated adaptive candidate passed and an immutable
 model-promotion event was appended. Exit status 2 means the run completed but
 the candidate failed safely. Neither status alone publishes a current-cutoff
-forecast; the normal application remains gated until such a snapshot exists.
+forecast; use the separately frozen completion runner below for that workflow.
 
 The recorded provider-backed run exits 2: adaptive MAE `0.0663605109` was
 worse than naive MAE `0.0636653453`, although its 82.4% interval coverage
 passed. Do not change the criteria or reuse the held-out test result for model
 selection merely to obtain exit 0.
+
+## Untouched-forward completion and current snapshot
+
+This command is the supported path that extends the provider period, executes
+the predeclared untouched-forward protocol, promotes a qualifying candidate,
+freezes its deployment artifacts, and publishes a current 15-day snapshot.
+Choose the last complete provider date explicitly; do not move the frozen
+training, validation, or holdout boundaries after inspecting results.
+
+```bash
+.venv/bin/python -m scripts.milestone9.run_forward_completion \
+  --current-cutoff-date 2026-10-14 \
+  --output /private/tmp/milestone9-forward-completion.json
+```
+
+The accepted local run used provider observations through 2026-10-14. Its
+validation window selected coefficient `0.0`, an explicit abstention to the
+naive expected-return forecast. On the untouched 2025-04-02 through 2026-09-29
+holdout, adaptive and naive MAE both measured `0.0529717654`; adaptive interval
+coverage was `0.8804639578`. Equality satisfies the unchanged no-worse-than-
+naive rule, but it is not predictive outperformance. The immutable promotion
+and snapshot remain research-only and do not execute trades.
 
 ## Troubleshooting
 
@@ -169,5 +191,6 @@ selection merely to obtain exit 0.
 
 Known limitations: local-only topology, personal non-commercial provider
 scope, manual worker scheduling, no trade execution or exchange custody, no
-fiat/native-crypto transfer, and no live recommendation until both promotion
-and current-cutoff forecast evidence exist.
+fiat/native-crypto transfer, and a promoted candidate that currently abstains
+to the naive expected-return baseline rather than demonstrating market
+outperformance.

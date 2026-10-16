@@ -4,7 +4,7 @@ Status: Approved planning baseline for local implementation; cloud deployment is
 
 Last reviewed: 2026-10-15
 
-Implementation status: Milestones 0–8 passed for local development and research. Milestone 9 implements the local lifecycle, explicit workers, operator guide, continuous real-service browser proof, and the full provider-data research protocol. The provider-backed adaptive candidate passed interval coverage but failed the immutable MAE rule, so no model is promoted and runtime portfolio recommendations remain gated. The live-recommendation objective remains incomplete. Milestone 10 production hardening and deployment remains on hold.
+Implementation status: Milestones 0–9 passed for local development and research. Milestone 9 includes the local lifecycle, explicit workers, operator guide, continuous real-service browser proof, the original provider-data research run, and the predeclared untouched-forward completion protocol. The validation-locked candidate abstained to the naive return forecast, tied its forward MAE, exceeded required interval coverage, passed the unchanged immutable gate, and published a provenance-complete current-cutoff snapshot. Milestone 10 production hardening and deployment remains on hold.
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
@@ -406,7 +406,7 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 
 ### Milestone 9 — Local Handoff
 
-**Status:** local handoff and full provider-data research implemented; the evaluated adaptive candidate failed the immutable MAE criterion, so the live-recommendation gate remains incomplete. Evidence and the remaining blocker are recorded in [`milestone9-local-handoff.md`](milestone9-local-handoff.md), with operating instructions in [`milestone9-local-operator-guide.md`](milestone9-local-operator-guide.md).
+**Status:** complete for local development and research. The first provider-data candidate remains rejected; the later predeclared untouched-forward candidate passed the unchanged gate and its live recommendation passed the real-stack browser journey. Evidence is recorded in [`milestone9-local-handoff.md`](milestone9-local-handoff.md), with operating instructions in [`milestone9-local-operator-guide.md`](milestone9-local-operator-guide.md).
 
 - Package a one-command local startup with preflight checks, bounded health waits, status, clean shutdown, and an explicitly confirmed reset path.
 - Prove one continuous, non-mocked browser journey through the real ResVault extension, React client, FastAPI API, four-replica ResilientDB stack, ResContract, local workers, and read-only AI path.
@@ -414,7 +414,15 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 - Run approved full-scale BTC/ETH/SOL research and promote a forecast only if it passes the existing immutable evaluation criteria. Never weaken the gate merely to complete the milestone.
 - Produce an operator handoff covering prerequisites, resource requirements, model/data provisioning, troubleshooting, restart recovery, cleanup, known limitations, and acceptance evidence.
 
-**Acceptance:** after documented prerequisites, one command starts the complete local stack and reaches healthy state; a real-browser test without API interception completes the wallet-authenticated Finance → Groups → settlement → Finance → Crypto → Insights journey and survives a controlled restart; and the normal Crypto dashboard displays a live recommendation only when backed by an eligible immutable promotion event. If no candidate passes promotion, the gated Crypto state remains correct but the live-recommendation objective—and therefore the full Local Handoff milestone—remains incomplete.
+The approved completion iteration adds these five required work packages:
+
+1. Develop a predeclared adaptive-gating candidate on a revised protocol with an untouched forward holdout. Its adaptive MAE must be no worse than naive and its interval coverage must be at least 70 percent. The already-observed five-fold test results may not be used for model or calibration selection.
+2. Write the immutable `research.model-promoted` event only after that candidate passes the unchanged promotion gate. A rejected or incomplete run cannot be promoted.
+3. Ingest current BTC/ETH/SOL provider observations under `available_at` point-in-time rules, freeze the promoted final model, generate current 15-day returns, upside probabilities, and uncertainty intervals, and persist a forecast snapshot linked to the exact dataset, model artifact, research run, and promotion event.
+4. Prove the normal Crypto dashboard recommendation path, exact-cent allocation reconciliation, Finance-derived default savings, non-mutating `Analyze Another Amount`, and fail-closed behavior for stale, corrupted, or unpromoted forecasts.
+5. Repeat the complete Python, client, ResVault, build, lint, type-check, and real two-wallet/restart acceptance suites. Mark Milestone 9 complete only after the live recommendation succeeds through the real local stack.
+
+**Acceptance:** after documented prerequisites, one command starts the complete local stack and reaches healthy state; the predeclared untouched-forward evaluation passes the unchanged promotion criteria; an immutable promotion and provenance-complete current-cutoff snapshot exist; and a real-browser test without API interception completes the wallet-authenticated Finance → Groups → settlement → Finance → Crypto recommendation → non-mutating scenario → Insights journey, including exact-cent allocation and controlled restart. Stale, corrupted, and unpromoted forecast inputs must fail closed. If any condition fails, the safe gated state remains correct but Milestone 9 remains incomplete.
 
 ### Milestone 10 — Production hardening and deployment — ON HOLD
 

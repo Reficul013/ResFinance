@@ -51,6 +51,11 @@ class ForecastFixture:
         return self.snapshot
 
 
+class CorruptForecastFixture:
+    def latest_forecast_snapshot(self) -> ForecastSnapshot | None:
+        raise ValueError("forecast snapshot content hash does not match")
+
+
 def test_risk_score_is_versioned_and_liquidity_need_is_reversed() -> None:
     conservative = RiskAnswers(0, 0, 0, 4, 0)
     aggressive = RiskAnswers(4, 4, 4, 0, 4)
@@ -128,6 +133,33 @@ def test_stale_promoted_forecast_is_rejected() -> None:
     )
 
     with pytest.raises(PortfolioRejected, match="stale"):
+        service.analyze_scenario(actor_address=ACTOR, amount_minor_units=10_000, now_utc=NOW)
+
+    overview = service.overview(actor_address=ACTOR, month="2026-10", now_utc=NOW)
+    assert overview.forecast is None
+    assert overview.recommendation is None
+
+
+def test_corrupted_or_unpromoted_forecasts_fail_closed() -> None:
+    store = MemoryKeyValueStore()
+    events = EncryptedEventRepository(
+        store,
+        AesGcmCipher(b"c" * 32, key_id="corrupt-test-v1"),
+        clock=lambda: NOW,
+    )
+    finance = FinanceService(events)
+    service = PortfolioService(events, CorruptForecastFixture(), finance)
+    service.record_risk_profile(
+        actor_address=ACTOR,
+        idempotency_key="risk-corrupt-0001",
+        expected_version=0,
+        answers=RiskAnswers(2, 2, 2, 2, 2),
+    )
+
+    overview = service.overview(actor_address=ACTOR, month="2026-10", now_utc=NOW)
+    assert overview.forecast is None
+    assert overview.recommendation is None
+    with pytest.raises(PortfolioRejected, match="no promoted forecast"):
         service.analyze_scenario(actor_address=ACTOR, amount_minor_units=10_000, now_utc=NOW)
 
 

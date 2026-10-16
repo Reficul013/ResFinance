@@ -98,7 +98,10 @@ class PortfolioService:
         finance = self._finance.overview(actor_address=actor_address, month=month)
         savings = finance.summary
         risk = self._risk_projection(actor_address)
-        snapshot = self._forecasts.latest_forecast_snapshot()
+        snapshot = self._eligible_snapshot()
+        current_time = (now_utc or datetime.now(UTC)).astimezone(UTC)
+        if snapshot is not None and current_time > snapshot.expires_at_utc:
+            snapshot = None
         if (
             snapshot is not None
             and snapshot.scope == "local-synthetic-acceptance"
@@ -114,7 +117,7 @@ class PortfolioService:
                 source_kind="finance_savings",
                 savings_calculation_id=savings.savings_calculation_id,
                 savings_source_event_ids=savings.source_event_ids,
-                now_utc=now_utc,
+                now_utc=current_time,
             )
         return CryptoOverview(
             month=month,
@@ -140,7 +143,7 @@ class PortfolioService:
         risk = self._risk_projection(actor_address)
         if risk.profile is None:
             raise PortfolioRejected("complete the risk questionnaire first")
-        snapshot = self._forecasts.latest_forecast_snapshot()
+        snapshot = self._eligible_snapshot()
         if snapshot is None:
             raise PortfolioRejected("no promoted forecast is available")
         if snapshot.scope == "local-synthetic-acceptance" and not self._allow_synthetic_acceptance:
@@ -154,6 +157,14 @@ class PortfolioService:
             savings_source_event_ids=(),
             now_utc=now_utc,
         )
+
+    def _eligible_snapshot(self) -> ForecastSnapshot | None:
+        try:
+            return self._forecasts.latest_forecast_snapshot()
+        except (KeyError, ValueError):
+            # Corrupt provenance, content hashes, and missing promotion events are
+            # ineligible inputs. The product fails closed instead of rendering them.
+            return None
 
     def _recommend(
         self,

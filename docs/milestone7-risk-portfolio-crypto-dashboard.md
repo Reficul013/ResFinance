@@ -38,7 +38,7 @@ fiat or cryptocurrency, or change Finance from a scenario.
   provenance, a non-mutating scenario control, and TradingView Lightweight
   Charts price/P10/P50/P90 overlays.
 
-## Current promotion state
+## Milestone 7 promotion state
 
 Milestone 6 promoted no model because its deterministic smoke candidate did not
 beat the declared naive-baseline MAE criterion. Milestone 7 does not bypass that
@@ -49,6 +49,10 @@ references a valid immutable promotion event.
 The Milestone 7 acceptance runner injects a deterministic forecast fixture only
 to test constraints. The fixture is labeled `local-synthetic-acceptance`, is not
 stored as a research promotion, and is rejected by the normal runtime.
+
+Milestone 9 later promoted a separate provider-backed forward candidate under
+the unchanged criteria and published the first eligible normal-runtime
+snapshot; it did not retroactively promote the Milestone 6 smoke candidate.
 
 ## API surface
 
