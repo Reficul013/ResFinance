@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import re
+import zlib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -24,6 +26,7 @@ _REQUIRED_MODELS = {
     "without-sentiment",
     "without-on-chain",
 }
+_MANIFEST_CHUNK_BYTES = 48 * 1024
 
 
 @dataclass(frozen=True)
@@ -90,7 +93,7 @@ class ResearchRunRepository:
             }
         stored_manifest = {**manifest, "persisted_artifacts": artifact_records}
         key = f"run:{_safe(run_id)}:manifest"
-        result = self._put_immutable(key, stored_manifest)
+        result = self._put_run_manifest(key, stored_manifest)
         return PersistedResearchRun(
             run_id=run_id,
             manifest_key=key,
@@ -104,7 +107,41 @@ class ResearchRunRepository:
         encoded = self._store.get(f"run:{_safe(run_id)}:manifest")
         if encoded is None:
             raise KeyError(run_id)
-        return _object(encoded)
+        value = _object(encoded)
+        if value.get("storage") != "zlib-json-chunks-v1":
+            return value
+        chunks = value.get("chunks")
+        if not isinstance(chunks, list) or not all(isinstance(item, dict) for item in chunks):
+            raise ValueError("research manifest chunk index is invalid")
+        compressed_parts: list[bytes] = []
+        for expected_number, raw_item in enumerate(chunks):
+            item = cast(dict[str, object], raw_item)
+            if item.get("number") != expected_number:
+                raise ValueError("research manifest chunks are not ordered")
+            key = item.get("key")
+            expected_hash = item.get("sha256")
+            if not isinstance(key, str) or not isinstance(expected_hash, str):
+                raise ValueError("research manifest chunk metadata is invalid")
+            encoded_chunk = self._store.get(key)
+            if encoded_chunk is None:
+                raise ValueError("research manifest chunk is missing")
+            chunk = base64.b64decode(encoded_chunk, validate=True)
+            if hashlib.sha256(chunk).hexdigest() != expected_hash:
+                raise ValueError("research manifest chunk checksum mismatch")
+            compressed_parts.append(chunk)
+        compressed = b"".join(compressed_parts)
+        if hashlib.sha256(compressed).hexdigest() != value.get("compressed_sha256"):
+            raise ValueError("research manifest compressed checksum mismatch")
+        try:
+            content = zlib.decompress(compressed)
+        except zlib.error as exc:
+            raise ValueError("research manifest decompression failed") from exc
+        if hashlib.sha256(content).hexdigest() != value.get("manifest_sha256"):
+            raise ValueError("research manifest checksum mismatch")
+        manifest = json.loads(content)
+        if not isinstance(manifest, dict) or manifest.get("run_id") != run_id:
+            raise ValueError("research manifest content is invalid")
+        return cast(dict[str, Any], manifest)
 
     def restore_artifact(self, run_id: str, name: str) -> bytes:
         manifest = self.run_manifest(run_id)
@@ -196,6 +233,45 @@ class ResearchRunRepository:
             return ImmutableStoreResult(key=key, record_id=digest, deduplicated=True)
         self._store.put(key, encoded)
         return ImmutableStoreResult(key=key, record_id=digest, deduplicated=False)
+
+    def _put_run_manifest(self, key: str, document: Mapping[str, object]) -> ImmutableStoreResult:
+        content = canonical_json_bytes(document)
+        manifest_hash = hashlib.sha256(content).hexdigest()
+        compressed = zlib.compress(content, level=9)
+        run_id = _required_text(document, "run_id")
+        chunks = [
+            compressed[offset : offset + _MANIFEST_CHUNK_BYTES]
+            for offset in range(0, len(compressed), _MANIFEST_CHUNK_BYTES)
+        ]
+        chunk_records = [
+            {
+                "number": number,
+                "key": f"run-manifest-chunk:{_safe(run_id)}:{number:06d}",
+                "sha256": hashlib.sha256(chunk).hexdigest(),
+            }
+            for number, chunk in enumerate(chunks)
+        ]
+        pointer = {
+            "schema_version": 1,
+            "run_id": run_id,
+            "storage": "zlib-json-chunks-v1",
+            "manifest_sha256": manifest_hash,
+            "compressed_sha256": hashlib.sha256(compressed).hexdigest(),
+            "size_bytes": len(content),
+            "compressed_size_bytes": len(compressed),
+            "chunks": chunk_records,
+        }
+        encoded_pointer = canonical_json_bytes(pointer).decode()
+        existing = self._store.get(key)
+        if existing is not None:
+            if existing != encoded_pointer:
+                raise ValueError(f"immutable research record conflict: {key}")
+            return ImmutableStoreResult(key=key, record_id=manifest_hash, deduplicated=True)
+        for chunk, record in zip(chunks, chunk_records, strict=True):
+            chunk_key = cast(str, record["key"])
+            self._store.put(chunk_key, base64.b64encode(chunk).decode("ascii"))
+        self._store.put(key, encoded_pointer)
+        return ImmutableStoreResult(key=key, record_id=manifest_hash, deduplicated=False)
 
 
 def _validate_manifest(manifest: Mapping[str, object]) -> None:

@@ -52,6 +52,10 @@ class AesGcmCipher:
         self._cipher = AESGCM(key)
         self._key_id = key_id
 
+    @property
+    def key_id(self) -> str:
+        return self._key_id
+
     def encrypt_bytes(self, plaintext: bytes, *, aad: bytes) -> EncryptionEnvelope:
         nonce = os.urandom(12)
         ciphertext = self._cipher.encrypt(nonce, plaintext, aad)
@@ -74,9 +78,7 @@ class AesGcmCipher:
     def encrypt_json(self, value: object, *, aad: bytes) -> EncryptionEnvelope:
         return self.encrypt_bytes(canonical_json_bytes(value), aad=aad)
 
-    def decrypt_json(
-        self, envelope: EncryptionEnvelope, *, aad: bytes
-    ) -> dict[str, Any]:
+    def decrypt_json(self, envelope: EncryptionEnvelope, *, aad: bytes) -> dict[str, Any]:
         value = json.loads(self.decrypt_bytes(envelope, aad=aad))
         if not isinstance(value, dict):
             raise ValueError("decrypted event payload must be an object")

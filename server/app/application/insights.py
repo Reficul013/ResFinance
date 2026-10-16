@@ -69,8 +69,11 @@ _NON_ADVICE = (
 
 
 class InstructionFactSelector(Protocol):
-    model_id: str
-    model_revision: str
+    @property
+    def model_id(self) -> str: ...
+
+    @property
+    def model_revision(self) -> str: ...
 
     def select_facts(
         self,
@@ -119,7 +122,14 @@ class InsightsService:
 
     def overview(self, *, actor_address: str, month: str) -> InsightsOverview:
         bundle = self.authorized_fact_bundle(actor_address=actor_address, month=month)
-        response = self._answer(bundle=bundle, question="How can I improve my savings?")
+        # Keep passive dashboard reads deterministic and fast. The optional local
+        # model is reserved for an explicit user question, so repeated overview
+        # refreshes cannot queue expensive inference ahead of that question.
+        response = self._answer(
+            bundle=bundle,
+            question="How can I improve my savings?",
+            use_selector=False,
+        )
         return InsightsOverview(
             bundle=bundle,
             response=response,
@@ -274,6 +284,7 @@ class InsightsService:
         *,
         bundle: AuthorizedFactBundle,
         question: str,
+        use_selector: bool = True,
     ) -> InsightResponse:
         normalized = " ".join(question.split())
         if not normalized or len(normalized) > 500:
@@ -301,7 +312,8 @@ class InsightsService:
             )
         selection: FactSelection
         mode: InsightMode = "template-fallback"
-        if self._selector is not None:
+        active_selector: InstructionFactSelector = self._fallback
+        if use_selector and self._selector is not None:
             try:
                 candidate = self._selector.select_facts(
                     question=normalized,
@@ -310,6 +322,7 @@ class InsightsService:
                 )
                 selection = self._validated_selection(candidate, bundle, topics)
                 mode = "local-model"
+                active_selector = self._selector
             except (RuntimeError, ValueError, KeyError, TypeError):
                 selection = self._fallback.select_facts(
                     question=normalized,
@@ -338,15 +351,14 @@ class InsightsService:
                 "No BTC, ETH, or SOL recommendation is available without a "
                 "promoted forecast."
             )
-        selector = self._selector or self._fallback
         return InsightResponse(
             summary=" ".join(fact.statement for fact in evidence),
             evidence=evidence,
             caveats=tuple(caveats),
             follow_up_questions=_follow_ups(topics),
             mode=mode,
-            model_id=selector.model_id,
-            model_revision=selector.model_revision,
+            model_id=active_selector.model_id,
+            model_revision=active_selector.model_revision,
             refused=False,
         )
 

@@ -86,6 +86,8 @@ def services_from_environment() -> tuple[
     if not event_key_path:
         return authentication, None, None, None, None
     key = Path(event_key_path).read_bytes()
+    research_key_path = os.environ.get("RESFINANCE_RESEARCH_KEY_FILE", event_key_path)
+    research_key = Path(research_key_path).read_bytes()
     repository = EncryptedEventRepository(
         store,
         AesGcmCipher(key, key_id="local-finance-event-key-v1"),
@@ -102,7 +104,8 @@ def services_from_environment() -> tuple[
         gateway_caller = str(registry.get("gateway_caller", ""))
     if not all((contract_tool, contract_config, contract_address, gateway_caller)):
         blobs = EncryptedBlobRepository(
-            store, AesGcmCipher(key, key_id="local-research-blob-key-v1")
+            store,
+            AesGcmCipher(research_key, key_id="local-research-blob-key-v1"),
         )
         research = ResearchRunRepository(store, blobs)
         portfolio = PortfolioService(
@@ -118,7 +121,10 @@ def services_from_environment() -> tuple[
         contract_address=str(contract_address),
         gateway_caller=str(gateway_caller),
     )
-    blobs = EncryptedBlobRepository(store, AesGcmCipher(key, key_id="local-research-blob-key-v1"))
+    blobs = EncryptedBlobRepository(
+        store,
+        AesGcmCipher(research_key, key_id="local-research-blob-key-v1"),
+    )
     research = ResearchRunRepository(store, blobs)
     portfolio = PortfolioService(repository, PortfolioResearchRepository(store, research), finance)
     groups = GroupService(repository, contract, finance)

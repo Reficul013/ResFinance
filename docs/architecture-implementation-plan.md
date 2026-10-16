@@ -4,7 +4,7 @@ Status: Approved planning baseline for local implementation; cloud deployment is
 
 Last reviewed: 2026-10-15
 
-Implementation status: Milestones 0–8 passed for local development and research. Milestone 9 now implements the local lifecycle, explicit workers, operator guide, and continuous real-service browser proof, but remains incomplete on full provider-data research and a live recommendation because the approved GDELT input is unavailable. No forecasting model is currently promoted, so runtime portfolio recommendations remain gated. Milestone 10 production hardening and deployment remains on hold.
+Implementation status: Milestones 0–8 passed for local development and research. Milestone 9 implements the local lifecycle, explicit workers, operator guide, continuous real-service browser proof, and the full provider-data research protocol. The provider-backed adaptive candidate passed interval coverage but failed the immutable MAE rule, so no model is promoted and runtime portfolio recommendations remain gated. The live-recommendation objective remains incomplete. Milestone 10 production hardening and deployment remains on hold.
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
@@ -406,7 +406,7 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 
 ### Milestone 9 — Local Handoff
 
-**Status:** local handoff implemented; full research and live-recommendation gates remain incomplete. Evidence and the remaining blocker are recorded in [`milestone9-local-handoff.md`](milestone9-local-handoff.md), with operating instructions in [`milestone9-local-operator-guide.md`](milestone9-local-operator-guide.md).
+**Status:** local handoff and full provider-data research implemented; the evaluated adaptive candidate failed the immutable MAE criterion, so the live-recommendation gate remains incomplete. Evidence and the remaining blocker are recorded in [`milestone9-local-handoff.md`](milestone9-local-handoff.md), with operating instructions in [`milestone9-local-operator-guide.md`](milestone9-local-operator-guide.md).
 
 - Package a one-command local startup with preflight checks, bounded health waits, status, clean shutdown, and an explicitly confirmed reset path.
 - Prove one continuous, non-mocked browser journey through the real ResVault extension, React client, FastAPI API, four-replica ResilientDB stack, ResContract, local workers, and read-only AI path.

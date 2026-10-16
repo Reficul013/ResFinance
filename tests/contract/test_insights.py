@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import UTC, date, datetime
+from threading import Event, Thread
 
+import pytest
 from fastapi.testclient import TestClient
 
 from server.app.application.finance import FinanceService
@@ -12,6 +14,7 @@ from server.app.domain.finance import EntryDirection
 from server.app.domain.insights import AuthorizedFactBundle, FactSelection, InsightTopic
 from server.app.infrastructure.encryption import AesGcmCipher
 from server.app.infrastructure.event_repository import EncryptedEventRepository
+from server.app.infrastructure.huggingface_insights import HuggingFaceInstructionSelector
 from server.app.main import create_app
 from tests.contract.test_authentication import (
     ORIGIN,
@@ -167,9 +170,7 @@ def test_unknown_or_low_confidence_model_output_falls_back_to_templates() -> Non
     finance, _, _ = services(store)
     actor = "0x" + "b" * 40
     record_finance(finance, actor)
-    selector = ControlledSelector(
-        FactSelection(fact_ids=("invented.fact",), confidence=0.99)
-    )
+    selector = ControlledSelector(FactSelection(fact_ids=("invented.fact",), confidence=0.99))
     _, _, insights = services(store, selector=selector)
 
     result = insights.answer(
@@ -182,6 +183,58 @@ def test_unknown_or_low_confidence_model_output_falls_back_to_templates() -> Non
     assert result.evidence
     assert all(item.fact_id.startswith("savings.") for item in result.evidence)
     assert "invented" not in result.summary
+
+
+def test_passive_overview_does_not_queue_local_model_inference() -> None:
+    store = MemoryKeyValueStore()
+    finance, _, _ = services(store)
+    actor = "0x" + "9" * 40
+    record_finance(finance, actor)
+    selector = ControlledSelector(FactSelection(fact_ids=("savings.available",), confidence=0.99))
+    _, _, insights = services(store, selector=selector)
+
+    result = insights.overview(actor_address=actor, month="2026-10")
+
+    assert result.response.mode == "template-fallback"
+    assert result.response.model_id == "Qwen/Qwen2.5-1.5B-Instruct"
+    assert selector.calls == 0
+
+
+def test_concurrent_local_model_request_fails_fast_for_template_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    selector = HuggingFaceInstructionSelector()
+    entered = Event()
+    release = Event()
+
+    def blocked_selection(**_: object) -> FactSelection:
+        entered.set()
+        assert release.wait(timeout=2)
+        return FactSelection(("savings.available",), 1.0)
+
+    monkeypatch.setattr(selector, "_select_facts", blocked_selection)
+    bundle = AuthorizedFactBundle.build(
+        actor_address="0x" + "8" * 40,
+        month="2026-10",
+        facts=(),
+    )
+    first = Thread(
+        target=selector.select_facts,
+        kwargs={"question": "Savings?", "topics": ("savings",), "bundle": bundle},
+    )
+    first.start()
+    assert entered.wait(timeout=2)
+
+    with pytest.raises(RuntimeError, match="busy"):
+        selector.select_facts(
+            question="Savings?",
+            topics=("savings",),
+            bundle=bundle,
+        )
+
+    release.set()
+    first.join(timeout=2)
+    assert not first.is_alive()
 
 
 def test_prompt_injection_and_action_requests_are_refused_before_model_use() -> None:
@@ -215,12 +268,8 @@ def test_fact_bundles_are_isolated_by_authenticated_wallet() -> None:
     second = "0x" + "e" * 40
     record_finance(finance, first)
 
-    first_bundle = insights.authorized_fact_bundle(
-        actor_address=first, month="2026-10"
-    )
-    second_bundle = insights.authorized_fact_bundle(
-        actor_address=second, month="2026-10"
-    )
+    first_bundle = insights.authorized_fact_bundle(actor_address=first, month="2026-10")
+    second_bundle = insights.authorized_fact_bundle(actor_address=second, month="2026-10")
 
     assert "$1,900.00" in first_bundle.by_id()["savings.available"].statement
     assert "$0.00" in second_bundle.by_id()["savings.available"].statement
@@ -231,9 +280,7 @@ def test_authenticated_api_exposes_read_only_insights_and_notifications() -> Non
     store = MemoryKeyValueStore()
     authentication = auth_service(store)
     finance, portfolio, insights = services(store)
-    client = TestClient(
-        create_app(authentication, finance, None, portfolio, insights)
-    )
+    client = TestClient(create_app(authentication, finance, None, portfolio, insights))
     private_key, identity = wallet()
     challenge_body = challenge(client, identity)
     token = create_session(

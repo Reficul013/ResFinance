@@ -174,6 +174,27 @@ def test_full_research_requires_runtime_artifact_key(
     ) == bytes.fromhex("ab" * 32)
 
 
+def test_full_research_loads_persistent_container_key_when_env_is_unset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("RESFINANCE_RESEARCH_ENCRYPTION_KEY", raising=False)
+    monkeypatch.setattr(
+        run_full_research.subprocess,
+        "run",
+        lambda *args, **kwargs: SimpleNamespace(stdout=b"k" * 32),
+    )
+
+    key = run_full_research.load_research_key(
+        variable="RESFINANCE_RESEARCH_ENCRYPTION_KEY",
+        docker=Path("docker"),
+        docker_host=None,
+        container="resfinance-api-1",
+        path="/certs/research-blob.key",
+    )
+
+    assert key == b"k" * 32
+
+
 def test_worker_status_transitions_are_append_only_resilientdb_records() -> None:
     store = MemoryStore()
     started = datetime(2026, 10, 15, tzinfo=UTC)

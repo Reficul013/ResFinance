@@ -117,32 +117,37 @@ accepted observations.
 ## Full research attempt
 
 The full runner requires either an approved GDELT CSV for fresh ingestion or a
-known provider-backed feature-dataset hash already in ResilientDB. Generate a
-temporary 32-byte artifact-encryption key in the shell; do not commit or log it.
+known provider-backed feature-dataset hash already in ResilientDB. By default,
+it reads the stable 32-byte research key from `/certs/research-blob.key` inside
+the local API container. The key is generated once in the private certificate
+volume, is never printed, and keeps encrypted artifacts readable after a
+restart. An explicit environment override remains available for controlled
+key-migration tests.
 
 ```bash
-export RESFINANCE_RESEARCH_ENCRYPTION_KEY="$(openssl rand -hex 32)"
 .venv/bin/python -m scripts.milestone9.run_full_research \
   --ingest \
   --gdelt-csv /absolute/path/to/approved-gdelt-daily.csv \
   --output /private/tmp/milestone9-full-research.json
-unset RESFINANCE_RESEARCH_ENCRYPTION_KEY
 ```
 
 To reuse a provider-backed feature dataset:
 
 ```bash
-export RESFINANCE_RESEARCH_ENCRYPTION_KEY="$(openssl rand -hex 32)"
 .venv/bin/python -m scripts.milestone9.run_full_research \
-  --dataset-hash REPLACE_WITH_64_HEX_DATASET_HASH \
+  --dataset-hash c9ec2b6f21ed3bedfb1b145dd94126f0c2c0dde7f2d4ac1d819e5dccedc3a01e \
   --output /private/tmp/milestone9-full-research.json
-unset RESFINANCE_RESEARCH_ENCRYPTION_KEY
 ```
 
 Exit status 0 means the evaluated adaptive candidate passed and an immutable
 model-promotion event was appended. Exit status 2 means the run completed but
 the candidate failed safely. Neither status alone publishes a current-cutoff
 forecast; the normal application remains gated until such a snapshot exists.
+
+The recorded provider-backed run exits 2: adaptive MAE `0.0663605109` was
+worse than naive MAE `0.0636653453`, although its 82.4% interval coverage
+passed. Do not change the criteria or reuse the held-out test result for model
+selection merely to obtain exit 0.
 
 ## Troubleshooting
 

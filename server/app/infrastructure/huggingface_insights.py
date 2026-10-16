@@ -26,9 +26,30 @@ class HuggingFaceInstructionSelector:
         self._max_new_tokens = max_new_tokens
         self._tokenizer: Any | None = None
         self._model: Any | None = None
-        self._lock = threading.Lock()
+        self._inference_lock = threading.Lock()
 
     def select_facts(
+        self,
+        *,
+        question: str,
+        topics: tuple[InsightTopic, ...],
+        bundle: AuthorizedFactBundle,
+    ) -> FactSelection:
+        # The local CPU model is intentionally a best-effort ranker. Do not let
+        # concurrent dashboard requests queue behind it and consume the browser
+        # request budget; callers safely fall back to deterministic templates.
+        if not self._inference_lock.acquire(blocking=False):
+            raise RuntimeError("the pinned local model is busy")
+        try:
+            return self._select_facts(
+                question=question,
+                topics=topics,
+                bundle=bundle,
+            )
+        finally:
+            self._inference_lock.release()
+
+    def _select_facts(
         self,
         *,
         question: str,
@@ -69,13 +90,12 @@ class HuggingFaceInstructionSelector:
             add_generation_prompt=True,
         )
         encoded = tokenizer(rendered, return_tensors="pt")
-        with self._lock:
-            output = model.generate(
-                **encoded,
-                max_new_tokens=self._max_new_tokens,
-                do_sample=False,
-                pad_token_id=tokenizer.eos_token_id,
-            )
+        output = model.generate(
+            **encoded,
+            max_new_tokens=self._max_new_tokens,
+            do_sample=False,
+            pad_token_id=tokenizer.eos_token_id,
+        )
         prompt_length = int(encoded["input_ids"].shape[-1])
         decoded = tokenizer.decode(
             output[0][prompt_length:],

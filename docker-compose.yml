@@ -317,6 +317,7 @@ services:
         condition: service_completed_successfully
     environment:
       RESFINANCE_EVENT_KEY_FILE: /certs/finance-event.key
+      RESFINANCE_RESEARCH_KEY_FILE: /certs/research-blob.key
     volumes:
       - resdb-certs:/certs:ro
       - rescontract-deployment:/deployment:ro

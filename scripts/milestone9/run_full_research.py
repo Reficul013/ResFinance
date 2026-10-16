@@ -4,11 +4,13 @@ import argparse
 import hashlib
 import json
 import os
+import subprocess
 import uuid
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 from pathlib import Path
 from typing import cast
 
+from ml.data.datasets import HORIZONS
 from ml.features.point_in_time import FeatureDataset, PointInTimeFeatureBuilder
 from ml.runs.runner import SmokeRunConfig, run_smoke_research
 from server.app.application.crypto_ingestion import CryptoIngestionService
@@ -52,8 +54,10 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument(
         "--encryption-key-env",
         default="RESFINANCE_RESEARCH_ENCRYPTION_KEY",
-        help="environment variable containing a 32-byte hexadecimal artifact key",
+        help="optional environment override containing a 32-byte hexadecimal artifact key",
     )
+    value.add_argument("--encryption-key-container", default="resfinance-api-1")
+    value.add_argument("--encryption-key-path", default="/certs/research-blob.key")
     value.add_argument("--output", type=Path, required=True)
     return value
 
@@ -66,7 +70,14 @@ def main() -> int:
         raise ValueError("choose exactly one of --ingest or --dataset-hash")
     if args.ingest and args.gdelt_csv is None:
         raise ValueError("--ingest requires the approved daily --gdelt-csv export")
-    key = load_encryption_key(args.encryption_key_env)
+    environment_key = os.environ.get(args.encryption_key_env)
+    key = load_research_key(
+        variable=args.encryption_key_env,
+        docker=args.docker,
+        docker_host=args.docker_host,
+        container=args.encryption_key_container,
+        path=args.encryption_key_path,
+    )
 
     store = DockerResilientDBEventStore(
         docker=args.docker,
@@ -82,28 +93,40 @@ def main() -> int:
         else load_dataset(crypto, str(args.dataset_hash))
     )
     unique_dates = len({str(row["timestamp_utc"])[:10] for row in dataset.rows})
+    lookback = 16
+    sequence_dates = unique_dates - (lookback - 1) - max(HORIZONS)
     validation_dates = 60
     test_dates = 30
-    minimum_train_dates = unique_dates - validation_dates - 5 * test_dates - 30
+    embargo_dates = 15
+    minimum_train_dates = sequence_dates - validation_dates - 5 * test_dates - 2 * embargo_dates
     if minimum_train_dates < 365:
         raise ValueError("full research dataset must provide at least one year of training history")
 
     run_id = f"milestone9-{uuid.uuid4().hex}"
     config = SmokeRunConfig(
         epochs=args.epochs,
+        lookback=lookback,
         minimum_train_dates=minimum_train_dates,
         validation_dates=validation_dates,
         test_dates=test_dates,
+        embargo_dates=embargo_dates,
         purpose="milestone-9-full-provider-research",
         owner="resfinance-local-research",
     )
     result = run_smoke_research(dataset, config=config, run_id=run_id)
-    key_id = f"milestone9-local-research-{hashlib.sha256(key).hexdigest()[:12]}"
     repository = ResearchRunRepository(
         store,
         EncryptedBlobRepository(
             store,
-            AesGcmCipher(key, key_id=key_id),
+            AesGcmCipher(
+                key,
+                key_id=(
+                    "local-research-blob-key-v1"
+                    if environment_key is None
+                    else "local-research-override-"
+                    + hashlib.sha256(key).hexdigest()[:16]
+                ),
+            ),
         ),
     )
     persisted = repository.put_completed_run(result.manifest, result.artifacts)
@@ -138,9 +161,7 @@ def main() -> int:
         "artifact_hashes": result.manifest["artifact_hashes"],
         "folds": result.manifest["folds"],
         "reported_models": result.manifest["reported_models"],
-        "required_comparisons_complete": result.manifest[
-            "required_comparisons_complete"
-        ],
+        "required_comparisons_complete": result.manifest["required_comparisons_complete"],
         "adaptive_metrics": metrics["adaptive-gating"],
         "naive_metrics": metrics["naive-zero-return"],
         "promotion_criteria": dict(PromotionCriteria().__dict__),
@@ -186,7 +207,7 @@ def ingest_and_build(
     )
     for provider in providers:
         assets = tuple(asset for asset in CryptoAsset if asset in provider.supported_assets)
-        service.ingest(
+        service.ingest_archived(
             provider,
             assets=assets,
             start_utc=start,
@@ -199,9 +220,9 @@ def ingest_and_build(
         providers=PROVIDERS,
         start=FIXED_START,
         end=FIXED_END,
-        as_of_utc=datetime.now(UTC),
+        as_of_utc=datetime.combine(FIXED_END + timedelta(days=2), time.max, tzinfo=UTC),
     )
-    repository.put_feature_dataset(
+    repository.put_feature_dataset_archive(
         dataset_hash=dataset.dataset_hash,
         rows=dataset.rows,
         manifest=dataset.manifest,
@@ -220,6 +241,31 @@ def load_encryption_key(variable: str) -> bytes:
     if len(key) != 32:
         raise ValueError(f"{variable} must contain a 32-byte hexadecimal key")
     return key
+
+
+def load_research_key(
+    *,
+    variable: str,
+    docker: Path,
+    docker_host: str | None,
+    container: str,
+    path: str,
+) -> bytes:
+    if os.environ.get(variable) is not None:
+        return load_encryption_key(variable)
+    command = [str(docker)]
+    if docker_host:
+        command.extend(("--host", docker_host))
+    command.extend(("exec", container, "cat", path))
+    completed = subprocess.run(
+        command,
+        check=True,
+        capture_output=True,
+        timeout=30,
+    )
+    if len(completed.stdout) != 32:
+        raise ValueError("the local research artifact key must contain exactly 32 bytes")
+    return completed.stdout
 
 
 def load_dataset(repository: CryptoResearchRepository, dataset_hash: str) -> FeatureDataset:

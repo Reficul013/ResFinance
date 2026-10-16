@@ -74,8 +74,7 @@ def test_synthetic_dataset_is_deterministic_and_preserves_missingness() -> None:
     sol_missing = [
         row
         for row in first.rows
-        if row["asset"] == "SOL"
-        and not row["source_masks"]["on_chain"]  # type: ignore[index]
+        if row["asset"] == "SOL" and not row["source_masks"]["on_chain"]  # type: ignore[index]
     ]
     assert sol_missing
     assert all(
@@ -91,9 +90,7 @@ def test_walk_forward_folds_are_chronological_embargoed_and_unshuffled() -> None
     assert len(folds) == 5
     for fold in folds:
         train_dates = {sequences.decision_dates[index] for index in fold.train_indices}
-        validation_dates = {
-            sequences.decision_dates[index] for index in fold.validation_indices
-        }
+        validation_dates = {sequences.decision_dates[index] for index in fold.validation_indices}
         test_dates = {sequences.decision_dates[index] for index in fold.test_indices}
         assert max(train_dates) < min(validation_dates) < max(validation_dates) < min(test_dates)
         assert train_dates.isdisjoint(validation_dates | test_dates)

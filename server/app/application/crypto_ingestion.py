@@ -15,6 +15,10 @@ from server.app.domain.crypto import CryptoAsset, ProviderObservation, utc_datet
 class CryptoObservationRepository(Protocol):
     def put_observation(self, observation: ProviderObservation) -> ImmutableStoreResult: ...
 
+    def put_observation_archive(
+        self, observations: Sequence[ProviderObservation]
+    ) -> ImmutableStoreResult: ...
+
     def record_ingestion_attempt(self, record: dict[str, object]) -> object: ...
 
 
@@ -41,6 +45,44 @@ class CryptoIngestionService:
         end_utc: datetime,
         attempt_id: str,
     ) -> IngestionReceipt:
+        return self._ingest(
+            provider,
+            assets=assets,
+            start_utc=start_utc,
+            end_utc=end_utc,
+            attempt_id=attempt_id,
+            archive=False,
+        )
+
+    def ingest_archived(
+        self,
+        provider: CryptoDataProvider,
+        *,
+        assets: Sequence[CryptoAsset | str],
+        start_utc: datetime,
+        end_utc: datetime,
+        attempt_id: str,
+    ) -> IngestionReceipt:
+        """Persist a validated provider response as a checksum-addressed archive."""
+        return self._ingest(
+            provider,
+            assets=assets,
+            start_utc=start_utc,
+            end_utc=end_utc,
+            attempt_id=attempt_id,
+            archive=True,
+        )
+
+    def _ingest(
+        self,
+        provider: CryptoDataProvider,
+        *,
+        assets: Sequence[CryptoAsset | str],
+        start_utc: datetime,
+        end_utc: datetime,
+        attempt_id: str,
+        archive: bool,
+    ) -> IngestionReceipt:
         start = utc_datetime(start_utc, field="start_utc")
         end = utc_datetime(end_utc, field="end_utc")
         if end < start:
@@ -64,12 +106,17 @@ class CryptoIngestionService:
                 end=end,
             )
             observation_set_sha256 = hashlib.sha256(
-                _canonical_json([item.to_dict() for item in observations])
+                _canonical_json([item.record_id for item in observations])
             ).hexdigest()
-            results = tuple(self._repository.put_observation(item) for item in observations)
+            if archive:
+                archive_result = self._repository.put_observation_archive(observations)
+                inserted = 0 if archive_result.deduplicated else len(observations)
+                deduplicated = len(observations) - inserted
+            else:
+                results = tuple(self._repository.put_observation(item) for item in observations)
+                inserted = sum(not item.deduplicated for item in results)
+                deduplicated = len(results) - inserted
             completed_at = datetime.now(UTC)
-            inserted = sum(not item.deduplicated for item in results)
-            deduplicated = len(results) - inserted
             self._repository.record_ingestion_attempt(
                 {
                     "attempt_id": attempt_id,

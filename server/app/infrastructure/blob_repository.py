@@ -31,6 +31,7 @@ class EncryptedBlobRepository:
     def __init__(self, store: KeyValueStore, cipher: AesGcmCipher) -> None:
         self._store = store
         self._cipher = cipher
+        self._namespace = hashlib.sha256(cipher.key_id.encode()).hexdigest()[:16]
 
     def put(
         self,
@@ -40,7 +41,8 @@ class EncryptedBlobRepository:
         producing_run_id: str | None = None,
     ) -> BlobReceipt:
         content_hash = hashlib.sha256(content).hexdigest()
-        manifest_key = f"blob:{content_hash}:manifest"
+        prefix = f"blob:{self._namespace}:{content_hash}"
+        manifest_key = f"{prefix}:manifest"
         existing = self._store.get(manifest_key)
         if existing is not None:
             restored, manifest = self._restore(existing)
@@ -56,9 +58,7 @@ class EncryptedBlobRepository:
 
         aad_document = {"sha256": content_hash, "media_type": media_type}
         compressed = zlib.compress(content, level=9)
-        envelope = self._cipher.encrypt_bytes(
-            compressed, aad=canonical_json_bytes(aad_document)
-        )
+        envelope = self._cipher.encrypt_bytes(compressed, aad=canonical_json_bytes(aad_document))
         encrypted_bytes = canonical_json_bytes(envelope.to_dict())
         chunks = [
             encrypted_bytes[offset : offset + LOGICAL_CHUNK_SIZE]
@@ -74,9 +74,7 @@ class EncryptedBlobRepository:
             segment_records: list[dict[str, object]] = []
             for segment_number, segment in enumerate(segments):
                 segment_hash = hashlib.sha256(segment).hexdigest()
-                segment_key = (
-                    f"blob:{content_hash}:{number:08d}:segment:{segment_number:04d}"
-                )
+                segment_key = f"{prefix}:{number:08d}:segment:{segment_number:04d}"
                 self._store.put(
                     segment_key,
                     canonical_json_bytes(
@@ -124,10 +122,12 @@ class EncryptedBlobRepository:
         )
 
     def get(self, sha256: str) -> bytes:
-        manifest_key = f"blob:{sha256}:manifest"
+        manifest_key = f"blob:{self._namespace}:{sha256}:manifest"
         encoded = self._store.get(manifest_key)
         if encoded is None:
-            raise KeyError(sha256)
+            encoded = self._store.get(f"blob:{sha256}:manifest")
+            if encoded is None:
+                raise KeyError(sha256)
         content, _ = self._restore(encoded)
         return content
 

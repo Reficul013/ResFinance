@@ -488,7 +488,7 @@ async function proveTamperAndReplayRejection(page: Page, request: Request) {
 
 async function proveWrongOriginHasNoExtension(context: BrowserContext) {
   const page = await context.newPage();
-  await page.goto("http://localhost:5173");
+  await page.goto("http://127.0.0.1:8000/api/v1/health");
   const answered = await page.evaluate(
     () =>
       new Promise<boolean>((resolve) => {

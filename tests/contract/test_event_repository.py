@@ -71,9 +71,7 @@ def test_write_read_rebuild_and_deduplicate_encrypted_events() -> None:
     second = events.append(
         AppendEventCommand(
             **{
-                **command(
-                    idempotency_key="expense-command-0002", expected_version=1
-                ).__dict__,
+                **command(idempotency_key="expense-command-0002", expected_version=1).__dict__,
                 "event_type": "finance.expense-recorded",
                 "payload": {
                     "minor_units": 25_00,
@@ -131,9 +129,7 @@ def test_stale_aggregate_version_is_rejected() -> None:
 
 def test_blob_round_trip_is_encrypted_chunked_and_deduplicated() -> None:
     store = MemoryKeyValueStore()
-    blobs = EncryptedBlobRepository(
-        store, AesGcmCipher(b"b" * 32, key_id="blob-test-key-v1")
-    )
+    blobs = EncryptedBlobRepository(store, AesGcmCipher(b"b" * 32, key_id="blob-test-key-v1"))
     content = random.Random(7).randbytes(600_000)
 
     first = blobs.put(content, media_type="application/octet-stream")
@@ -196,3 +192,22 @@ def test_blob_repository_restores_legacy_unsegmented_schema() -> None:
     )
 
     assert blobs.get(content_hash) == content
+
+
+def test_blob_namespaces_allow_key_rotation_without_ciphertext_collision() -> None:
+    store = MemoryKeyValueStore()
+    content = b"same research artifact under two local keys"
+    first = EncryptedBlobRepository(
+        store, AesGcmCipher(b"1" * 32, key_id="research-key-v1")
+    )
+    second = EncryptedBlobRepository(
+        store, AesGcmCipher(b"2" * 32, key_id="research-key-v2")
+    )
+
+    first_receipt = first.put(content, media_type="application/octet-stream")
+    second_receipt = second.put(content, media_type="application/octet-stream")
+
+    assert first_receipt.sha256 == second_receipt.sha256
+    assert first_receipt.manifest_key != second_receipt.manifest_key
+    assert first.get(first_receipt.sha256) == content
+    assert second.get(second_receipt.sha256) == content

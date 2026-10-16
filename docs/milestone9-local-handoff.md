@@ -1,7 +1,8 @@
 # Milestone 9 — Local Handoff
 
-Status: local handoff implementation complete; full provider-data research and
-live-recommendation gates remain incomplete.
+Status: local handoff and full provider-data research complete; the
+live-recommendation gate remains incomplete because the evaluated candidate did
+not qualify for promotion.
 
 Production and cloud deployment remain out of scope and on hold for Milestone
 10. This milestone establishes a reproducible local product handoff only; it
@@ -16,13 +17,14 @@ and makes manual ingestion and reconciliation jobs observable through
 append-only ResilientDB records. It also provides the full provider-data
 research runner without weakening the existing forecast-promotion policy.
 
-The local application path is implemented and verified. The research runner
-was not executed because the approved 2020-04-10 through 2025-01-01 GDELT daily
-aggregate CSV is not present in the checkout or current ResilientDB volumes.
-The historical attestation proves its prior hash, but an attestation is not a
-substitute for the provider rows. Consequently no provider-backed candidate,
-promotion event, or current-cutoff live forecast was produced, and the normal
-Crypto experience continues to fail closed with no recommendation.
+The local application path is implemented and verified. The approved
+2020-04-10 through 2025-01-01 GDELT daily aggregate was recovered byte-for-byte
+from the preserved Milestone 0 ResilientDB volume, checked against its original
+size and SHA-256 attestation, and combined with Coin Metrics and DefiLlama data
+in the complete provider-backed research protocol. The candidate passed
+interval coverage but lost to the naive baseline on MAE. The immutable gate
+therefore rejected promotion, no current-cutoff forecast was published, and
+the normal Crypto experience continues to fail closed with no recommendation.
 
 ## What was implemented
 
@@ -46,9 +48,19 @@ Crypto experience continues to fail closed with no recommendation.
 - `scripts.milestone9.run_full_research` accepts either an approved live
   ingestion input or an existing provider-backed dataset hash, enforces the
   fixed BTC/ETH/SOL period and adequate history, runs five chronological folds
-  with the required baselines and ablations, encrypts artifacts with a
-  runtime-supplied key, persists them in ResilientDB, and applies
+  with the required baselines and ablations, encrypts artifacts with a stable
+  local Docker-volume key, persists them in ResilientDB, and applies
   `forecast-promotion-v1` without overrides.
+- Provider observations, feature datasets, and large research manifests use
+  checksum-addressed compressed chunks in ResilientDB. This keeps full runs
+  practical without adding a second database, and retrieval verifies both the
+  compressed and restored checksums.
+- Research artifact keys are namespaced by encryption-key identity so local key
+  rotation cannot collide with older immutable ciphertext.
+- Passive Insights overviews always use deterministic evidence templates.
+  Optional Qwen inference is reserved for explicit questions and protected by
+  a non-blocking single-flight guard, so concurrent requests fail closed to the
+  template instead of building an unbounded CPU queue.
 - The browser acceptance uses two isolated Chromium profiles and the built
   ResVault extension. It contains no route interception and exercises the real
   `/api/v1`, ResilientDB, and ResContract paths.
@@ -69,7 +81,7 @@ The live journey also exposed and fixed three integration defects:
 `npm run test:e2e:local` performs one continuous, non-mocked journey:
 
 1. create two extension-held wallets and prove the extension does not answer
-   the unapproved `localhost` origin;
+   the unapproved API-port origin;
 2. authenticate both wallets through extension-owned approvals;
 3. record income, expense, category, and budget data;
 4. create a group, add the second wallet, and create a signed shared expense;
@@ -89,12 +101,15 @@ Wallet seeds and private keys are generated inside each extension profile and
 are never fixtures. Playwright retains traces and screenshots only on failure;
 these generated directories remain ignored by Git.
 
-The pinned Qwen overlay passed artifact-hash verification and API startup, but
-one browser run did not return its supported Insights answer within the
-explicit 120-second wait. The definitive bounded browser acceptance therefore
-uses the normal deterministic evidence-template fallback. This is the declared
-optional-model behavior, not a claim that local-model latency passed the final
-journey.
+The pinned Qwen overlay passed artifact-hash verification and API startup. An
+exact Linux/ARM64 container benchmark measured 56.33 seconds cold and 30.77
+seconds warm for the bounded request, with approximately 3.72 GB resident-memory
+growth. The earlier browser timeout was caused by passive overview requests
+queueing model inference ahead of the explicit question. Passive overviews now
+use the deterministic renderer and concurrent model requests fail fast to that
+fallback. The definitive full browser journey still uses the no-model startup;
+the optional model remains a read-only selector and is not required for safe
+operation.
 
 ## Research and promotion status
 
@@ -110,12 +125,20 @@ The approved full research inputs remain exact:
 - naive, linear, LSTM, market-only, fixed-fusion, adaptive-gating, and every
   one-source-removed comparison.
 
-The earlier GDELT CSV had SHA-256
-`5c6aa7f22c8e4595ab68944276b0abe4867ea71967bfb52c1469911bde2f541a`,
-but the CSV bytes are not currently recoverable. The current ResilientDB lookup
-for its Milestone 0 manifest returned no value. Re-querying or supplying that
-approved export is an explicit provider-data provisioning step and is not
-performed silently by startup.
+The recovered GDELT CSV is 260,315 bytes with SHA-256
+`5c6aa7f22c8e4595ab68944276b0abe4867ea71967bfb52c1469911bde2f541a`.
+It contains 5,184 rows, exactly 1,728 per asset, representing 277,883 matched
+documents with 47 explicit zero-document day/asset rows. The resulting
+provider feature dataset has hash
+`c9ec2b6f21ed3bedfb1b145dd94126f0c2c0dde7f2d4ac1d819e5dccedc3a01e`.
+
+The completed run `milestone9-cf7489a9b41f41919bbc0b8ea65ac126`
+persisted 39 encrypted artifacts and every required baseline and ablation. The
+adaptive model achieved MAE `0.0663605109` and interval coverage `0.824000001`;
+the naive baseline MAE was `0.0636653453`. Coverage passed the 70 percent rule,
+but MAE did not meet the no-worse-than-naive rule. The gate returned
+`model does not satisfy promotion criteria: mae_ratio`, and no promotion event
+exists for this run.
 
 Even if the adaptive model passes promotion, held-out evaluation predictions
 are not a current live forecast. A separately reproducible current-cutoff
@@ -131,15 +154,17 @@ state.
 | Continuous real ResVault/browser/full-stack journey | Pass | Two profiles exercised Finance, Groups, ResContract, Crypto gate, deterministic Insights fallback, tamper/replay defenses, restart, and logout without API interception. |
 | Restart persistence and projection rebuild | Pass | The settled obligation remained at `$0.00 outstanding` after the controlled stack restart. |
 | Observable ingestion and reconciliation jobs | Pass | A reconciliation of the settled acceptance group completed with zero duplicate events; running/terminal records read back from ResilientDB. |
-| Full non-smoke provider research | Blocked | Approved GDELT CSV bytes are unavailable; the runner refuses to substitute synthetic data. |
-| Eligible live recommendation | Fail safe | No provider-backed promotion/current-cutoff forecast exists; the UI keeps the forecast gate closed. |
-| Complete repository suites | Pass for implemented scope | Ruff, mypy, 107 Python tests, 9 client tests, 5 ResVault tests, both builds, extension inspection, 5 dashboard browser tests, and the live journey passed. Full provider research remains separately blocked above. |
+| Full non-smoke provider research | Pass | The attested GDELT bytes were recovered from preserved ResilientDB state; the 5,184-row provider dataset completed all five folds and persisted 39 encrypted artifacts. |
+| Immutable model promotion | Rejected safely | Coverage passed at 82.4%; adaptive MAE `0.0663605109` was worse than naive `0.0636653453`, so no promotion event was written. |
+| Eligible live recommendation | Fail safe | A rejected model cannot publish a current-cutoff forecast; the UI keeps the forecast gate closed. |
+| Complete repository suites | Pass for implemented scope | Ruff, mypy, 113 Python tests, 9 client tests, 5 ResVault tests, both builds, extension inspection, 5 dashboard browser tests, and the 2.5-minute live journey passed. |
 | Reproducible operator guide | Pass | See [Milestone 9 local operator guide](milestone9-local-operator-guide.md). |
 
-Milestone 9 therefore remains incomplete by design on the research and live
-recommendation criteria. The missing approved dataset is the only input needed
-to attempt the full run; passing the immutable gate is not guaranteed and must
-not be manufactured.
+Milestone 9 therefore remains incomplete only on the live-recommendation
+criterion. The provider-data and research-execution blockers are resolved; the
+remaining blocker is measured model quality. It must be addressed by a new,
+predeclared research iteration, not by tuning on held-out results or weakening
+the immutable gate.
 
 ## Final verification
 
@@ -148,14 +173,14 @@ The implementation handoff passed:
 ```text
 .venv/bin/ruff check .                              pass
 .venv/bin/mypy                                      pass (95 files)
-.venv/bin/pytest                                    pass (107 tests)
+.venv/bin/pytest                                    pass (113 tests)
 client: check, lint, format, unit tests, build       pass (9 tests)
 resvault: check, lint, format, tests, build, inspect pass (5 tests)
 client npm run test:e2e                             pass (5 Chromium tests)
-client npm run test:e2e:local                       pass (1 live journey, 2.8m)
+client npm run test:e2e:local                       pass (1 live journey, 2.5m)
 local reconciliation worker                         pass (0 duplicate events)
 local lifecycle status                              pass (API/client and replicas healthy)
 ```
 
-No full-research result or local attestation was fabricated because the
-required provider input was absent.
+No promotion or live forecast was fabricated after the provider-backed
+candidate failed the declared MAE rule.

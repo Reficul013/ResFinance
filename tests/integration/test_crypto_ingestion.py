@@ -168,6 +168,51 @@ def test_repeat_retrieval_time_does_not_duplicate_an_unchanged_observation() -> 
     assert repeated.record_id == first.record_id
 
 
+def test_archived_ingestion_is_checksum_verified_idempotent_and_restorable() -> None:
+    store = MemoryKeyValueStore()
+    repository = CryptoResearchRepository(store)
+    service = CryptoIngestionService(repository)
+    observations = (item(), item(day=2, value="105"))
+    provider = SyntheticProvider(observations)
+    start = datetime(2025, 1, 1, tzinfo=UTC)
+    end = datetime(2025, 1, 2, tzinfo=UTC)
+
+    first = service.ingest_archived(
+        provider,
+        assets=(CryptoAsset.BTC,),
+        start_utc=start,
+        end_utc=end,
+        attempt_id="archive-1",
+    )
+    repeated = service.ingest_archived(
+        provider,
+        assets=(CryptoAsset.BTC,),
+        start_utc=start,
+        end_utc=end,
+        attempt_id="archive-2",
+    )
+    later = tuple(
+        ProviderObservation.from_dict(
+            {**observation.to_dict(), "retrieved_at_utc": "2026-10-15T00:00:00Z"}
+        )
+        for observation in observations
+    )
+    later_retrieval = service.ingest_archived(
+        SyntheticProvider(later),
+        assets=(CryptoAsset.BTC,),
+        start_utc=start,
+        end_utc=end,
+        attempt_id="archive-3",
+    )
+
+    assert first.inserted_count == 2
+    assert repeated.inserted_count == 0
+    assert repeated.deduplicated_count == 2
+    assert later_retrieval.inserted_count == 0
+    assert repository.observations() == list(observations)
+    assert len([key for key in store.values if key.startswith("license:")]) == 1
+
+
 def test_immutable_observation_rejects_same_identity_with_changed_value() -> None:
     repository = CryptoResearchRepository(MemoryKeyValueStore())
     repository.put_observation(item())
@@ -260,6 +305,35 @@ def test_point_in_time_join_excludes_future_revision_and_persists_masks() -> Non
             rows=dataset.rows,
             manifest=dataset.manifest,
         )
+
+
+def test_feature_dataset_archive_round_trips_without_per_row_records() -> None:
+    dataset = PointInTimeFeatureBuilder().build(
+        (item(), item(day=2, value="105")),
+        assets=(CryptoAsset.BTC,),
+        providers=("synthetic-provider",),
+        start=date(2025, 1, 1),
+        end=date(2025, 1, 2),
+        as_of_utc=datetime(2025, 1, 3, tzinfo=UTC),
+    )
+    store = MemoryKeyValueStore()
+    repository = CryptoResearchRepository(store)
+
+    first = repository.put_feature_dataset_archive(
+        dataset_hash=dataset.dataset_hash,
+        rows=dataset.rows,
+        manifest=dataset.manifest,
+    )
+    repeated = repository.put_feature_dataset_archive(
+        dataset_hash=dataset.dataset_hash,
+        rows=dataset.rows,
+        manifest=dataset.manifest,
+    )
+
+    assert not any(key.startswith("feat:") for key in store.values)
+    assert repository.feature_rows(dataset.dataset_hash) == list(dataset.rows)
+    assert any(not item.deduplicated for item in first)
+    assert all(item.deduplicated for item in repeated)
 
 
 def test_fourth_asset_is_rejected_at_ingestion_and_feature_boundaries() -> None:

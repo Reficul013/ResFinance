@@ -5,12 +5,18 @@ readonly CERT_DIR="/certs"
 readonly KEYGEN="/app/bazel-bin/tools/key_generator_tools"
 readonly CERTGEN="/app/bazel-bin/tools/certificate_tools"
 readonly FINANCE_EVENT_KEY="${CERT_DIR}/finance-event.key"
+readonly RESEARCH_BLOB_KEY="${CERT_DIR}/research-blob.key"
 
 mkdir -p "${CERT_DIR}"
 
 if [[ ! -f "${FINANCE_EVENT_KEY}" ]]; then
   head -c 32 /dev/urandom > "${FINANCE_EVENT_KEY}"
   chmod 600 "${FINANCE_EVENT_KEY}"
+fi
+
+if [[ ! -f "${RESEARCH_BLOB_KEY}" ]]; then
+  head -c 32 /dev/urandom > "${RESEARCH_BLOB_KEY}"
+  chmod 600 "${RESEARCH_BLOB_KEY}"
 fi
 
 if [[ -f "${CERT_DIR}/cert_5.cert" ]]; then
