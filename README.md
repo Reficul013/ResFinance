@@ -233,6 +233,7 @@ docs/         Product, architecture, delivery, and development references
 - [Milestone 8 read-only AI and cross-dashboard integration](docs/milestone8-read-only-ai-integration.md)
 - [Milestone 9 Local Handoff evidence](docs/milestone9-local-handoff.md)
 - [Milestone 9 local operator guide](docs/milestone9-local-operator-guide.md)
+- [Local demo runbook](docs/local-demo-runbook.md)
 - [REST API contract](docs/rest-api-contract.md)
 - [Security contract](docs/security.md)
 - [Research protocol](docs/research-protocol.md)
