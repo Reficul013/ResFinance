@@ -403,8 +403,30 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
       .getByText("finance-savings-v1", { exact: true }),
   ).toHaveCount(0);
 
+  await expect(
+    page.locator(".finance-dashboard > .provenance-panel"),
+  ).toHaveCount(1);
   await page.locator(".finance-dashboard > .provenance-panel summary").click();
+  await expect(
+    page.getByRole("heading", { name: "Finance Insights" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Savings Insights", exact: true }),
+  ).toBeVisible();
+  const financeProvenanceBox = await page
+    .getByRole("heading", { name: "Finance Insights" })
+    .boundingBox();
+  const savingsProvenanceBox = await page
+    .getByRole("heading", { name: "Savings Insights", exact: true })
+    .boundingBox();
+  expect(financeProvenanceBox).not.toBeNull();
+  expect(savingsProvenanceBox).not.toBeNull();
+  expect(savingsProvenanceBox!.x).toBeGreaterThan(financeProvenanceBox!.x);
+  expect(Math.abs(savingsProvenanceBox!.y - financeProvenanceBox!.y)).toBeLessThan(
+    2,
+  );
   await expect(page.getByText(/Projection v8 rebuilt through/)).toBeVisible();
+  await expect(page.getByText(/Fact bundle facts_finance_e2e/)).toBeVisible();
   await expect(
     page.getByText("finance-savings-v1", { exact: true }),
   ).toBeVisible();

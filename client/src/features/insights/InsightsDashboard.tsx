@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 
-import type { InsightResponse } from "../../lib/api/client";
+import type { FinanceOverview, InsightResponse } from "../../lib/api/client";
 import { currentMonth } from "../finance/money";
 import { useInsightsDashboard } from "./useInsightsDashboard";
 
@@ -37,23 +37,43 @@ export function InsightsDashboard({ accessToken }: { accessToken: string }) {
 export function SmartSavingsInsights({
   accessToken,
   month,
+  financeOverview,
 }: {
   accessToken: string;
   month: string;
+  financeOverview?: FinanceOverview;
 }) {
   const [question, setQuestion] = useState("How can I improve my savings?");
   const dashboard = useInsightsDashboard(accessToken, month);
 
   if (dashboard.overview.isPending) {
-    return <DashboardState title="Reviewing verified records…" />;
+    return (
+      <>
+        <DashboardState title="Reviewing verified records…" />
+        {financeOverview !== undefined && (
+          <CombinedProvenancePanel
+            financeOverview={financeOverview}
+            savingsStatus="loading"
+          />
+        )}
+      </>
+    );
   }
   if (dashboard.overview.isError) {
     return (
-      <DashboardState
-        title="Smart Savings Insights are unavailable."
-        text={dashboard.overview.error.message}
-        error
-      />
+      <>
+        <DashboardState
+          title="Smart Savings Insights are unavailable."
+          text={dashboard.overview.error.message}
+          error
+        />
+        {financeOverview !== undefined && (
+          <CombinedProvenancePanel
+            financeOverview={financeOverview}
+            savingsStatus="unavailable"
+          />
+        )}
+      </>
     );
   }
   const response = dashboard.query.data ?? dashboard.overview.data.insight;
@@ -69,75 +89,147 @@ export function SmartSavingsInsights({
   }
 
   return (
-    <section
-      id="smart-insights"
-      className="smart-savings-insights"
-      aria-labelledby="smart-insights-title"
-    >
-      <div className="insights-section-heading">
-        <div>
-          <p className="section-kicker">Evidence-linked guidance</p>
-          <h2 id="smart-insights-title">Smart Savings Insights</h2>
-          <p>
-            Ask about your recorded savings, budgets, obligations, and crypto
-            analysis. Answers use only facts authorized for your wallet.
-          </p>
-        </div>
-      </div>
-      <section className="insight-composer panel" aria-labelledby="ask-title">
-        <div className="section-heading compact">
+    <>
+      <section
+        id="smart-insights"
+        className="smart-savings-insights"
+        aria-labelledby="smart-insights-title"
+      >
+        <div className="insights-section-heading">
           <div>
-            <p className="section-kicker">Read-only assistant</p>
-            <h2 id="ask-title">Ask about your evidence</h2>
+            <p className="section-kicker">Evidence-linked guidance</p>
+            <h2 id="smart-insights-title">Smart Savings Insights</h2>
+            <p>
+              Ask about your recorded savings, budgets, obligations, and crypto
+              analysis. Answers use only facts authorized for your wallet.
+            </p>
           </div>
-          <span className={`generation-pill ${response.mode}`}>
-            {modeLabel(response.mode)}
-          </span>
         </div>
-        <form onSubmit={submit}>
-          <label className="form-field">
-            <span>Question</span>
-            <textarea
-              value={question}
-              maxLength={500}
-              rows={3}
-              onChange={(event) => setQuestion(event.target.value)}
-            />
-          </label>
-          <button
-            className="primary-button"
-            disabled={dashboard.query.isPending}
-          >
-            {dashboard.query.isPending ? "Checking evidence…" : "Explain"}
-          </button>
-        </form>
-        {dashboard.query.isError && (
-          <p className="form-error" role="alert">
-            {dashboard.query.error.message}
-          </p>
-        )}
+        <section className="insight-composer panel" aria-labelledby="ask-title">
+          <div className="section-heading compact">
+            <div>
+              <p className="section-kicker">Read-only assistant</p>
+              <h2 id="ask-title">Ask about your evidence</h2>
+            </div>
+            <span className={`generation-pill ${response.mode}`}>
+              {modeLabel(response.mode)}
+            </span>
+          </div>
+          <form onSubmit={submit}>
+            <label className="form-field">
+              <span>Question</span>
+              <textarea
+                value={question}
+                maxLength={500}
+                rows={3}
+                onChange={(event) => setQuestion(event.target.value)}
+              />
+            </label>
+            <button
+              className="primary-button"
+              disabled={dashboard.query.isPending}
+            >
+              {dashboard.query.isPending ? "Checking evidence…" : "Explain"}
+            </button>
+          </form>
+          {dashboard.query.isError && (
+            <p className="form-error" role="alert">
+              {dashboard.query.error.message}
+            </p>
+          )}
+        </section>
+
+        <InsightResult response={response} onAsk={ask} />
       </section>
 
-      <InsightResult response={response} onAsk={ask} />
+      <CombinedProvenancePanel
+        financeOverview={financeOverview}
+        factBundleId={dashboard.overview.data.fact_bundle_id}
+        response={response}
+      />
+    </>
+  );
+}
 
-      <details className="provenance-panel">
-        <summary>Data Freshness and Provenance</summary>
-        <div>
-          <p>
-            Fact bundle <code>{dashboard.overview.data.fact_bundle_id}</code>
-          </p>
-          <p>
-            Model <code>{response.model_id}</code> at revision{" "}
-            <code>{response.model_revision.slice(0, 12)}</code>. The model may
-            rank facts; final claims are rendered from validated evidence.
-          </p>
-          <p>
-            This path has no write, ResVault, ResContract, trading, or direct
-            ResilientDB capability.
-          </p>
-        </div>
-      </details>
-    </section>
+function CombinedProvenancePanel({
+  financeOverview,
+  factBundleId,
+  response,
+  savingsStatus,
+}: {
+  financeOverview: FinanceOverview | undefined;
+  factBundleId?: string;
+  response?: InsightResponse;
+  savingsStatus?: "loading" | "unavailable";
+}) {
+  return (
+    <details className="provenance-panel">
+      <summary>Data Freshness and Provenance</summary>
+      <div
+        className={
+          financeOverview === undefined ? undefined : "provenance-columns"
+        }
+      >
+        {financeOverview !== undefined && (
+          <section
+            className="provenance-column"
+            aria-labelledby="finance-provenance-title"
+          >
+            <h3 id="finance-provenance-title">Finance Insights</h3>
+            <p>
+              Projection{" "}
+              <strong>v{financeOverview.provenance.projection_version}</strong>
+              {financeOverview.provenance.as_of_utc === null
+                ? " has no events yet."
+                : ` rebuilt through ${new Date(financeOverview.provenance.as_of_utc).toLocaleString()}.`}
+            </p>
+            <p>
+              Savings calculation{" "}
+              <code>{financeOverview.summary.savings.calculation_id}</code> uses{" "}
+              <code>{financeOverview.summary.savings.formula_version}</code> and{" "}
+              {financeOverview.summary.savings.source_event_ids.length} source
+              event(s).
+            </p>
+            {financeOverview.provenance.source_event_ids.length > 0 && (
+              <ul className="event-id-list">
+                {financeOverview.provenance.source_event_ids.map((eventId) => (
+                  <li key={eventId}>
+                    <code>{eventId}</code>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
+        <section
+          className="provenance-column"
+          aria-labelledby="savings-provenance-title"
+        >
+          <h3 id="savings-provenance-title">Savings Insights</h3>
+          {savingsStatus === "loading" && <p>Fact bundle is loading.</p>}
+          {savingsStatus === "unavailable" && (
+            <p>Fact bundle is temporarily unavailable.</p>
+          )}
+          {factBundleId !== undefined && response !== undefined && (
+            <>
+              <p>
+                Fact bundle <code>{factBundleId}</code>
+              </p>
+              <p>
+                Model <code>{response.model_id}</code> at revision{" "}
+                <code>{response.model_revision.slice(0, 12)}</code>. The model
+                may rank facts; final claims are rendered from validated
+                evidence.
+              </p>
+              <p>
+                This path has no write, ResVault, ResContract, trading, or
+                direct ResilientDB capability.
+              </p>
+            </>
+          )}
+        </section>
+      </div>
+    </details>
   );
 }
 

@@ -134,7 +134,16 @@ test("shows evidence-linked insights, notifications, and safe refusals", async (
       .locator(".evidence-grid")
       .getByText("finance-budget · 2 source references"),
   ).toHaveCount(0);
-  await page.locator("#smart-insights .provenance-panel summary").click();
+  await expect(
+    page.locator(".finance-dashboard > .provenance-panel"),
+  ).toHaveCount(1);
+  await page.locator(".finance-dashboard > .provenance-panel summary").click();
+  await expect(
+    page.getByRole("heading", { name: "Finance Insights" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Savings Insights", exact: true }),
+  ).toBeVisible();
   await expect(page.getByText(/Fact bundle facts_1/)).toBeVisible();
   await expect(page.getByText(/Qwen\/Qwen/)).toBeVisible();
   await expect(

@@ -92,8 +92,11 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
         <TransactionPanel overview={overview} />
         <CommitmentsPanel overview={overview} />
       </div>
-      <SmartSavingsInsights accessToken={accessToken} month={month} />
-      <ProvenancePanel overview={overview} />
+      <SmartSavingsInsights
+        accessToken={accessToken}
+        month={month}
+        financeOverview={overview}
+      />
     </div>
   );
 }
@@ -318,37 +321,6 @@ function CommitmentsPanel({ overview }: { overview: FinanceOverview }) {
         </ul>
       )}
     </section>
-  );
-}
-
-function ProvenancePanel({ overview }: { overview: FinanceOverview }) {
-  return (
-    <details className="provenance-panel">
-      <summary>Data Freshness and Provenance</summary>
-      <div>
-        <p>
-          Projection <strong>v{overview.provenance.projection_version}</strong>
-          {overview.provenance.as_of_utc === null
-            ? " has no events yet."
-            : ` rebuilt through ${new Date(overview.provenance.as_of_utc).toLocaleString()}.`}
-        </p>
-        <p>
-          Savings calculation{" "}
-          <code>{overview.summary.savings.calculation_id}</code> uses{" "}
-          <code>{overview.summary.savings.formula_version}</code> and{" "}
-          {overview.summary.savings.source_event_ids.length} source event(s).
-        </p>
-        {overview.provenance.source_event_ids.length > 0 && (
-          <ul className="event-id-list">
-            {overview.provenance.source_event_ids.map((eventId) => (
-              <li key={eventId}>
-                <code>{eventId}</code>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </details>
   );
 }
 

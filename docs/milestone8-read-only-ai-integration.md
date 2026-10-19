@@ -74,7 +74,7 @@ capacity claim. Full evidence is in
 - Smart Savings Insights is embedded below the Personal Finance dashboard and displays the answer,
   generation mode, evidence cards, caveats, follow-up questions, and a Data
   Freshness and Provenance panel. Fact-bundle and model-revision values are
-  presented only in that panel as inspectable provenance tags; evidence cards
+  presented beside Finance projection details in one two-column panel as inspectable provenance tags; evidence cards
   use plain-language verified-record counts.
 - The shared notification center surfaces budget alerts, wallet-scoped Group
   updates, and the current Crypto forecast gate with links to the relevant
