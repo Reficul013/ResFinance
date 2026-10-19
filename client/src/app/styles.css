@@ -99,6 +99,17 @@ body {
   font-size: 0.96rem;
 }
 
+.auth-brand-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.auth-brand-link:focus-visible {
+  border-radius: 0.2rem;
+  outline: 3px solid color-mix(in srgb, var(--page-accent) 52%, transparent);
+  outline-offset: 3px;
+}
+
 .app-shell > .auth-card .auth-session {
   display: flex;
   gap: 0.65rem;

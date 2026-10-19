@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 
 import type { AuthenticationState } from "../features/auth/useAuthentication";
 import { ThemeToggle } from "./ThemeToggle";
@@ -47,7 +48,19 @@ export function AuthCard({
         )}
         <div className="auth-session-copy">
           <p className="auth-kicker">Wallet authentication</p>
-          <h2>{authenticated ? "ResFinance" : "Connect ResVault"}</h2>
+          <h2>
+            {authenticated ? (
+              <Link
+                className="auth-brand-link"
+                to="/"
+                title="Go to ResFinance main screen"
+              >
+                ResFinance
+              </Link>
+            ) : (
+              "Connect ResVault"
+            )}
+          </h2>
           <p className="auth-message">{message}</p>
           {(actorAddress ?? walletAddress) !== null && (
             <code className="wallet-address">

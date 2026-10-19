@@ -231,6 +231,11 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     topBar.getByRole("heading", { name: "ResFinance" }),
   ).toBeVisible();
+  const homeLink = topBar.getByRole("link", {
+    name: "ResFinance",
+    exact: true,
+  });
+  await expect(homeLink).toHaveAttribute("href", "/");
   await expect(topBar.locator(".auth-brand-logo-light")).toHaveAttribute(
     "src",
     "/favicon.png",
@@ -323,6 +328,14 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   expect(themeToggleBox!.y + themeToggleBox!.height).toBeLessThanOrEqual(
     sessionCardBox!.y + sessionCardBox!.height,
   );
+  await homeLink.click();
+  await expect(page).toHaveURL("http://127.0.0.1:4173/");
+  await expect(
+    dashboardNavigation.getByRole("link", { name: "Personal Finance" }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    page.getByRole("heading", { name: "Your money, in one view." }),
+  ).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.locator(".theme-toggle")).toHaveAttribute(
     "aria-pressed",
