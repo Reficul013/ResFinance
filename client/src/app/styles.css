@@ -27,6 +27,7 @@
   --card-lowlight: rgb(104 97 164 / 10%);
   --card-sheen: rgb(255 255 255 / 22%);
   --card-shadow: 0 1.75rem 4.5rem rgb(78 72 139 / 18%);
+  --popover-background: #eef2ff;
   --code-background: rgb(255 255 255 / 38%);
   --control-background: rgb(255 255 255 / 42%);
   --control-background-hover: rgb(255 255 255 / 58%);
@@ -108,6 +109,18 @@ body {
   width: 2rem;
   height: 2rem;
   flex: 0 0 auto;
+}
+
+.auth-brand-logo-dark {
+  display: none;
+}
+
+:root[data-theme="dark"] .auth-brand-logo-light {
+  display: none;
+}
+
+:root[data-theme="dark"] .auth-brand-logo-dark {
+  display: block;
 }
 
 .auth-session-copy {
@@ -990,6 +1003,7 @@ td.expense {
   --card-lowlight: rgb(0 0 0 / 22%);
   --card-sheen: rgb(255 255 255 / 6%);
   --card-shadow: 0 1.75rem 4.5rem rgb(0 0 0 / 34%);
+  --popover-background: #111827;
   --code-background: rgb(55 209 197 / 10%);
   --control-background: rgb(26 34 46 / 62%);
   --control-background-hover: rgb(36 47 61 / 76%);
@@ -1077,7 +1091,7 @@ td.expense {
   padding: 1rem;
   border: 1px solid var(--control-border);
   border-radius: 1.15rem;
-  background: var(--card-background);
+  background: var(--popover-background);
   box-shadow: var(--card-shadow);
   -webkit-backdrop-filter: blur(28px) saturate(155%);
   backdrop-filter: blur(28px) saturate(155%);

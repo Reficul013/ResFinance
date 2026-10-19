@@ -30,12 +30,20 @@ export function AuthCard({
     <section className="auth-card" data-state={state} aria-live="polite">
       <div className="auth-session">
         {authenticated && (
-          <img
-            className="auth-brand-logo"
-            src="/favicon.png"
-            alt=""
-            aria-hidden="true"
-          />
+          <>
+            <img
+              className="auth-brand-logo auth-brand-logo-light"
+              src="/favicon.png"
+              alt=""
+              aria-hidden="true"
+            />
+            <img
+              className="auth-brand-logo auth-brand-logo-dark"
+              src="/favicon-dark.png"
+              alt=""
+              aria-hidden="true"
+            />
+          </>
         )}
         <div className="auth-session-copy">
           <p className="auth-kicker">Wallet authentication</p>

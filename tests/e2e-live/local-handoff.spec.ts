@@ -170,6 +170,7 @@ test("real ResVault and services preserve the local journey through restart", as
     );
     await ownerPage.getByRole("button", { name: "Log out" }).click();
     expect((await loggedOut).status()).toBe(204);
+    await expect(ownerPage).toHaveURL("http://127.0.0.1:5173/");
     await expect(ownerPage.getByRole("button", { name: "Connect wallet" })).toBeEnabled();
     await expectWalletLocked(first);
     await expect(ownerPage.locator("main")).not.toContainText(beforeRestart);
@@ -238,7 +239,9 @@ async function authenticate(context: BrowserContext): Promise<Page> {
   await page.goto("http://127.0.0.1:5173/finance");
   await expect(page.getByRole("button", { name: "Connect wallet" })).toBeEnabled();
   await approveAfter(context, () => page.getByRole("button", { name: "Connect wallet" }).click());
-  await expect(page.getByRole("heading", { name: "Session active" })).toBeVisible();
+  await expect(
+    page.locator(".auth-card").getByRole("heading", { name: "ResFinance" }),
+  ).toBeVisible();
   return page;
 }
 
@@ -414,7 +417,9 @@ async function createAndSettleGroup(
   await expect(owner.getByText("$60.00 outstanding")).toBeVisible();
 
   await member.reload();
-  await expect(member.getByRole("heading", { name: "Session active" })).toBeVisible();
+  await expect(
+    member.locator(".auth-card").getByRole("heading", { name: "ResFinance" }),
+  ).toBeVisible();
   await member.getByRole("link", { name: "Friends & Groups" }).click();
   await selectGroup(member, groupName);
   const decisionCreated = waitForPost(member, /\/decision$/);

@@ -159,6 +159,9 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
       body: JSON.stringify({ status: "ok", service: "resfinance-api" }),
     });
   });
+  await page.route("**/api/v1/auth/sessions/current", async (route) => {
+    await route.fulfill({ status: 204 });
+  });
   await page.route("**/api/v1/finance/overview?month=*", async (route) => {
     await route.fulfill({
       status: 200,
@@ -179,10 +182,16 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     topBar.getByRole("heading", { name: "ResFinance" }),
   ).toBeVisible();
-  await expect(topBar.locator(".auth-brand-logo")).toHaveAttribute(
+  await expect(topBar.locator(".auth-brand-logo-light")).toHaveAttribute(
     "src",
     "/favicon.png",
   );
+  await expect(topBar.locator(".auth-brand-logo-dark")).toHaveAttribute(
+    "src",
+    "/favicon-dark.png",
+  );
+  await expect(topBar.locator(".auth-brand-logo-dark")).toBeVisible();
+  await expect(topBar.locator(".auth-brand-logo-light")).not.toBeVisible();
   const dashboardNavigation = topBar.getByRole("navigation", {
     name: "ResFinance dashboards",
   });
@@ -251,6 +260,8 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   );
   await page.getByRole("button", { name: "Switch to Light Mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(topBar.locator(".auth-brand-logo-light")).toBeVisible();
+  await expect(topBar.locator(".auth-brand-logo-dark")).not.toBeVisible();
   await expect(page.locator(".theme-toggle")).toHaveAttribute(
     "aria-pressed",
     "false",
@@ -264,6 +275,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: "Switch to Dark Mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(topBar.locator(".auth-brand-logo-dark")).toBeVisible();
 
   await page.setViewportSize({ width: 375, height: 812 });
   const compactSessionCardBox = await page.locator(".auth-card").boundingBox();
@@ -313,5 +325,16 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await page.screenshot({
     path: "test-results/finance-dashboard.png",
     fullPage: true,
+  });
+
+  await page.getByRole("button", { name: "Log out" }).click();
+  await expect(page).toHaveURL("http://127.0.0.1:4173/");
+  await expect(
+    page.getByText("Private finance · Read-only insights"),
+  ).toHaveCount(0);
+  await expect(page.locator(".status-card")).toHaveCount(0);
+  await page.screenshot({
+    path: "test-results/logged-out-screen.png",
+    fullPage: false,
   });
 });

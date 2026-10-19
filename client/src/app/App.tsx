@@ -1,12 +1,16 @@
 import { lazy, Suspense } from "react";
-import { Navigate, NavLink, Route, Routes } from "react-router-dom";
+import {
+  Navigate,
+  NavLink,
+  Route,
+  Routes,
+  useNavigate,
+} from "react-router-dom";
 
 import { AuthCard } from "../components/AuthCard";
-import { StatusCard } from "../components/StatusCard";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useAuthentication } from "../features/auth/useAuthentication";
 import { NotificationCenter } from "../features/insights/NotificationCenter";
-import { usePlatformHealth } from "../features/platform/usePlatformHealth";
 
 const FinanceDashboard = lazy(() =>
   import("../features/finance/FinanceDashboard").then((module) => ({
@@ -30,18 +34,25 @@ const InsightsDashboard = lazy(() =>
 );
 
 export function App() {
-  const health = usePlatformHealth();
+  const navigate = useNavigate();
   const authentication = useAuthentication();
   const authenticated =
     authentication.state === "authenticated" &&
     authentication.accessToken !== null;
+
+  async function logout() {
+    try {
+      await authentication.logout();
+    } finally {
+      navigate("/", { replace: true });
+    }
+  }
 
   return (
     <main className={authenticated ? "app-shell" : "shell"}>
       {!authenticated && <ThemeToggle />}
       {!authenticated && (
         <>
-          <p className="eyebrow">Private finance · Read-only insights</p>
           <h1>ResFinance</h1>
           <p className="lede">
             Connect the hardened ResVault extension to open your encrypted
@@ -55,7 +66,7 @@ export function App() {
         walletAddress={authentication.identity?.address ?? null}
         actorAddress={authentication.actorAddress}
         onConnect={() => void authentication.connect()}
-        onLogout={() => void authentication.logout()}
+        onLogout={() => void logout()}
         actions={
           authenticated ? (
             <NotificationCenter accessToken={authentication.accessToken!} />
@@ -122,9 +133,7 @@ export function App() {
             <Route path="*" element={<Navigate to="/finance" replace />} />
           </Routes>
         </>
-      ) : (
-        <StatusCard state={health.state} message={health.message} />
-      )}
+      ) : null}
     </main>
   );
 }

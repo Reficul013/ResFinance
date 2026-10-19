@@ -101,9 +101,18 @@ test("shows evidence-linked insights, notifications, and safe refusals", async (
   await expect(page.getByText(/milestone/i)).toHaveCount(0);
 
   await page.getByLabel("1 in-app notifications").click();
-  await expect(page.locator(".notification-popover")).toBeVisible();
+  const notificationPopover = page.locator(".notification-popover");
+  await expect(notificationPopover).toBeVisible();
+  await expect(notificationPopover).toHaveCSS(
+    "background-color",
+    "rgb(17, 24, 39)",
+  );
+  await page.screenshot({
+    path: "test-results/insights-notifications.png",
+    fullPage: false,
+  });
   await page.getByRole("heading", { name: "Smart Savings Insights" }).click();
-  await expect(page.locator(".notification-popover")).not.toBeVisible();
+  await expect(notificationPopover).not.toBeVisible();
 
   await page
     .getByRole("textbox", { name: "Question" })
