@@ -176,6 +176,13 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByRole("button", { name: "Switch to Light Mode" }),
   ).toBeVisible();
   const topBar = page.locator(".auth-card");
+  await expect(
+    topBar.getByRole("heading", { name: "ResFinance" }),
+  ).toBeVisible();
+  await expect(topBar.locator(".auth-brand-logo")).toHaveAttribute(
+    "src",
+    "/favicon.png",
+  );
   const dashboardNavigation = topBar.getByRole("navigation", {
     name: "ResFinance dashboards",
   });
@@ -185,6 +192,8 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   ).toHaveAttribute("aria-current", "page");
   await expect(topBar.getByLabel("No in-app notifications")).toBeVisible();
   await expect(topBar.locator(".notification-bell")).toBeVisible();
+  await expect(topBar.locator(".auth-action-icon")).toBeVisible();
+  await expect(topBar.locator(".theme-slider-track")).toBeVisible();
   await expect(page.getByText(/milestone/i)).toHaveCount(0);
   await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
     "href",
@@ -194,12 +203,29 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   const logoutButtonBox = await page
     .getByRole("button", { name: "Log out" })
     .boundingBox();
+  const notificationButtonBox = await topBar
+    .getByLabel("No in-app notifications")
+    .boundingBox();
+  const notificationBellBox = await topBar
+    .locator(".notification-bell")
+    .boundingBox();
+  const dashboardNavigationBox = await dashboardNavigation.boundingBox();
   const themeToggleBox = await page
     .getByRole("button", { name: "Switch to Light Mode" })
     .boundingBox();
   expect(sessionCardBox).not.toBeNull();
   expect(logoutButtonBox).not.toBeNull();
+  expect(notificationButtonBox).not.toBeNull();
+  expect(notificationBellBox).not.toBeNull();
+  expect(dashboardNavigationBox).not.toBeNull();
   expect(themeToggleBox).not.toBeNull();
+  expect(dashboardNavigationBox!.width).toBeGreaterThan(550);
+  expect(
+    notificationButtonBox!.x + notificationButtonBox!.width,
+  ).toBeLessThanOrEqual(logoutButtonBox!.x);
+  expect(
+    notificationButtonBox!.width - notificationBellBox!.width,
+  ).toBeGreaterThanOrEqual(16);
   expect(themeToggleBox!.x).toBeGreaterThanOrEqual(
     logoutButtonBox!.x + logoutButtonBox!.width,
   );
@@ -211,8 +237,16 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     sessionCardBox!.y + sessionCardBox!.height,
   );
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator(".theme-toggle")).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
   await page.getByRole("button", { name: "Switch to Light Mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator(".theme-toggle")).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
   await expect(
     page.getByRole("button", { name: "Switch to Dark Mode" }),
   ).toBeVisible();

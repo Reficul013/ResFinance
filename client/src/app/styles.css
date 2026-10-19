@@ -77,7 +77,7 @@ body {
 }
 
 .app-shell > .auth-card {
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(8rem, auto) minmax(0, 1fr) auto;
   gap: 0.85rem;
   overflow: visible;
   margin: 0 0 1rem;
@@ -98,6 +98,22 @@ body {
   font-size: 0.96rem;
 }
 
+.app-shell > .auth-card .auth-session {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.auth-brand-logo {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+}
+
+.auth-session-copy {
+  min-width: 0;
+}
+
 .app-shell > .auth-card .auth-button {
   min-height: 2.25rem;
   padding: 0.45rem 0.8rem;
@@ -108,12 +124,13 @@ body {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  justify-self: end;
 }
 
 .authenticated-navigation {
   display: flex;
+  width: 100%;
   min-width: 0;
-  gap: 0.6rem;
   align-items: center;
   justify-content: center;
 }
@@ -188,9 +205,44 @@ code {
   outline-offset: 3px;
 }
 
-.theme-toggle-icon {
-  font-size: 1rem;
+.theme-slider-track {
+  position: relative;
+  display: grid;
+  width: 3rem;
+  height: 1.5rem;
+  grid-template-columns: repeat(2, 1fr);
+  align-items: center;
+  padding: 0.15rem;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--page-muted) 16%, transparent);
+}
+
+.theme-slider-icon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  font-size: 0.68rem;
   line-height: 1;
+}
+
+.theme-slider-thumb {
+  position: absolute;
+  z-index: 0;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 1.08rem;
+  height: 1.08rem;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0.2rem 0.55rem rgb(32 37 50 / 25%);
+  transition: transform 180ms ease;
+}
+
+.theme-toggle[data-theme="dark"] .theme-slider-thumb {
+  transform: translateX(1.45rem);
+  background: var(--page-accent);
 }
 
 .status-card {
@@ -272,6 +324,10 @@ code {
 }
 
 .auth-button {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: center;
   min-height: 2.8rem;
   padding: 0.65rem 1rem;
   border: 0;
@@ -281,6 +337,12 @@ code {
   font: inherit;
   font-weight: 750;
   cursor: pointer;
+}
+
+.auth-action-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
 }
 
 .auth-button.secondary {
@@ -925,11 +987,12 @@ td.expense {
 
 .dashboard-nav {
   display: flex;
+  width: 100%;
+  max-width: 54rem;
   min-width: 0;
   gap: 0.2rem;
   margin: 0;
   padding: 0.25rem;
-  width: fit-content;
   border: 1px solid var(--control-border);
   border-radius: 999px;
   background: var(--control-background);
@@ -947,6 +1010,7 @@ td.expense {
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
+  padding: 0.55rem 0.65rem;
   border: 1px solid var(--control-border);
   border-radius: 999px;
   background: var(--control-background);
@@ -1126,11 +1190,13 @@ td.expense {
 }
 
 .dashboard-nav a {
-  padding: 0.55rem 0.75rem;
+  flex: 1 1 0;
+  padding: 0.6rem 1rem;
   border-radius: 999px;
   color: var(--page-muted);
   font-size: 0.78rem;
   font-weight: 750;
+  text-align: center;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -1474,9 +1540,7 @@ td.expense {
   }
 
   .app-shell > .auth-card .authenticated-navigation {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
+    display: block;
   }
 
   .dashboard-nav {
@@ -1509,10 +1573,26 @@ td.expense {
   .app-shell > .auth-card .auth-actions {
     gap: 0.35rem;
   }
+
+  .app-shell > .auth-card .auth-button.secondary {
+    min-width: 2.65rem;
+    padding-inline: 0.65rem;
+  }
+
+  .auth-button-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .loading-orb {
+  .loading-orb,
+  .theme-slider-thumb {
     animation: none;
+    transition: none;
   }
 }

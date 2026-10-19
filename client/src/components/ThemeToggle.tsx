@@ -9,11 +9,15 @@ export function ThemeToggle() {
     <button
       className="theme-toggle"
       type="button"
+      data-theme={theme}
       onClick={toggleTheme}
       aria-label={`Switch to ${nextThemeLabel}`}
+      aria-pressed={theme === "dark"}
     >
-      <span className="theme-toggle-icon" aria-hidden="true">
-        {theme === "dark" ? "☀︎" : "☾"}
+      <span className="theme-slider-track" aria-hidden="true">
+        <span className="theme-slider-icon">☀︎</span>
+        <span className="theme-slider-icon">☾</span>
+        <span className="theme-slider-thumb" />
       </span>
       <span className="theme-toggle-label">{nextThemeLabel}</span>
     </button>

@@ -1,9 +1,11 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
 import { currentMonth } from "../finance/money";
 import { useInsightsOverview } from "./useInsightsDashboard";
 
 export function NotificationCenter({ accessToken }: { accessToken: string }) {
+  const detailsRef = useRef<HTMLDetailsElement>(null);
   const overview = useInsightsOverview(accessToken, currentMonth());
   const notifications = overview.data?.notifications ?? [];
   const notificationLabel =
@@ -11,8 +13,40 @@ export function NotificationCenter({ accessToken }: { accessToken: string }) {
       ? "No in-app notifications"
       : `${notifications.length} in-app notifications`;
 
+  useEffect(() => {
+    function closeOnOutsidePointer(event: PointerEvent) {
+      const details = detailsRef.current;
+      if (
+        details?.open &&
+        event.target instanceof Node &&
+        !details.contains(event.target)
+      ) {
+        details.open = false;
+      }
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      const details = detailsRef.current;
+      if (event.key === "Escape" && details?.open) {
+        details.open = false;
+        details.querySelector("summary")?.focus();
+      }
+    }
+
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
+
+  function closeNotifications() {
+    if (detailsRef.current) detailsRef.current.open = false;
+  }
+
   return (
-    <details className="notification-center">
+    <details className="notification-center" ref={detailsRef}>
       <summary aria-label={notificationLabel}>
         <svg
           className="notification-bell"
@@ -47,13 +81,18 @@ export function NotificationCenter({ accessToken }: { accessToken: string }) {
             to={item.href}
             key={item.notification_id}
             className={`notification-item ${item.severity}`}
+            onClick={closeNotifications}
           >
             <strong>{item.title}</strong>
             <span>{item.message}</span>
           </Link>
         ))}
         {notifications.length > 0 && (
-          <Link className="notification-all" to="/insights">
+          <Link
+            className="notification-all"
+            to="/insights"
+            onClick={closeNotifications}
+          >
             Open Smart Savings Insights
           </Link>
         )}

@@ -56,6 +56,11 @@ export function App() {
         actorAddress={authentication.actorAddress}
         onConnect={() => void authentication.connect()}
         onLogout={() => void authentication.logout()}
+        actions={
+          authenticated ? (
+            <NotificationCenter accessToken={authentication.accessToken!} />
+          ) : undefined
+        }
       >
         {authenticated && (
           <div className="authenticated-navigation">
@@ -65,7 +70,6 @@ export function App() {
               <NavLink to="/crypto">Crypto</NavLink>
               <NavLink to="/insights">Smart Insights</NavLink>
             </nav>
-            <NotificationCenter accessToken={authentication.accessToken!} />
           </div>
         )}
       </AuthCard>
