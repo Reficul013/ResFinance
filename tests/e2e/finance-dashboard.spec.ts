@@ -222,18 +222,24 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   expect(dashboardNavigationBox).not.toBeNull();
   expect(themeToggleBox).not.toBeNull();
   expect(dashboardNavigationBox!.width).toBeGreaterThan(550);
+  expect(themeToggleBox!.x + themeToggleBox!.width).toBeLessThanOrEqual(
+    notificationButtonBox!.x,
+  );
   expect(
     notificationButtonBox!.x + notificationButtonBox!.width,
   ).toBeLessThanOrEqual(logoutButtonBox!.x);
   expect(
     notificationButtonBox!.width - notificationBellBox!.width,
   ).toBeGreaterThanOrEqual(16);
-  expect(themeToggleBox!.x).toBeGreaterThanOrEqual(
-    logoutButtonBox!.x + logoutButtonBox!.width,
-  );
-  expect(themeToggleBox!.x + themeToggleBox!.width).toBeLessThanOrEqual(
+  expect(logoutButtonBox!.x + logoutButtonBox!.width).toBeLessThanOrEqual(
     sessionCardBox!.x + sessionCardBox!.width,
   );
+  expect(
+    Math.abs(themeToggleBox!.height - notificationButtonBox!.height),
+  ).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(themeToggleBox!.height - logoutButtonBox!.height),
+  ).toBeLessThanOrEqual(1);
   expect(themeToggleBox!.y).toBeGreaterThanOrEqual(sessionCardBox!.y);
   expect(themeToggleBox!.y + themeToggleBox!.height).toBeLessThanOrEqual(
     sessionCardBox!.y + sessionCardBox!.height,

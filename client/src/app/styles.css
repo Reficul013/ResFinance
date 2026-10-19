@@ -120,6 +120,12 @@ body {
   font-size: 0.8rem;
 }
 
+.app-shell > .auth-card .auth-button.secondary {
+  min-width: 2.65rem;
+  min-height: 2.65rem;
+  padding: 0;
+}
+
 .app-shell > .auth-card .auth-actions {
   display: flex;
   gap: 0.5rem;
@@ -138,7 +144,7 @@ body {
 .app-shell > .auth-card .theme-toggle {
   position: static;
   min-height: 2.65rem;
-  padding: 0.35rem;
+  padding: 0;
   font-size: 0.8rem;
 }
 
@@ -179,8 +185,8 @@ code {
   display: inline-flex;
   gap: 0.45rem;
   align-items: center;
-  min-height: 2.5rem;
-  padding: 0.35rem;
+  min-height: 2.65rem;
+  padding: 0;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -208,8 +214,8 @@ code {
 .theme-slider-track {
   position: relative;
   display: grid;
-  width: 3rem;
-  height: 1.5rem;
+  width: 4.5rem;
+  height: 2.65rem;
   grid-template-columns: repeat(2, 1fr);
   align-items: center;
   overflow: hidden;
@@ -230,8 +236,8 @@ code {
 
 .theme-slider-icon svg {
   display: block;
-  width: 0.72rem;
-  height: 0.72rem;
+  width: 1rem;
+  height: 1rem;
 }
 
 .theme-toggle[data-theme="light"] .theme-slider-icon:first-child,
@@ -243,9 +249,9 @@ code {
   position: absolute;
   z-index: 0;
   top: 50%;
-  left: 0.14rem;
-  width: 1.15rem;
-  height: 1.15rem;
+  left: 0.07rem;
+  width: 2.05rem;
+  height: 2.05rem;
   border-radius: 999px;
   background: #fff;
   box-shadow: 0 0.2rem 0.55rem rgb(32 37 50 / 25%);
@@ -254,7 +260,7 @@ code {
 }
 
 .theme-toggle[data-theme="dark"] .theme-slider-thumb {
-  transform: translate(1.44rem, -50%);
+  transform: translate(2.19rem, -50%);
   background: var(--page-accent);
 }
 
@@ -1576,11 +1582,6 @@ td.expense {
 
   .app-shell > .auth-card .auth-actions {
     gap: 0.35rem;
-  }
-
-  .app-shell > .auth-card .auth-button.secondary {
-    min-width: 2.65rem;
-    padding-inline: 0.65rem;
   }
 }
 

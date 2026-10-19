@@ -51,6 +51,7 @@ export function AuthCard({
       {authenticated && children}
       {authenticated ? (
         <div className="auth-actions">
+          <ThemeToggle />
           {actions}
           <button
             className="auth-button secondary"
@@ -74,7 +75,6 @@ export function AuthCard({
               <path d="M21 12H9" />
             </svg>
           </button>
-          <ThemeToggle />
         </div>
       ) : (
         <button
