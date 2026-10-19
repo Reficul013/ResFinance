@@ -169,6 +169,27 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
       body: JSON.stringify(overview),
     });
   });
+  await page.route("**/api/v1/insights/overview?month=*", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        month: "2026-10",
+        fact_bundle_id: "facts_finance_e2e",
+        insight: {
+          summary: "Your recorded budget is on track for this month.",
+          evidence: [],
+          caveats: ["This is a read-only explanation of recorded data."],
+          follow_up_questions: ["How can I improve my savings?"],
+          mode: "template-fallback",
+          model_id: "template",
+          model_revision: "finance-e2e",
+          refused: false,
+        },
+        notifications: [],
+      }),
+    });
+  });
 
   await page.goto("/finance");
 
@@ -223,7 +244,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   const dashboardNavigation = topBar.getByRole("navigation", {
     name: "ResFinance dashboards",
   });
-  await expect(dashboardNavigation.getByRole("link")).toHaveCount(4);
+  await expect(dashboardNavigation.getByRole("link")).toHaveCount(3);
   await expect(
     dashboardNavigation.getByRole("link", { name: "Personal Finance" }),
   ).toHaveAttribute("aria-current", "page");
@@ -258,7 +279,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   expect(notificationBellBox).not.toBeNull();
   expect(dashboardNavigationBox).not.toBeNull();
   expect(themeToggleBox).not.toBeNull();
-  expect(dashboardNavigationBox!.width).toBeGreaterThan(550);
+  expect(dashboardNavigationBox!.width).toBeGreaterThan(450);
   expect(themeToggleBox!.x + themeToggleBox!.width).toBeLessThanOrEqual(
     notificationButtonBox!.x,
   );
@@ -344,6 +365,18 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByRole("img", { name: /Income \$5,000.00/ }),
   ).toBeVisible();
   await expect(
+    page.getByRole("heading", { name: "Your financial trends" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Spending by category" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Savings outlook" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Smart Savings Insights" }),
+  ).toBeVisible();
+  await expect(
     page.locator(".chart-panel").getByText("Projection v8", { exact: true }),
   ).toHaveCount(0);
   await expect(
@@ -352,7 +385,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
       .getByText("finance-savings-v1", { exact: true }),
   ).toHaveCount(0);
 
-  await page.getByText("Data Freshness and Provenance").click();
+  await page.locator(".finance-dashboard > .provenance-panel summary").click();
   await expect(page.getByText(/Projection v8 rebuilt through/)).toBeVisible();
   await expect(
     page.getByText("finance-savings-v1", { exact: true }),

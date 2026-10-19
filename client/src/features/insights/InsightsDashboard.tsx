@@ -6,6 +6,41 @@ import { useInsightsDashboard } from "./useInsightsDashboard";
 
 export function InsightsDashboard({ accessToken }: { accessToken: string }) {
   const [month, setMonth] = useState(currentMonth());
+
+  return (
+    <div className="finance-dashboard insights-dashboard">
+      <section className="dashboard-header" aria-labelledby="insights-title">
+        <div>
+          <p className="eyebrow">Evidence-linked guidance</p>
+          <h1 id="insights-title">Smart Savings Insights</h1>
+          <p className="lede">
+            Ask about your recorded savings, budgets, obligations, and crypto
+            analysis. Answers are assembled only from facts authorized for your
+            wallet.
+          </p>
+        </div>
+        <label className="month-control">
+          <span>Insight month</span>
+          <input
+            type="month"
+            value={month}
+            onChange={(event) => setMonth(event.target.value)}
+          />
+        </label>
+      </section>
+
+      <SmartSavingsInsights accessToken={accessToken} month={month} />
+    </div>
+  );
+}
+
+export function SmartSavingsInsights({
+  accessToken,
+  month,
+}: {
+  accessToken: string;
+  month: string;
+}) {
   const [question, setQuestion] = useState("How can I improve my savings?");
   const dashboard = useInsightsDashboard(accessToken, month);
 
@@ -34,27 +69,21 @@ export function InsightsDashboard({ accessToken }: { accessToken: string }) {
   }
 
   return (
-    <div className="finance-dashboard insights-dashboard">
-      <section className="dashboard-header" aria-labelledby="insights-title">
+    <section
+      id="smart-insights"
+      className="smart-savings-insights"
+      aria-labelledby="smart-insights-title"
+    >
+      <div className="insights-section-heading">
         <div>
-          <p className="eyebrow">Evidence-linked guidance</p>
-          <h1 id="insights-title">Smart Savings Insights</h1>
-          <p className="lede">
+          <p className="section-kicker">Evidence-linked guidance</p>
+          <h2 id="smart-insights-title">Smart Savings Insights</h2>
+          <p>
             Ask about your recorded savings, budgets, obligations, and crypto
-            analysis. Answers are assembled only from facts authorized for your
-            wallet.
+            analysis. Answers use only facts authorized for your wallet.
           </p>
         </div>
-        <label className="month-control">
-          <span>Insight month</span>
-          <input
-            type="month"
-            value={month}
-            onChange={(event) => setMonth(event.target.value)}
-          />
-        </label>
-      </section>
-
+      </div>
       <section className="insight-composer panel" aria-labelledby="ask-title">
         <div className="section-heading compact">
           <div>
@@ -108,7 +137,7 @@ export function InsightsDashboard({ accessToken }: { accessToken: string }) {
           </p>
         </div>
       </details>
-    </div>
+    </section>
   );
 }
 

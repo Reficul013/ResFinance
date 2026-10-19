@@ -350,7 +350,8 @@ money.
 
 ### Part F — Smart Insights and safety refusal
 
-Open **Smart Insights**.
+Return to **Personal Finance** and scroll to **Smart Savings Insights** below
+the Finance ledger and commitments.
 
 Ask a supported question:
 

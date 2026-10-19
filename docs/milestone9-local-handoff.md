@@ -99,7 +99,7 @@ The live journey also exposed and fixed three integration defects:
 1. create two extension-held wallets and prove the extension does not answer
    the unapproved API-port origin;
 2. authenticate both wallets through extension-owned approvals;
-3. record income, expense, category, and budget data;
+3. record income, expense, and budget data using the built-in Finance categories;
 4. create a group, add the second wallet, and create a signed shared expense;
 5. approve the obligation, fund non-redeemable credits, reject tampered and
    replayed intents, and partially then fully settle;

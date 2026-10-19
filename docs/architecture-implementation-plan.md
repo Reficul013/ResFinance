@@ -10,12 +10,12 @@ Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud
 
 ## 1. Summary and Product Boundaries
 
-ExpoLab will be a wallet-authenticated finance platform with three interconnected product dashboards and one read-only insights workspace:
+ExpoLab will be a wallet-authenticated finance platform with three interconnected product dashboards and embedded read-only insights:
 
 1. **Personal Finance** — income, expenses, budgets, savings, receivables, payables, and financial insights.
 2. **Friends & Groups** — shared expenses, participant approval, obligations, internal-credit settlements, and immutable receipts.
 3. **Crypto Investments** — BTC, ETH, and SOL market analysis, forecasts, risk profiling, portfolio allocation, scenarios, and AI explanations.
-4. **Smart Insights** — wallet-authorized, evidence-linked explanations and cross-dashboard notifications without write or wallet authority.
+4. **Smart Insights** — wallet-authorized, evidence-linked explanations and cross-dashboard notifications without write or wallet authority, embedded beneath Personal Finance rather than exposed as a fourth dashboard tab.
 
 Non-negotiable boundaries:
 
@@ -437,7 +437,7 @@ The approved completion iteration adds these five required work packages:
 
 Required suites:
 
-- **Frontend:** Vitest component/state tests, generated-client compatibility, accessibility, and Playwright journeys across all four authenticated workspaces.
+- **Frontend:** Vitest component/state tests, generated-client compatibility, accessibility, and Playwright journeys across the three authenticated dashboards and embedded Smart Insights.
 - **Backend:** Pytest unit, REST contract, authorization, encryption, idempotency, reducer, and provider-adapter tests.
 - **ResilientDB:** real four-node integration, restart durability, range/history behavior, blob reconstruction, projection repair, and replica-loss tests.
 - **Wallet/security:** origin isolation, private-key non-disclosure, locked-state behavior, replay/tamper/expiry rejection, and session revocation.

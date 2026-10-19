@@ -78,7 +78,9 @@ export function NotificationCenter({ accessToken }: { accessToken: string }) {
         )}
         {notifications.slice(0, 5).map((item) => (
           <Link
-            to={item.href}
+            to={
+              item.href === "/insights" ? "/finance#smart-insights" : item.href
+            }
             key={item.notification_id}
             className={`notification-item ${item.severity}`}
             onClick={closeNotifications}
@@ -90,7 +92,7 @@ export function NotificationCenter({ accessToken }: { accessToken: string }) {
         {notifications.length > 0 && (
           <Link
             className="notification-all"
-            to="/insights"
+            to="/finance#smart-insights"
             onClick={closeNotifications}
           >
             Open Smart Savings Insights

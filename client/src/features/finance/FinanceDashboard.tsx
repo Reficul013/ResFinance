@@ -11,8 +11,10 @@ import {
 
 import type { FinanceOverview } from "../../lib/api/client";
 import { FinanceEntryForms } from "./FinanceEntryForms";
+import { FinanceAnalytics } from "./FinanceAnalytics";
 import { currentMonth, formatUsd } from "./money";
 import { useFinanceDashboard } from "./useFinanceDashboard";
+import { SmartSavingsInsights } from "../insights/InsightsDashboard";
 
 interface FinanceDashboardProps {
   accessToken: string;
@@ -76,6 +78,11 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
         <CashFlowChart overview={overview} />
         <BudgetPanel overview={overview} />
       </div>
+      <FinanceAnalytics
+        overview={overview}
+        historyMonths={dashboard.historyMonths}
+        history={dashboard.history.map((item) => item.data)}
+      />
       <FinanceEntryForms
         dashboard={dashboard}
         overview={overview}
@@ -85,6 +92,7 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
         <TransactionPanel overview={overview} />
         <CommitmentsPanel overview={overview} />
       </div>
+      <SmartSavingsInsights accessToken={accessToken} month={month} />
       <ProvenancePanel overview={overview} />
     </div>
   );

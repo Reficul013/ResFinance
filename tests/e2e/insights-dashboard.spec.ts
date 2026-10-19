@@ -76,12 +76,55 @@ test("shows evidence-linked insights, notifications, and safe refusals", async (
       }),
     });
   });
+  await page.route("**/api/v1/finance/overview?month=*", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        summary: {
+          month: "2026-10",
+          income: { currency: "USD", minor_units: 0 },
+          expense: { currency: "USD", minor_units: 0 },
+          balance: { currency: "USD", minor_units: 0 },
+          receivable: { currency: "USD", minor_units: 0 },
+          payable: { currency: "USD", minor_units: 0 },
+          outstanding_recurring_income: { currency: "USD", minor_units: 0 },
+          outstanding_recurring_expense: { currency: "USD", minor_units: 0 },
+          savings: {
+            actual: { currency: "USD", minor_units: 0 },
+            projected: { currency: "USD", minor_units: 0 },
+            available: { currency: "USD", minor_units: 0 },
+            formula_version: "finance-savings-v1",
+            calculation_id: "insights-e2e",
+            source_event_ids: [],
+          },
+          budget_statuses: [],
+        },
+        categories: [],
+        transactions: [],
+        budgets: [],
+        recurring_entries: [],
+        obligations: [],
+        provenance: {
+          projection_version: 0,
+          as_of_utc: null,
+          source_event_ids: [],
+        },
+      }),
+    });
+  });
 
   await page.goto("/insights");
+  await expect(page).toHaveURL(/\/finance#smart-insights$/);
 
   await expect(
     page.getByRole("heading", { name: "Smart Savings Insights" }),
   ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "ResFinance dashboards" })
+      .getByRole("link"),
+  ).toHaveCount(3);
   await expect(
     page.locator(".insight-result").getByText(evidence.statement).first(),
   ).toBeVisible();
@@ -91,7 +134,7 @@ test("shows evidence-linked insights, notifications, and safe refusals", async (
       .locator(".evidence-grid")
       .getByText("finance-budget · 2 source references"),
   ).toHaveCount(0);
-  await page.getByText("Data Freshness and Provenance").click();
+  await page.locator("#smart-insights .provenance-panel summary").click();
   await expect(page.getByText(/Fact bundle facts_1/)).toBeVisible();
   await expect(page.getByText(/Qwen\/Qwen/)).toBeVisible();
   await expect(

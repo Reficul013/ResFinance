@@ -616,6 +616,48 @@ code {
   grid-template-columns: minmax(0, 1.3fr) minmax(20rem, 0.7fr);
 }
 
+.finance-analytics,
+.smart-savings-insights {
+  display: grid;
+  gap: 1rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.analytics-card {
+  min-height: 22rem;
+}
+
+.analytics-card h3,
+.smart-savings-insights > .insights-section-heading h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.analytics-card .section-heading p,
+.insights-section-heading p {
+  margin: 0.25rem 0 0;
+  color: var(--page-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.analytics-chart {
+  min-height: 16.25rem;
+}
+
+.analytics-empty {
+  display: grid;
+  min-height: 16.25rem;
+  place-items: center;
+  text-align: center;
+}
+
 .panel,
 .entry-panel {
   min-width: 0;
@@ -1140,6 +1182,10 @@ td.expense {
   gap: 1rem;
 }
 
+.smart-savings-insights {
+  scroll-margin-top: 1.5rem;
+}
+
 .insight-composer form {
   display: grid;
   gap: 0.8rem;
@@ -1516,6 +1562,10 @@ td.expense {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
   .summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1524,6 +1574,7 @@ td.expense {
 @media (max-width: 52rem) {
   .dashboard-header,
   .dashboard-columns,
+  .analytics-grid,
   .crypto-dashboard .dashboard-columns,
   .group-actions-grid,
   .obligation-card {

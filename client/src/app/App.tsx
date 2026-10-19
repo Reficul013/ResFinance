@@ -27,11 +27,6 @@ const CryptoDashboard = lazy(() =>
     default: module.CryptoDashboard,
   })),
 );
-const InsightsDashboard = lazy(() =>
-  import("../features/insights/InsightsDashboard").then((module) => ({
-    default: module.InsightsDashboard,
-  })),
-);
 
 export function App() {
   const navigate = useNavigate();
@@ -79,7 +74,6 @@ export function App() {
               <NavLink to="/finance">Personal Finance</NavLink>
               <NavLink to="/groups">Friends &amp; Groups</NavLink>
               <NavLink to="/crypto">Crypto</NavLink>
-              <NavLink to="/insights">Smart Insights</NavLink>
             </nav>
           </div>
         )}
@@ -120,15 +114,7 @@ export function App() {
             />
             <Route
               path="/insights"
-              element={
-                <Suspense
-                  fallback={<RouteLoading text="Opening Smart Insights…" />}
-                >
-                  <InsightsDashboard
-                    accessToken={authentication.accessToken!}
-                  />
-                </Suspense>
-              }
+              element={<Navigate to="/finance#smart-insights" replace />}
             />
             <Route path="*" element={<Navigate to="/finance" replace />} />
           </Routes>

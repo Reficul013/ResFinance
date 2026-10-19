@@ -71,7 +71,7 @@ capacity claim. Full evidence is in
   initial insight, evidence, caveats, follow-ups, and notifications.
 - `POST /api/v1/insights/query` computes a read-only answer and appends no event.
 - The generated `/api/v1` TypeScript client is the browser's only data path.
-- The fourth authenticated workspace, Smart Insights, displays the answer,
+- Smart Savings Insights is embedded below the Personal Finance dashboard and displays the answer,
   generation mode, evidence cards, caveats, follow-up questions, and a Data
   Freshness and Provenance panel. Fact-bundle and model-revision values are
   presented only in that panel as inspectable provenance tags; evidence cards
@@ -93,7 +93,7 @@ It verified:
 - the actual pinned local model completed evidence selection; and
 - the AI path performed zero ResilientDB writes.
 
-The Chromium journey also exercised the Smart Insights page, evidence display,
+The Chromium journey also exercised the embedded Smart Savings Insights section, evidence display,
 plain-language verified-record counts, notification count, refusal state,
 responsive layout, and the Data Freshness and Provenance panel. The rendered
 screenshot was visually inspected.

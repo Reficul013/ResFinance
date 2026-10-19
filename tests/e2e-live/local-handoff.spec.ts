@@ -120,7 +120,8 @@ test("real ResVault and services preserve the local journey through restart", as
       "milestone9:e2e promoted forecast, exact-cent allocations, and non-mutating scenario verified",
     );
 
-    await ownerPage.getByRole("link", { name: "Smart Insights" }).click();
+    await ownerPage.getByRole("link", { name: "Personal Finance" }).click();
+    await ownerPage.locator("#smart-insights").scrollIntoViewIfNeeded();
     await ownerPage.getByRole("textbox", { name: "Question" }).fill(
       "Which recorded budgets need attention?",
     );
