@@ -8,6 +8,10 @@ import {
   type SignedIntent,
 } from "../auth/resvault";
 import { formatUsd, usdToMinorUnits } from "../finance/money";
+import { MemberName } from "./MemberName";
+import { shortAddress } from "./members";
+import { parseShares } from "./shares";
+import { useGroupAction } from "./useGroupAction";
 import { useGroupsDashboard } from "./useGroupsDashboard";
 
 interface Props {
@@ -48,7 +52,6 @@ export function GroupsDashboard({ accessToken, actorAddress }: Props) {
 
       <CreateGroupPanel
         pending={dashboard.create.isPending}
-        error={dashboard.create.error}
         onCreate={async (name, displayName) => {
           const groupId = `group-${crypto.randomUUID()}`;
           await dashboard.create.mutateAsync({
@@ -70,6 +73,13 @@ export function GroupsDashboard({ accessToken, actorAddress }: Props) {
       {dashboard.groups.isError && (
         <DashboardState text={errorMessage(dashboard.groups.error)} error />
       )}
+      {dashboard.groups.data !== undefined &&
+        dashboard.groups.data.length === 0 && (
+          <p className="empty-copy">
+            No groups yet. Create one above, then add friends by wallet address
+            to start splitting expenses.
+          </p>
+        )}
       {dashboard.groups.data !== undefined &&
         dashboard.groups.data.length > 0 && (
           <nav className="group-switcher" aria-label="Your groups">
@@ -140,6 +150,8 @@ function GroupWorkspace({
         </dl>
       </section>
 
+      <MembersPanel actorAddress={actorAddress} group={group} />
+
       <div className="group-actions-grid">
         {group.owner_address === actorAddress && (
           <AddMemberPanel group={group} dashboard={dashboard} />
@@ -174,17 +186,50 @@ function GroupWorkspace({
   );
 }
 
+function MembersPanel({
+  actorAddress,
+  group,
+}: {
+  actorAddress: string;
+  group: GroupOverview;
+}) {
+  const members = group.members.filter((member) => member.active);
+  return (
+    <section className="panel members-panel" aria-labelledby="members-title">
+      <div className="panel-heading">
+        <h2 id="members-title">Members</h2>
+        <span className="provenance-chip">{members.length} total</span>
+      </div>
+      <ul className="member-list">
+        {members.map((member) => (
+          <li key={member.actor_address}>
+            <MemberName address={member.actor_address} members={members} />
+            {member.actor_address === group.owner_address && (
+              <span className="member-tag">Owner</span>
+            )}
+            {member.actor_address === actorAddress && (
+              <span className="member-tag">You</span>
+            )}
+          </li>
+        ))}
+      </ul>
+      <p className="form-note">
+        Hover over or focus a name to see the member's wallet address.
+      </p>
+    </section>
+  );
+}
+
 function CreateGroupPanel({
   pending,
-  error,
   onCreate,
 }: {
   pending: boolean;
-  error: Error | null;
   onCreate(name: string, displayName: string): Promise<void>;
 }) {
   const [name, setName] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const action = useGroupAction();
   return (
     <section className="panel compact-form">
       <div>
@@ -194,7 +239,8 @@ function CreateGroupPanel({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          void onCreate(name, displayName).then(() => {
+          void action.run(async () => {
+            await onCreate(name, displayName);
             setName("");
             setDisplayName("");
           });
@@ -220,7 +266,7 @@ function CreateGroupPanel({
           {pending ? "Creating…" : "Create group"}
         </button>
       </form>
-      <MutationError error={error} />
+      <MutationError error={action.error} />
     </section>
   );
 }
@@ -234,15 +280,16 @@ function AddMemberPanel({
 }) {
   const [address, setAddress] = useState("");
   const [name, setName] = useState("");
+  const action = useGroupAction();
   return (
     <section className="panel compact-form">
       <h2>Add member</h2>
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          const id = crypto.randomUUID();
-          void dashboard.member
-            .mutateAsync({
+          void action.run(async () => {
+            const id = crypto.randomUUID();
+            await dashboard.member.mutateAsync({
               groupId: group.group_id,
               idempotencyKey: `member-${id}`,
               body: {
@@ -250,11 +297,10 @@ function AddMemberPanel({
                 display_name: name,
                 expected_version: group.provenance.projection_version,
               },
-            })
-            .then(() => {
-              setAddress("");
-              setName("");
             });
+            setAddress("");
+            setName("");
+          });
         }}
       >
         <label>
@@ -276,7 +322,7 @@ function AddMemberPanel({
         </label>
         <button disabled={isGroupWritePending(dashboard)}>Add member</button>
       </form>
-      <MutationError error={dashboard.member.error} />
+      <MutationError error={action.error} />
     </section>
   );
 }
@@ -291,6 +337,7 @@ function FundCreditsPanel({
   dashboard: Dashboard;
 }) {
   const [amount, setAmount] = useState("");
+  const action = useGroupAction();
   return (
     <section className="panel compact-form">
       <h2>Fund internal credits</h2>
@@ -300,7 +347,7 @@ function FundCreditsPanel({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          void (async () => {
+          void action.run(async () => {
             const amountMinorUnits = usdToMinorUnits(amount);
             const parameters = {
               group_id: group.group_id,
@@ -322,7 +369,7 @@ function FundCreditsPanel({
               },
             });
             setAmount("");
-          })();
+          });
         }}
       >
         <label>
@@ -340,7 +387,7 @@ function FundCreditsPanel({
         </button>
       </form>
       <p className="form-note">Funding wallet: {shortAddress(actorAddress)}</p>
-      <MutationError error={dashboard.credits.error} />
+      <MutationError error={action.error} />
     </section>
   );
 }
@@ -361,6 +408,7 @@ function CreateExpensePanel({
   );
   const [dueOn, setDueOn] = useState("");
   const [sharesText, setSharesText] = useState("");
+  const action = useGroupAction();
   const memberHint = useMemo(
     () => group.members.map((item) => `${item.actor_address}=0.00`).join("\n"),
     [group.members],
@@ -371,7 +419,7 @@ function CreateExpensePanel({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          void (async () => {
+          void action.run(async () => {
             const expenseId = `expense-${crypto.randomUUID()}`;
             const amountMinorUnits = usdToMinorUnits(amount);
             const shares = parseShares(sharesText);
@@ -418,7 +466,7 @@ function CreateExpensePanel({
             setDescription("");
             setAmount("");
             setSharesText("");
-          })();
+          });
         }}
       >
         <label>
@@ -469,7 +517,7 @@ function CreateExpensePanel({
           Approve split in ResVault
         </button>
       </form>
-      <MutationError error={dashboard.expense.error} />
+      <MutationError error={action.error} />
     </section>
   );
 }
@@ -484,6 +532,7 @@ function ObligationsPanel({
   dashboard: Dashboard;
 }) {
   const [settlements, setSettlements] = useState<Record<string, string>>({});
+  const action = useGroupAction();
   return (
     <section
       className="panel obligations-panel"
@@ -536,11 +585,13 @@ function ObligationsPanel({
                         className={decision === "reject" ? "secondary" : ""}
                         disabled={isGroupWritePending(dashboard)}
                         onClick={() =>
-                          void decideObligation(
-                            dashboard,
-                            group,
-                            obligation.obligation_id,
-                            decision,
+                          void action.run(() =>
+                            decideObligation(
+                              dashboard,
+                              group,
+                              obligation.obligation_id,
+                              decision,
+                            ),
                           )
                         }
                       >
@@ -558,11 +609,13 @@ function ObligationsPanel({
                       event.preventDefault();
                       const amount =
                         settlements[obligation.obligation_id] ?? "";
-                      void settleObligation(
-                        dashboard,
-                        group,
-                        obligation.obligation_id,
-                        amount,
+                      void action.run(() =>
+                        settleObligation(
+                          dashboard,
+                          group,
+                          obligation.obligation_id,
+                          amount,
+                        ),
                       );
                     }}
                   >
@@ -593,9 +646,7 @@ function ObligationsPanel({
           })}
         </div>
       )}
-      <MutationError
-        error={dashboard.decision.error ?? dashboard.settlement.error}
-      />
+      <MutationError error={action.error} />
     </section>
   );
 }
@@ -726,25 +777,6 @@ async function requestSignature(
   return { ...signed, action };
 }
 
-function parseShares(value: string): Record<string, number> {
-  const result: Record<string, number> = {};
-  for (const line of value
-    .split("\n")
-    .map((item) => item.trim())
-    .filter(Boolean)) {
-    const separator = line.indexOf("=");
-    if (separator < 0) throw new Error("Each share must use wallet=amount");
-    const address = line.slice(0, separator).trim().toLowerCase();
-    if (!/^0x[0-9a-f]{40}$/.test(address))
-      throw new Error("A share has an invalid wallet address");
-    if (address in result) throw new Error("Each wallet may appear only once");
-    result[address] = usdToMinorUnits(line.slice(separator + 1).trim());
-  }
-  if (Object.keys(result).length === 0)
-    throw new Error("At least one share is required");
-  return result;
-}
-
 function DashboardState({
   text,
   error = false,
@@ -773,10 +805,6 @@ function MutationError({ error }: { error: Error | null }) {
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "The group request failed.";
-}
-
-function shortAddress(value: string): string {
-  return `${value.slice(0, 8)}…${value.slice(-6)}`;
 }
 
 function formatTimestamp(value: string | null): string {
