@@ -135,8 +135,8 @@ function InsightResult({
               <span>{item.topic}</span>
               <p>{item.statement}</p>
               <small>
-                {item.source_kind} · {item.source_ids.length} source reference
-                {item.source_ids.length === 1 ? "" : "s"}
+                Based on {item.source_ids.length} verified{" "}
+                {item.source_ids.length === 1 ? "record" : "records"}
               </small>
             </article>
           ))}

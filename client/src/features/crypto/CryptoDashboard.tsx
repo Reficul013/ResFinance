@@ -67,7 +67,7 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
         <Metric
           label="Default capital"
           value={formatUsd(overview.default_capital.minor_units)}
-          note={overview.savings_formula_version}
+          note="From Finance savings"
         />
         <Metric
           label="Risk score"
@@ -138,7 +138,8 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
         <summary>Data Freshness and Provenance</summary>
         <div>
           <p>
-            Finance calculation <code>{overview.savings_calculation_id}</code>{" "}
+            Formula <code>{overview.savings_formula_version}</code>; Finance
+            calculation <code>{overview.savings_calculation_id}</code>{" "}
             references {overview.savings_source_event_ids.length} immutable
             event(s).
           </p>
@@ -183,7 +184,7 @@ function RiskQuestionnaire({
     <section className="entry-panel" aria-labelledby="risk-title">
       <div className="section-heading">
         <div>
-          <p className="section-kicker">Policy v1</p>
+          <p className="section-kicker">Your preferences</p>
           <h2 id="risk-title">Risk questionnaire</h2>
         </div>
         {overview.risk_profile !== null && (
@@ -311,7 +312,6 @@ function AllocationPanel({
           <p className="section-kicker">Constrained recommendation</p>
           <h2 id="allocation-title">Portfolio allocation</h2>
         </div>
-        <span className="freshness-pill">{recommendation.solver}</span>
       </div>
       <div className="allocation-grid">
         {recommendation.allocations.map((item) => (

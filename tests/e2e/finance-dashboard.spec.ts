@@ -343,6 +343,14 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     page.getByRole("img", { name: /Income \$5,000.00/ }),
   ).toBeVisible();
+  await expect(
+    page.locator(".chart-panel").getByText("Projection v8", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page
+      .locator(".summary-grid")
+      .getByText("finance-savings-v1", { exact: true }),
+  ).toHaveCount(0);
 
   await page.getByText("Data Freshness and Provenance").click();
   await expect(page.getByText(/Projection v8 rebuilt through/)).toBeVisible();

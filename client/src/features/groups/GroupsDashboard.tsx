@@ -137,10 +137,6 @@ function GroupWorkspace({
               {formatUsd(group.credit_balances[actorAddress]?.minor_units ?? 0)}
             </dd>
           </div>
-          <div>
-            <dt>Projection</dt>
-            <dd>v{group.provenance.projection_version}</dd>
-          </div>
         </dl>
       </section>
 

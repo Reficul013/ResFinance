@@ -85,9 +85,12 @@ test("shows evidence-linked insights, notifications, and safe refusals", async (
   await expect(
     page.locator(".insight-result").getByText(evidence.statement).first(),
   ).toBeVisible();
+  await expect(page.getByText("Based on 2 verified records")).toBeVisible();
   await expect(
-    page.getByText("finance-budget · 2 source references"),
-  ).toBeVisible();
+    page
+      .locator(".evidence-grid")
+      .getByText("finance-budget · 2 source references"),
+  ).toHaveCount(0);
   await page.getByText("Data Freshness and Provenance").click();
   await expect(page.getByText(/Fact bundle facts_1/)).toBeVisible();
   await expect(page.getByText(/Qwen\/Qwen/)).toBeVisible();

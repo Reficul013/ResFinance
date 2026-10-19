@@ -15,7 +15,7 @@ Evidence date: 2026-10-14 America/Los_Angeles
 - A deterministic reducer that rebuilds categories, transactions, budgets, recurring entries, obligations, balances, and savings from the event stream.
 - A built-in catalog available without setup events: `Salary`, `Liquid Funds Transfer`, and `Other Sources` for income; `Rent`, `Utilities`, `Shopping`, `Entertainment`, `Food & Groceries`, `Medical Bills`, and `Miscellaneous` for expenses. The dashboard no longer exposes category creation.
 - Authenticated `/api/v1/finance` endpoints with generated TypeScript types, RFC 9457 errors, optimistic aggregate versions, and required idempotency keys on writes.
-- An accessible `/finance` dashboard with a cash-flow chart, text equivalents, budget progress, validation, empty/loading/error states, responsive tables, and a Data Freshness and Provenance panel that exposes formula, calculation, event, and projection identifiers for users to inspect.
+- An accessible `/finance` dashboard with a cash-flow chart, text equivalents, budget progress, validation, empty/loading/error states, responsive tables, and a Data Freshness and Provenance panel as the only user-facing location for formula, calculation, event, and projection identifiers.
 - React Hook Form and Zod validation, TanStack Query state management, Recharts visualization, React Router navigation, Vitest coverage, and a checked Chromium Playwright journey.
 
 ## Versioned savings formula
@@ -36,7 +36,7 @@ projected savings
 available savings = max(0, projected savings)
 ```
 
-Every response includes the formula version, deterministic calculation ID, projection version, freshness timestamp, and source event IDs. The dashboard presents these values in its Data Freshness and Provenance panel so users can inspect the exact inputs behind their savings summary. Money remains integer USD cents throughout the backend and API. The browser converts validated decimal text to cents without binary-floating-point monetary arithmetic.
+Every response includes the formula version, deterministic calculation ID, projection version, freshness timestamp, and source event IDs. The dashboard confines these technical values to its Data Freshness and Provenance panel so users can inspect the exact inputs behind their savings summary without crowding the primary financial view. Money remains integer USD cents throughout the backend and API. The browser converts validated decimal text to cents without binary-floating-point monetary arithmetic.
 
 ## Real-stack acceptance
 

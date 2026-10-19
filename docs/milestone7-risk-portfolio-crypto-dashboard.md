@@ -36,10 +36,10 @@ fiat or cryptocurrency, or change Finance from a scenario.
 - The generated `/api/v1` client powers a responsive Crypto dashboard with the
   questionnaire, default capital, forecast status, constrained allocations, a
   Data Freshness and Provenance panel, a non-mutating scenario control, and
-  TradingView Lightweight Charts price/P10/P50/P90 overlays. The panel exposes
-  the Finance formula and calculation IDs, source-event count, forecast snapshot
-  ID, and promotion event ID. Policy and solver tags remain visible where they
-  describe the applied portfolio policy and optimization result.
+  TradingView Lightweight Charts price/P10/P50/P90 overlays. The Data Freshness
+  and Provenance panel is the sole dashboard location for technical Finance
+  formula/calculation IDs, source-event count, forecast snapshot ID, and
+  promotion event ID; the rest of the dashboard uses plain-language labels.
 
 ## Milestone 7 promotion state
 

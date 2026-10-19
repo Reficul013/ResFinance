@@ -159,6 +159,9 @@ test("approves and settles an obligation partially and fully", async ({
   await expect(page.getByText("settled", { exact: true })).toBeVisible();
   await expect(page.getByText(/non-redeemable, non-monetary/)).toBeVisible();
   await expect(page.getByText("Data Freshness and Provenance")).toBeVisible();
+  await expect(
+    page.locator(".group-overview").getByText("Projection", { exact: true }),
+  ).toHaveCount(0);
   await expect(page.getByText(/Projection v5/)).toBeVisible();
   await expect(page.getByText(/5 encrypted source events/)).toBeVisible();
   await page.screenshot({

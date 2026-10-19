@@ -99,7 +99,7 @@ export function SummaryCards({ overview }: { overview: FinanceOverview }) {
     [
       "Available savings",
       summary.savings.available.minor_units,
-      `Formula ${summary.savings.formula_version}`,
+      "After recurring entries and obligations",
     ],
   ] as const;
   return (
@@ -121,7 +121,7 @@ function CashFlowChart({ overview }: { overview: FinanceOverview }) {
     { label: "Income", amount: summary.income.minor_units },
     { label: "Expenses", amount: summary.expense.minor_units },
     {
-      label: "Projected savings",
+      label: "Estimated savings",
       amount: summary.savings.projected.minor_units,
     },
   ];
@@ -132,14 +132,11 @@ function CashFlowChart({ overview }: { overview: FinanceOverview }) {
           <p className="section-kicker">Monthly shape</p>
           <h2 id="cash-flow-title">Cash flow</h2>
         </div>
-        <span className="freshness-pill">
-          Projection v{overview.provenance.projection_version}
-        </span>
       </div>
       <div
         className="chart-wrap"
         role="img"
-        aria-label={`Income ${formatUsd(summary.income.minor_units)}, expenses ${formatUsd(summary.expense.minor_units)}, projected savings ${formatUsd(summary.savings.projected.minor_units)}`}
+        aria-label={`Income ${formatUsd(summary.income.minor_units)}, expenses ${formatUsd(summary.expense.minor_units)}, estimated savings ${formatUsd(summary.savings.projected.minor_units)}`}
       >
         <ResponsiveContainer width="100%" height={240}>
           <BarChart
@@ -165,7 +162,7 @@ function CashFlowChart({ overview }: { overview: FinanceOverview }) {
         </ResponsiveContainer>
       </div>
       <p className="panel-note">
-        Projected savings includes unmatched monthly recurring entries and open
+        Estimated savings includes unmatched monthly recurring entries and open
         obligations due this month.
       </p>
     </section>
