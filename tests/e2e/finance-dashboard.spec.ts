@@ -194,6 +194,8 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(topBar.locator(".notification-bell")).toBeVisible();
   await expect(topBar.locator(".auth-action-icon")).toBeVisible();
   await expect(topBar.locator(".theme-slider-track")).toBeVisible();
+  await expect(topBar.getByText("Log out", { exact: true })).toHaveCount(0);
+  await expect(topBar.getByText(/^(Light|Dark) Mode$/)).toHaveCount(0);
   await expect(page.getByText(/milestone/i)).toHaveCount(0);
   await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
     "href",

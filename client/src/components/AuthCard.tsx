@@ -56,6 +56,8 @@ export function AuthCard({
             className="auth-button secondary"
             type="button"
             onClick={onLogout}
+            aria-label="Log out"
+            title="Log out"
           >
             <svg
               className="auth-action-icon"
@@ -71,7 +73,6 @@ export function AuthCard({
               <path d="m16 17 5-5-5-5" />
               <path d="M21 12H9" />
             </svg>
-            <span className="auth-button-label">Log out</span>
           </button>
           <ThemeToggle />
         </div>

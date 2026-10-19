@@ -13,13 +13,13 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={`Switch to ${nextThemeLabel}`}
       aria-pressed={theme === "dark"}
+      title={`Switch to ${nextThemeLabel}`}
     >
       <span className="theme-slider-track" aria-hidden="true">
         <span className="theme-slider-icon">☀︎</span>
         <span className="theme-slider-icon">☾</span>
         <span className="theme-slider-thumb" />
       </span>
-      <span className="theme-toggle-label">{nextThemeLabel}</span>
     </button>
   );
 }

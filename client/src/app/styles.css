@@ -1509,15 +1509,6 @@ td.expense {
     width: 100%;
   }
 
-  .theme-toggle-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
   .app-shell {
     width: min(100% - 1rem, 90rem);
   }
@@ -1577,15 +1568,6 @@ td.expense {
   .app-shell > .auth-card .auth-button.secondary {
     min-width: 2.65rem;
     padding-inline: 0.65rem;
-  }
-
-  .auth-button-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
   }
 }
 
