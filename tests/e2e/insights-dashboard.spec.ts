@@ -128,12 +128,23 @@ test("shows evidence-linked insights, notifications, and safe refusals", async (
   await expect(
     page.locator(".insight-result").getByText(evidence.statement).first(),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "What your records show" }),
+  ).toBeVisible();
   await expect(page.getByText("Based on 2 verified records")).toBeVisible();
   await expect(
     page
-      .locator(".evidence-grid")
+      .locator(".evidence-list")
       .getByText("finance-budget · 2 source references"),
   ).toHaveCount(0);
+  await expect(page.locator(".evidence-list > li")).toHaveCount(1);
+  const composerBox = await page.locator(".insight-composer").boundingBox();
+  const resultBox = await page.locator(".insight-result").boundingBox();
+  expect(composerBox).not.toBeNull();
+  expect(resultBox).not.toBeNull();
+  expect(resultBox!.x).toBeGreaterThan(composerBox!.x);
+  expect(Math.abs(resultBox!.y - composerBox!.y)).toBeLessThan(2);
+  expect(Math.abs(resultBox!.height - composerBox!.height)).toBeLessThan(2);
   await expect(
     page.locator(".finance-dashboard > .provenance-panel"),
   ).toHaveCount(1);

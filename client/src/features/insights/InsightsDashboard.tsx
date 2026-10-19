@@ -105,41 +105,46 @@ export function SmartSavingsInsights({
             </p>
           </div>
         </div>
-        <section className="insight-composer panel" aria-labelledby="ask-title">
-          <div className="section-heading compact">
-            <div>
-              <p className="section-kicker">Read-only assistant</p>
-              <h2 id="ask-title">Ask about your evidence</h2>
+        <div className="insights-workspace">
+          <section
+            className="insight-composer panel"
+            aria-labelledby="ask-title"
+          >
+            <div className="section-heading compact">
+              <div>
+                <p className="section-kicker">Read-only assistant</p>
+                <h2 id="ask-title">Ask about your evidence</h2>
+              </div>
+              <span className={`generation-pill ${response.mode}`}>
+                {modeLabel(response.mode)}
+              </span>
             </div>
-            <span className={`generation-pill ${response.mode}`}>
-              {modeLabel(response.mode)}
-            </span>
-          </div>
-          <form onSubmit={submit}>
-            <label className="form-field">
-              <span>Question</span>
-              <textarea
-                value={question}
-                maxLength={500}
-                rows={3}
-                onChange={(event) => setQuestion(event.target.value)}
-              />
-            </label>
-            <button
-              className="primary-button"
-              disabled={dashboard.query.isPending}
-            >
-              {dashboard.query.isPending ? "Checking evidence…" : "Explain"}
-            </button>
-          </form>
-          {dashboard.query.isError && (
-            <p className="form-error" role="alert">
-              {dashboard.query.error.message}
-            </p>
-          )}
-        </section>
+            <form onSubmit={submit}>
+              <label className="form-field">
+                <span>Question</span>
+                <textarea
+                  value={question}
+                  maxLength={500}
+                  rows={3}
+                  onChange={(event) => setQuestion(event.target.value)}
+                />
+              </label>
+              <button
+                className="primary-button"
+                disabled={dashboard.query.isPending}
+              >
+                {dashboard.query.isPending ? "Checking evidence…" : "Explain"}
+              </button>
+            </form>
+            {dashboard.query.isError && (
+              <p className="form-error" role="alert">
+                {dashboard.query.error.message}
+              </p>
+            )}
+          </section>
 
-        <InsightResult response={response} onAsk={ask} />
+          <InsightResult response={response} onAsk={ask} />
+        </div>
       </section>
 
       <CombinedProvenancePanel
@@ -248,20 +253,23 @@ function InsightResult({
       <p className="section-kicker">
         {response.refused ? "Request safely declined" : "Evidence-bound answer"}
       </p>
-      <h2>{response.summary}</h2>
+      <h2>
+        {response.refused || response.evidence.length === 0
+          ? response.summary
+          : "What your records show"}
+      </h2>
       {response.evidence.length > 0 && (
-        <div className="evidence-grid" aria-label="Evidence used">
+        <ul className="evidence-list" aria-label="Evidence used">
           {response.evidence.map((item) => (
-            <article key={item.fact_id}>
-              <span>{item.topic}</span>
+            <li key={item.fact_id}>
               <p>{item.statement}</p>
               <small>
                 Based on {item.source_ids.length} verified{" "}
                 {item.source_ids.length === 1 ? "record" : "records"}
               </small>
-            </article>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
       <ul className="caveat-list">
         {response.caveats.map((item) => (
