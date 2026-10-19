@@ -113,7 +113,7 @@ export function SmartSavingsInsights({
             <div className="section-heading compact">
               <div>
                 <p className="section-kicker">Read-only assistant</p>
-                <h2 id="ask-title">Ask about your evidence</h2>
+                <h2 id="ask-title">Ask About Your Evidence!</h2>
               </div>
               <span className={`generation-pill ${response.mode}`}>
                 {modeLabel(response.mode)}
@@ -256,7 +256,7 @@ function InsightResult({
       <h2>
         {response.refused || response.evidence.length === 0
           ? response.summary
-          : "What your records show"}
+          : "What your records show?"}
       </h2>
       {response.evidence.length > 0 && (
         <ul className="evidence-list" aria-label="Evidence used">

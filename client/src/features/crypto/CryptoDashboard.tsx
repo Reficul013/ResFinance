@@ -254,7 +254,10 @@ function ScenarioPanel({
   }
   return (
     <section className="entry-panel" aria-labelledby="scenario-title">
-      <p className="section-kicker">Read-only what-if</p>
+      <p className="section-kicker">
+        {" "}
+        What IF? <em style={{ color: "#d92d20" }}>(Read-only)</em>
+      </p>
       <h2 id="scenario-title">Analyze Another Amount</h2>
       <p className="panel-note">
         Change only this on-screen scenario. Your saved Finance data is never

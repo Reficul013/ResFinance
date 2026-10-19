@@ -129,7 +129,7 @@ test("shows evidence-linked insights, notifications, and safe refusals", async (
     page.locator(".insight-result").getByText(evidence.statement).first(),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "What your records show" }),
+    page.getByRole("heading", { name: "What your records show?" }),
   ).toBeVisible();
   await expect(page.getByText("Based on 2 verified records")).toBeVisible();
   await expect(

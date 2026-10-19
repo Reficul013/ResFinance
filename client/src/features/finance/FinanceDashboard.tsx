@@ -233,7 +233,7 @@ function TransactionPanel({ overview }: { overview: FinanceOverview }) {
       <div className="section-heading compact">
         <div>
           <p className="section-kicker">Event ledger</p>
-          <h2 id="transactions-title">Recent transactions</h2>
+          <h2 id="transactions-title">Recent Transactions</h2>
         </div>
       </div>
       {active.length === 0 ? (
