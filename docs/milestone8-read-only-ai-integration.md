@@ -71,8 +71,9 @@ capacity claim. Full evidence is in
   initial insight, evidence, caveats, follow-ups, and notifications.
 - `POST /api/v1/insights/query` computes a read-only answer and appends no event.
 - The generated `/api/v1` TypeScript client is the browser's only data path.
-- Smart Savings Insights is embedded below the Personal Finance dashboard in a balanced two-column
-  question-and-answer workspace and displays the answer, generation mode, compact evidence bullets,
+- Smart Savings Insights is embedded below the Personal Finance dashboard in an equal-width two-column
+  question-and-answer workspace and displays the answer, generation mode, explicit completion feedback,
+  a bounded 30-second request with a retry message, compact evidence bullets,
   caveats, follow-up questions, and a Data
   Freshness and Provenance panel. Fact-bundle and model-revision values are
   presented beside Finance projection details in one two-column panel as inspectable provenance tags;

@@ -1221,7 +1221,7 @@ td.expense {
 
 .insights-workspace {
   display: grid;
-  grid-template-columns: minmax(18rem, 0.82fr) minmax(0, 1.18fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
   gap: 1rem;
 }
@@ -1244,6 +1244,13 @@ td.expense {
 
 .insight-composer .primary-button {
   margin-top: auto;
+}
+
+.form-success {
+  margin: 0;
+  color: var(--income);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .generation-pill {

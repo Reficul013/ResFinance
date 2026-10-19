@@ -44,6 +44,7 @@ export function SmartSavingsInsights({
   financeOverview?: FinanceOverview;
 }) {
   const [question, setQuestion] = useState("How can I improve my savings?");
+  const [answeredQuestion, setAnsweredQuestion] = useState<string | null>(null);
   const dashboard = useInsightsDashboard(accessToken, month);
 
   if (dashboard.overview.isPending) {
@@ -80,12 +81,16 @@ export function SmartSavingsInsights({
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    dashboard.query.mutate(question);
+    ask(question);
   }
 
   function ask(value: string) {
-    setQuestion(value);
-    dashboard.query.mutate(value);
+    const normalized = value.trim();
+    if (normalized.length === 0) return;
+    setQuestion(normalized);
+    dashboard.query.mutate(normalized, {
+      onSuccess: () => setAnsweredQuestion(normalized),
+    });
   }
 
   return (
@@ -126,12 +131,15 @@ export function SmartSavingsInsights({
                   value={question}
                   maxLength={500}
                   rows={3}
+                  required
                   onChange={(event) => setQuestion(event.target.value)}
                 />
               </label>
               <button
                 className="primary-button"
-                disabled={dashboard.query.isPending}
+                disabled={
+                  dashboard.query.isPending || question.trim().length === 0
+                }
               >
                 {dashboard.query.isPending ? "Checking evidence…" : "Explain"}
               </button>
@@ -139,6 +147,11 @@ export function SmartSavingsInsights({
             {dashboard.query.isError && (
               <p className="form-error" role="alert">
                 {dashboard.query.error.message}
+              </p>
+            )}
+            {dashboard.query.isSuccess && answeredQuestion !== null && (
+              <p className="form-success" role="status">
+                Answer updated for “{answeredQuestion}”
               </p>
             )}
           </section>

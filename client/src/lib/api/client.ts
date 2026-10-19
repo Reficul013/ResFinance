@@ -146,19 +146,38 @@ export async function getInsightsOverview(
   );
 }
 
-export function queryInsights(
+const INSIGHTS_QUERY_TIMEOUT_MS = 30_000;
+
+export async function queryInsights(
   accessToken: string,
   command: InsightQuery,
 ): Promise<InsightResponse> {
-  return requestJson<InsightResponse>("/api/v1/insights/query", {
-    method: "POST",
-    headers: {
-      ...authorizedHeaders(accessToken),
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify(command),
-  });
+  const controller = new AbortController();
+  const timeout = globalThis.setTimeout(
+    () => controller.abort(),
+    INSIGHTS_QUERY_TIMEOUT_MS,
+  );
+  try {
+    return await requestJson<InsightResponse>("/api/v1/insights/query", {
+      method: "POST",
+      headers: {
+        ...authorizedHeaders(accessToken),
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(command),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error("The evidence check took too long. Please try again.", {
+        cause: error,
+      });
+    }
+    throw error;
+  } finally {
+    globalThis.clearTimeout(timeout);
+  }
 }
 
 export function recordRiskProfile(
