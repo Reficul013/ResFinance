@@ -27,7 +27,7 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
     return (
       <DashboardState
         title="Building your crypto view…"
-        text="Reading Finance savings, risk policy, and promoted forecast evidence."
+        text="Reading Finance savings, risk preferences, and approved forecast data."
       />
     );
   }
@@ -50,8 +50,7 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
           <h1 id="crypto-title">Savings, translated into choices.</h1>
           <p className="lede">
             Explore a long-only BTC, ETH, and SOL allocation backed by your risk
-            profile, Finance savings, and an explicitly promoted 15-day
-            forecast.
+            profile, Finance savings, and an approved 15-day forecast.
           </p>
         </div>
         <label className="month-control">
@@ -68,7 +67,7 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
         <Metric
           label="Default capital"
           value={formatUsd(overview.default_capital.minor_units)}
-          note={overview.savings_formula_version}
+          note="From Finance savings"
         />
         <Metric
           label="Risk score"
@@ -80,7 +79,7 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
           value={overview.forecast === null ? "Unavailable" : "15 days"}
           note={
             overview.forecast === null
-              ? "No promoted model"
+              ? "No eligible forecast"
               : `As of ${new Date(overview.forecast.as_of_utc).toLocaleDateString()}`
           }
         />
@@ -98,11 +97,11 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
 
       {overview.forecast === null ? (
         <section className="panel empty-forecast" role="status">
-          <p className="section-kicker">Promotion gate holding</p>
+          <p className="section-kicker">Forecast unavailable</p>
           <h2>No forecast is eligible for portfolio use.</h2>
           <p>
-            No research candidate has been promoted. This dashboard will remain
-            evidence-safe until a model passes the immutable promotion criteria.
+            No forecast has passed the required quality checks. Portfolio
+            analysis will remain unavailable until one qualifies.
           </p>
         </section>
       ) : (
@@ -136,18 +135,21 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
         <AllocationPanel recommendation={displayed} />
       )}
       <details className="provenance-panel">
-        <summary>Calculation and evidence provenance</summary>
+        <summary>Data freshness</summary>
         <div>
           <p>
-            Finance calculation <code>{overview.savings_calculation_id}</code>{" "}
-            references {overview.savings_source_event_ids.length} immutable
-            event(s).
+            Default capital is based on{" "}
+            {overview.savings_source_event_ids.length} verified Finance{" "}
+            {overview.savings_source_event_ids.length === 1
+              ? "record"
+              : "records"}
+            .
           </p>
           {overview.forecast !== null && (
             <p>
-              Forecast <code>{overview.forecast.snapshot_id}</code> is
-              authorized by promotion event{" "}
-              <code>{overview.forecast.promotion_event_id}</code>.
+              The 15-day forecast was updated{" "}
+              {new Date(overview.forecast.as_of_utc).toLocaleString()} and is
+              approved for portfolio analysis.
             </p>
           )}
         </div>
@@ -184,7 +186,7 @@ function RiskQuestionnaire({
     <section className="entry-panel" aria-labelledby="risk-title">
       <div className="section-heading">
         <div>
-          <p className="section-kicker">Policy v1</p>
+          <p className="section-kicker">Your preferences</p>
           <h2 id="risk-title">Risk questionnaire</h2>
         </div>
         {overview.risk_profile !== null && (
@@ -257,8 +259,8 @@ function ScenarioPanel({
       <p className="section-kicker">Read-only what-if</p>
       <h2 id="scenario-title">Analyze Another Amount</h2>
       <p className="panel-note">
-        Change only this on-screen scenario. Finance savings and its source
-        events are never updated.
+        Change only this on-screen scenario. Your saved Finance data is never
+        updated.
       </p>
       <form className="scenario-form" onSubmit={submit}>
         <label className="form-field">
@@ -312,7 +314,6 @@ function AllocationPanel({
           <p className="section-kicker">Constrained recommendation</p>
           <h2 id="allocation-title">Portfolio allocation</h2>
         </div>
-        <span className="freshness-pill">{recommendation.solver}</span>
       </div>
       <div className="allocation-grid">
         {recommendation.allocations.map((item) => (

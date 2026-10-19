@@ -90,7 +90,7 @@ export function GroupsDashboard({ accessToken, actorAddress }: Props) {
         )}
 
       {selectedGroupId !== null && dashboard.overview.isLoading && (
-        <DashboardState text="Rebuilding the group projection…" />
+        <DashboardState text="Refreshing the group data…" />
       )}
       {dashboard.overview.isError && (
         <DashboardState text={errorMessage(dashboard.overview.error)} error />
@@ -137,10 +137,6 @@ function GroupWorkspace({
               {formatUsd(group.credit_balances[actorAddress]?.minor_units ?? 0)}
             </dd>
           </div>
-          <div>
-            <dt>Projection</dt>
-            <dd>v{group.provenance.projection_version}</dd>
-          </div>
         </dl>
       </section>
 
@@ -167,9 +163,11 @@ function GroupWorkspace({
       />
       <NotificationsPanel actorAddress={actorAddress} group={group} />
       <footer className="provenance-footer">
-        <span>Projection v{group.provenance.projection_version}</span>
         <span>
-          {group.provenance.source_event_ids.length} encrypted source events
+          Based on {group.provenance.source_event_ids.length} verified{" "}
+          {group.provenance.source_event_ids.length === 1
+            ? "record"
+            : "records"}
         </span>
         <span>{formatTimestamp(group.provenance.as_of_utc)}</span>
       </footer>

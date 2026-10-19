@@ -10,7 +10,7 @@ export function InsightsDashboard({ accessToken }: { accessToken: string }) {
   const dashboard = useInsightsDashboard(accessToken, month);
 
   if (dashboard.overview.isPending) {
-    return <DashboardState title="Assembling authorized facts…" />;
+    return <DashboardState title="Reviewing verified records…" />;
   }
   if (dashboard.overview.isError) {
     return (
@@ -92,15 +92,12 @@ export function InsightsDashboard({ accessToken }: { accessToken: string }) {
       <InsightResult response={response} onAsk={ask} />
 
       <details className="provenance-panel">
-        <summary>Assistant boundary and model provenance</summary>
+        <summary>How answers are kept safe</summary>
         <div>
+          <p>Answers use wallet-authorized, verified records.</p>
           <p>
-            Fact bundle <code>{dashboard.overview.data.fact_bundle_id}</code>
-          </p>
-          <p>
-            Model <code>{response.model_id}</code> at revision{" "}
-            <code>{response.model_revision.slice(0, 12)}</code>. The model may
-            rank facts; final claims are rendered from validated evidence.
+            An offline model may rank relevant records; final claims are
+            rendered from validated evidence.
           </p>
           <p>
             This path has no write, ResVault, ResContract, trading, or direct
@@ -135,8 +132,8 @@ function InsightResult({
               <span>{item.topic}</span>
               <p>{item.statement}</p>
               <small>
-                {item.source_kind} · {item.source_ids.length} source reference
-                {item.source_ids.length === 1 ? "" : "s"}
+                Based on {item.source_ids.length} verified{" "}
+                {item.source_ids.length === 1 ? "record" : "records"}
               </small>
             </article>
           ))}

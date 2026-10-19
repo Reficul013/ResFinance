@@ -1298,7 +1298,7 @@ td.expense {
 
 .group-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(7rem, 1fr));
+  grid-template-columns: repeat(2, minmax(7rem, 1fr));
   gap: 0.65rem;
   margin: 0;
 }
@@ -1318,6 +1318,15 @@ td.expense {
 .group-metrics dd {
   margin: 0.25rem 0 0;
   font-weight: 760;
+}
+
+.provenance-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
+  padding: 0 0.2rem;
+  color: var(--muted);
+  font-size: 0.78rem;
 }
 
 .group-actions-grid {

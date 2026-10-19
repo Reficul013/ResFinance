@@ -35,8 +35,12 @@ fiat or cryptocurrency, or change Finance from a scenario.
   the normal runtime and require an explicit acceptance-only service flag.
 - The generated `/api/v1` client powers a responsive Crypto dashboard with the
   questionnaire, default capital, forecast status, constrained allocations,
-  provenance, a non-mutating scenario control, and TradingView Lightweight
-  Charts price/P10/P50/P90 overlays.
+  plain-language freshness, a non-mutating scenario control, and TradingView
+  Lightweight Charts price/P10/P50/P90 overlays. Internal savings formula,
+  calculation, policy-version, solver, snapshot, promotion, and source-event
+  identifiers remain in the API and verification records but are not presented
+  as user-facing tags. Forecast eligibility failures are explained as quality
+  checks rather than internal promotion-state terminology.
 
 ## Milestone 7 promotion state
 

@@ -10,7 +10,7 @@ Status: complete for local development. Cloud and production deployment remain o
 - Internal credits that are explicitly non-redeemable, non-monetary, and have no cash value. No fiat, native cryptocurrency, token, trade, or custody operation exists.
 - Confirmed obligations and partial/full settlement propagation into both participants' encrypted Finance projections.
 - A request/confirmation saga whose pending contract-confirmed settlements reconcile idempotently after a process or storage-cluster interruption.
-- An accessible Groups dashboard using the generated `/api/v1` client only, with approval, credit, partial/full settlement, notification, loading/error/empty, and provenance views.
+- An accessible Groups dashboard using the generated `/api/v1` client only, with approval, credit, partial/full settlement, notification, loading/error/empty, and plain-language freshness views. Projection versions remain internal for signed-command concurrency and are not shown as user-facing labels.
 
 ## Local ResContract topology
 

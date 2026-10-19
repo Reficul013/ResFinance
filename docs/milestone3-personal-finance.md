@@ -14,7 +14,7 @@ Evidence date: 2026-10-14 America/Los_Angeles
 - Read-only receivable and payable projections. Only the application-only confirmed-contract method can append obligation events, and every such event requires a source event ID and ResContract receipt.
 - A deterministic reducer that rebuilds categories, transactions, budgets, recurring entries, obligations, balances, and savings from the event stream.
 - Authenticated `/api/v1/finance` endpoints with generated TypeScript types, RFC 9457 errors, optimistic aggregate versions, and required idempotency keys on writes.
-- An accessible `/finance` dashboard with cash-flow chart, text equivalents, budget progress, validation, empty/loading/error states, responsive tables, and record-level provenance.
+- An accessible `/finance` dashboard with a cash-flow chart, text equivalents, budget progress, validation, empty/loading/error states, responsive tables, and plain-language freshness information. Internal formula, calculation, event, and projection identifiers remain in the API for audit and concurrency controls but are not exposed as user-facing labels.
 - React Hook Form and Zod validation, TanStack Query state management, Recharts visualization, React Router navigation, Vitest coverage, and a checked Chromium Playwright journey.
 
 ## Versioned savings formula
@@ -35,7 +35,7 @@ projected savings
 available savings = max(0, projected savings)
 ```
 
-Every response includes the formula version, deterministic calculation ID, projection version, freshness timestamp, and source event IDs. Money remains integer USD cents throughout the backend and API. The browser converts validated decimal text to cents without binary floating-point monetary arithmetic.
+Every response includes the formula version, deterministic calculation ID, projection version, freshness timestamp, and source event IDs. These technical fields remain available to application logic and verification, while the dashboard presents only the update time and verified-record count. Money remains integer USD cents throughout the backend and API. The browser converts validated decimal text to cents without binary floating-point monetary arithmetic.
 
 ## Real-stack acceptance
 

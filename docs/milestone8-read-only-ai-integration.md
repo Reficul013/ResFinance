@@ -72,8 +72,10 @@ capacity claim. Full evidence is in
 - `POST /api/v1/insights/query` computes a read-only answer and appends no event.
 - The generated `/api/v1` TypeScript client is the browser's only data path.
 - The fourth authenticated workspace, Smart Insights, displays the answer,
-  generation mode, evidence cards, caveats, follow-up questions, and model/fact
-  provenance.
+  generation mode, evidence cards, caveats, follow-up questions, and a
+  plain-language explanation of its read-only safety boundary. Fact-bundle,
+  model-revision, source-kind, and source-ID values remain available to the API
+  and acceptance evidence but are not presented as user-facing tags.
 - The shared notification center surfaces budget alerts, wallet-scoped Group
   updates, and the current Crypto forecast gate with links to the relevant
   dashboard.
@@ -92,8 +94,9 @@ It verified:
 - the AI path performed zero ResilientDB writes.
 
 The Chromium journey also exercised the Smart Insights page, evidence display,
-notification count, refusal state, responsive layout, and model provenance. The
-rendered screenshot was visually inspected.
+verified-record wording, notification count, refusal state, responsive layout,
+and the plain-language assistant safety explanation. The rendered screenshot
+was visually inspected.
 
 ## Verification
 

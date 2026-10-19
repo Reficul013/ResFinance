@@ -36,7 +36,7 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
     return (
       <section className="dashboard-state error-state" role="alert">
         <p className="section-kicker">Finance unavailable</p>
-        <h2>We couldn’t load this projection.</h2>
+        <h2>We couldn’t load your finance data.</h2>
         <p>{dashboard.overview.error.message}</p>
         <button
           className="primary-button"
@@ -99,7 +99,7 @@ export function SummaryCards({ overview }: { overview: FinanceOverview }) {
     [
       "Available savings",
       summary.savings.available.minor_units,
-      `Formula ${summary.savings.formula_version}`,
+      "After recurring entries and obligations",
     ],
   ] as const;
   return (
@@ -121,7 +121,7 @@ function CashFlowChart({ overview }: { overview: FinanceOverview }) {
     { label: "Income", amount: summary.income.minor_units },
     { label: "Expenses", amount: summary.expense.minor_units },
     {
-      label: "Projected savings",
+      label: "Estimated savings",
       amount: summary.savings.projected.minor_units,
     },
   ];
@@ -132,14 +132,11 @@ function CashFlowChart({ overview }: { overview: FinanceOverview }) {
           <p className="section-kicker">Monthly shape</p>
           <h2 id="cash-flow-title">Cash flow</h2>
         </div>
-        <span className="freshness-pill">
-          Projection v{overview.provenance.projection_version}
-        </span>
       </div>
       <div
         className="chart-wrap"
         role="img"
-        aria-label={`Income ${formatUsd(summary.income.minor_units)}, expenses ${formatUsd(summary.expense.minor_units)}, projected savings ${formatUsd(summary.savings.projected.minor_units)}`}
+        aria-label={`Income ${formatUsd(summary.income.minor_units)}, expenses ${formatUsd(summary.expense.minor_units)}, estimated savings ${formatUsd(summary.savings.projected.minor_units)}`}
       >
         <ResponsiveContainer width="100%" height={240}>
           <BarChart
@@ -165,7 +162,7 @@ function CashFlowChart({ overview }: { overview: FinanceOverview }) {
         </ResponsiveContainer>
       </div>
       <p className="panel-note">
-        Projected savings includes unmatched monthly recurring entries and open
+        Estimated savings includes unmatched monthly recurring entries and open
         obligations due this month.
       </p>
     </section>
@@ -317,31 +314,20 @@ function CommitmentsPanel({ overview }: { overview: FinanceOverview }) {
 }
 
 function ProvenancePanel({ overview }: { overview: FinanceOverview }) {
+  const recordCount = overview.provenance.source_event_ids.length;
   return (
     <details className="provenance-panel">
-      <summary>Data freshness and provenance</summary>
+      <summary>Data freshness</summary>
       <div>
         <p>
-          Projection <strong>v{overview.provenance.projection_version}</strong>
           {overview.provenance.as_of_utc === null
-            ? " has no events yet."
-            : ` rebuilt through ${new Date(overview.provenance.as_of_utc).toLocaleString()}.`}
+            ? "No finance records yet."
+            : `Updated ${new Date(overview.provenance.as_of_utc).toLocaleString()}.`}
         </p>
         <p>
-          Savings calculation{" "}
-          <code>{overview.summary.savings.calculation_id}</code>
-          uses <code>{overview.summary.savings.formula_version}</code> and{" "}
-          {overview.summary.savings.source_event_ids.length} source event(s).
+          Based on {recordCount} verified{" "}
+          {recordCount === 1 ? "record" : "records"}.
         </p>
-        {overview.provenance.source_event_ids.length > 0 && (
-          <ul className="event-id-list">
-            {overview.provenance.source_event_ids.map((eventId) => (
-              <li key={eventId}>
-                <code>{eventId}</code>
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
     </details>
   );

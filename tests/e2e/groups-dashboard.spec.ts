@@ -146,7 +146,8 @@ test("approves and settles an obligation partially and fully", async ({ page }) 
   await expect(page.getByText("$0.00 outstanding")).toBeVisible();
   await expect(page.getByText("settled", { exact: true })).toBeVisible();
   await expect(page.getByText(/non-redeemable, non-monetary/)).toBeVisible();
-  await expect(page.getByText(/5 encrypted source events/)).toBeVisible();
+  await expect(page.getByText("Based on 5 verified records")).toBeVisible();
+  await expect(page.getByText(/Projection v/)).toHaveCount(0);
   await page.screenshot({ path: "test-results/groups-dashboard.png", fullPage: true });
 
   function groupOverview() {
