@@ -137,8 +137,8 @@ body {
 
 .app-shell > .auth-card .theme-toggle {
   position: static;
-  min-height: 2.25rem;
-  padding: 0.45rem 0.8rem;
+  min-height: 2.65rem;
+  padding: 0.35rem;
   font-size: 0.8rem;
 }
 
@@ -180,23 +180,23 @@ code {
   gap: 0.45rem;
   align-items: center;
   min-height: 2.5rem;
-  padding: 0.55rem 0.85rem;
-  border: 1px solid var(--control-border);
+  padding: 0.35rem;
+  border: 0;
   border-radius: 999px;
-  background: var(--control-background);
-  box-shadow:
-    0 0.8rem 2.5rem rgb(78 72 139 / 14%),
-    inset 0 1px 0 var(--card-highlight);
+  background: transparent;
+  box-shadow: none;
   color: var(--page-text);
   font: inherit;
   font-size: 0.82rem;
   font-weight: 650;
   cursor: pointer;
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
-  backdrop-filter: blur(24px) saturate(150%);
 }
 
 .theme-toggle:hover {
+  background: transparent;
+}
+
+.theme-toggle:hover .theme-slider-track {
   background: var(--control-background-hover);
 }
 
@@ -212,7 +212,8 @@ code {
   height: 1.5rem;
   grid-template-columns: repeat(2, 1fr);
   align-items: center;
-  padding: 0.15rem;
+  overflow: hidden;
+  padding: 0;
   border: 1px solid var(--control-border);
   border-radius: 999px;
   background: color-mix(in srgb, var(--page-muted) 16%, transparent);
@@ -222,26 +223,38 @@ code {
   position: relative;
   z-index: 1;
   display: grid;
+  height: 100%;
   place-items: center;
-  font-size: 0.68rem;
-  line-height: 1;
+  color: var(--page-muted);
+}
+
+.theme-slider-icon svg {
+  display: block;
+  width: 0.72rem;
+  height: 0.72rem;
+}
+
+.theme-toggle[data-theme="light"] .theme-slider-icon:first-child,
+.theme-toggle[data-theme="dark"] .theme-slider-icon:nth-child(2) {
+  color: #17202a;
 }
 
 .theme-slider-thumb {
   position: absolute;
   z-index: 0;
-  top: 0.15rem;
-  left: 0.15rem;
-  width: 1.08rem;
-  height: 1.08rem;
+  top: 50%;
+  left: 0.14rem;
+  width: 1.15rem;
+  height: 1.15rem;
   border-radius: 999px;
   background: #fff;
   box-shadow: 0 0.2rem 0.55rem rgb(32 37 50 / 25%);
+  transform: translateY(-50%);
   transition: transform 180ms ease;
 }
 
 .theme-toggle[data-theme="dark"] .theme-slider-thumb {
-  transform: translateX(1.45rem);
+  transform: translate(1.44rem, -50%);
   background: var(--page-accent);
 }
 

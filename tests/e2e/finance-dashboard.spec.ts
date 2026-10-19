@@ -249,6 +249,10 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     "aria-pressed",
     "false",
   );
+  await page.screenshot({
+    path: "test-results/finance-dashboard-light.png",
+    fullPage: false,
+  });
   await expect(
     page.getByRole("button", { name: "Switch to Dark Mode" }),
   ).toBeVisible();
