@@ -368,6 +368,7 @@ code {
   color: #fff;
   font: inherit;
   font-weight: 750;
+  text-decoration: none;
   cursor: pointer;
 }
 

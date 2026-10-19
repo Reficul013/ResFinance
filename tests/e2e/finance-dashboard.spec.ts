@@ -250,7 +250,20 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   ).toHaveAttribute("aria-current", "page");
   await expect(topBar.getByLabel("No in-app notifications")).toBeVisible();
   await expect(topBar.locator(".notification-bell")).toBeVisible();
-  await expect(topBar.locator(".auth-action-icon")).toBeVisible();
+  const githubLink = topBar.getByRole("link", {
+    name: "Open ResFinance repository on GitHub",
+  });
+  await expect(githubLink).toHaveAttribute(
+    "href",
+    "https://github.com/haseebshaik00/ResFinance",
+  );
+  await expect(githubLink).toHaveAttribute("target", "_blank");
+  await expect(githubLink.locator(".github-icon")).toBeVisible();
+  await expect(
+    topBar
+      .getByRole("button", { name: "Log out" })
+      .locator(".auth-action-icon"),
+  ).toBeVisible();
   await expect(topBar.locator(".theme-slider-track")).toBeVisible();
   await expect(topBar.getByText("Log out", { exact: true })).toHaveCount(0);
   await expect(topBar.getByText(/^(Light|Dark) Mode$/)).toHaveCount(0);
@@ -260,6 +273,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     "/favicon.png",
   );
   const sessionCardBox = await page.locator(".auth-card").boundingBox();
+  const githubLinkBox = await githubLink.boundingBox();
   const logoutButtonBox = await page
     .getByRole("button", { name: "Log out" })
     .boundingBox();
@@ -274,12 +288,16 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     .getByRole("button", { name: "Switch to Light Mode" })
     .boundingBox();
   expect(sessionCardBox).not.toBeNull();
+  expect(githubLinkBox).not.toBeNull();
   expect(logoutButtonBox).not.toBeNull();
   expect(notificationButtonBox).not.toBeNull();
   expect(notificationBellBox).not.toBeNull();
   expect(dashboardNavigationBox).not.toBeNull();
   expect(themeToggleBox).not.toBeNull();
   expect(dashboardNavigationBox!.width).toBeGreaterThan(450);
+  expect(githubLinkBox!.x + githubLinkBox!.width).toBeLessThanOrEqual(
+    themeToggleBox!.x,
+  );
   expect(themeToggleBox!.x + themeToggleBox!.width).toBeLessThanOrEqual(
     notificationButtonBox!.x,
   );
@@ -294,6 +312,9 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   );
   expect(
     Math.abs(themeToggleBox!.height - notificationButtonBox!.height),
+  ).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(githubLinkBox!.height - themeToggleBox!.height),
   ).toBeLessThanOrEqual(1);
   expect(
     Math.abs(themeToggleBox!.height - logoutButtonBox!.height),
@@ -376,23 +397,25 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     page.getByRole("heading", { name: "Smart Savings Insights" }),
   ).toBeVisible();
-  const entryFollowsSummary = await page.locator(".summary-grid").evaluate(
-    (node) =>
+  const entryFollowsSummary = await page
+    .locator(".summary-grid")
+    .evaluate((node) =>
       Boolean(
         node.compareDocumentPosition(
           document.querySelector(".entry-panel") as Node,
         ) & Node.DOCUMENT_POSITION_FOLLOWING,
       ),
-  );
+    );
   expect(entryFollowsSummary).toBe(true);
-  const chartsFollowEntry = await page.locator(".entry-panel").evaluate(
-    (node) =>
+  const chartsFollowEntry = await page
+    .locator(".entry-panel")
+    .evaluate((node) =>
       Boolean(
         node.compareDocumentPosition(
           document.querySelector(".dashboard-columns") as Node,
         ) & Node.DOCUMENT_POSITION_FOLLOWING,
       ),
-  );
+    );
   expect(chartsFollowEntry).toBe(true);
   await expect(
     page.locator(".chart-panel").getByText("Projection v8", { exact: true }),
@@ -422,9 +445,9 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   expect(financeProvenanceBox).not.toBeNull();
   expect(savingsProvenanceBox).not.toBeNull();
   expect(savingsProvenanceBox!.x).toBeGreaterThan(financeProvenanceBox!.x);
-  expect(Math.abs(savingsProvenanceBox!.y - financeProvenanceBox!.y)).toBeLessThan(
-    2,
-  );
+  expect(
+    Math.abs(savingsProvenanceBox!.y - financeProvenanceBox!.y),
+  ).toBeLessThan(2);
   await expect(page.getByText(/Projection v8 rebuilt through/)).toBeVisible();
   await expect(page.getByText(/Fact bundle facts_finance_e2e/)).toBeVisible();
   await expect(
