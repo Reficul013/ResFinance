@@ -52,12 +52,6 @@ export function FinanceAnalytics({
           },
         ];
   });
-  const selectedMonthIndex = historyMonths.indexOf(overview.summary.month);
-  const outlookData = monthlyData.map((item, index) => ({
-    ...item,
-    actualSavings: index <= selectedMonthIndex ? item.savings : undefined,
-    projectedSavings: index >= selectedMonthIndex ? item.savings : undefined,
-  }));
 
   return (
     <section className="finance-analytics" aria-labelledby="analytics-title">
@@ -74,7 +68,6 @@ export function FinanceAnalytics({
         <CategorySplitChart data={categoryData} />
         <CategoryTotalsChart data={categoryData} />
         <SavingsExpenseChart data={monthlyData} />
-        <SavingsOutlookChart data={outlookData} />
       </div>
     </section>
   );
@@ -175,52 +168,6 @@ function SavingsExpenseChart({ data }: { data: MonthlyDatum[] }) {
         aria-label="Six month savings and expenses comparison"
       >
         <ResponsiveContainer width="100%" height={260}>
-          <BarChart
-            data={data}
-            margin={{ top: 10, right: 8, left: 0, bottom: 0 }}
-          >
-            <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
-            <XAxis
-              dataKey="label"
-              tick={{ fill: "var(--page-muted)", fontSize: 11 }}
-            />
-            <YAxis
-              tick={{ fill: "var(--page-muted)", fontSize: 11 }}
-              tickFormatter={compactUsd}
-            />
-            <Tooltip formatter={(value) => formatUsd(Number(value))} />
-            <Legend />
-            <Bar
-              dataKey="savings"
-              name="Savings"
-              fill="var(--page-accent)"
-              radius={[6, 6, 0, 0]}
-            />
-            <Bar
-              dataKey="expenses"
-              name="Expenses"
-              fill="var(--expense)"
-              radius={[6, 6, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </ChartCard>
-  );
-}
-
-function SavingsOutlookChart({ data }: { data: OutlookDatum[] }) {
-  return (
-    <ChartCard
-      title="Savings outlook"
-      description="Recorded history and the next three months"
-    >
-      <div
-        className="analytics-chart"
-        role="img"
-        aria-label="Savings outlook with recorded and projected months"
-      >
-        <ResponsiveContainer width="100%" height={260}>
           <LineChart
             data={data}
             margin={{ top: 10, right: 8, left: 0, bottom: 0 }}
@@ -237,20 +184,27 @@ function SavingsOutlookChart({ data }: { data: OutlookDatum[] }) {
             <Tooltip formatter={(value) => formatUsd(Number(value))} />
             <Legend />
             <Line
-              dataKey="actualSavings"
-              name="Recorded savings"
+              type="monotone"
+              dataKey="savings"
+              name="Savings"
               stroke="var(--page-accent)"
               strokeWidth={3}
-              dot={{ r: 3 }}
+              strokeDasharray="1 7"
+              strokeLinecap="round"
+              dot={{ r: 4 }}
+              activeDot={{ r: 6 }}
               connectNulls
             />
             <Line
-              dataKey="projectedSavings"
-              name="Projected savings"
-              stroke="var(--warning)"
+              type="monotone"
+              dataKey="expenses"
+              name="Expenses"
+              stroke="var(--expense)"
               strokeWidth={3}
-              strokeDasharray="5 5"
-              dot={{ r: 3 }}
+              strokeDasharray="1 7"
+              strokeLinecap="round"
+              dot={{ r: 4 }}
+              activeDot={{ r: 6 }}
               connectNulls
             />
           </LineChart>
@@ -341,9 +295,4 @@ interface MonthlyDatum {
   label: string;
   expenses: number;
   savings: number;
-}
-
-interface OutlookDatum extends MonthlyDatum {
-  actualSavings: number | undefined;
-  projectedSavings: number | undefined;
 }
