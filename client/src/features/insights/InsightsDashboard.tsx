@@ -92,12 +92,15 @@ export function InsightsDashboard({ accessToken }: { accessToken: string }) {
       <InsightResult response={response} onAsk={ask} />
 
       <details className="provenance-panel">
-        <summary>How answers are kept safe</summary>
+        <summary>Data Freshness and Provenance</summary>
         <div>
-          <p>Answers use wallet-authorized, verified records.</p>
           <p>
-            An offline model may rank relevant records; final claims are
-            rendered from validated evidence.
+            Fact bundle <code>{dashboard.overview.data.fact_bundle_id}</code>
+          </p>
+          <p>
+            Model <code>{response.model_id}</code> at revision{" "}
+            <code>{response.model_revision.slice(0, 12)}</code>. The model may
+            rank facts; final claims are rendered from validated evidence.
           </p>
           <p>
             This path has no write, ResVault, ResContract, trading, or direct
@@ -132,8 +135,8 @@ function InsightResult({
               <span>{item.topic}</span>
               <p>{item.statement}</p>
               <small>
-                Based on {item.source_ids.length} verified{" "}
-                {item.source_ids.length === 1 ? "record" : "records"}
+                {item.source_kind} · {item.source_ids.length} source reference
+                {item.source_ids.length === 1 ? "" : "s"}
               </small>
             </article>
           ))}

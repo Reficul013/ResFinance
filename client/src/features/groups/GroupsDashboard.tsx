@@ -137,6 +137,10 @@ function GroupWorkspace({
               {formatUsd(group.credit_balances[actorAddress]?.minor_units ?? 0)}
             </dd>
           </div>
+          <div>
+            <dt>Projection</dt>
+            <dd>v{group.provenance.projection_version}</dd>
+          </div>
         </dl>
       </section>
 
@@ -163,11 +167,10 @@ function GroupWorkspace({
       />
       <NotificationsPanel actorAddress={actorAddress} group={group} />
       <footer className="provenance-footer">
+        <strong>Data Freshness and Provenance</strong>
+        <span>Projection v{group.provenance.projection_version}</span>
         <span>
-          Based on {group.provenance.source_event_ids.length} verified{" "}
-          {group.provenance.source_event_ids.length === 1
-            ? "record"
-            : "records"}
+          {group.provenance.source_event_ids.length} encrypted source events
         </span>
         <span>{formatTimestamp(group.provenance.as_of_utc)}</span>
       </footer>

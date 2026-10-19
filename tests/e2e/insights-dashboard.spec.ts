@@ -85,14 +85,12 @@ test("shows evidence-linked insights, notifications, and safe refusals", async (
   await expect(
     page.locator(".insight-result").getByText(evidence.statement).first(),
   ).toBeVisible();
-  await expect(page.getByText("Based on 2 verified records")).toBeVisible();
-  await expect(page.getByText(/finance-budget/)).toHaveCount(0);
-  await page.getByText("How answers are kept safe").click();
   await expect(
-    page.getByText("Answers use wallet-authorized, verified records."),
+    page.getByText("finance-budget · 2 source references"),
   ).toBeVisible();
-  await expect(page.getByText(/facts_1/)).toHaveCount(0);
-  await expect(page.getByText(/Qwen\/Qwen/)).toHaveCount(0);
+  await page.getByText("Data Freshness and Provenance").click();
+  await expect(page.getByText(/Fact bundle facts_1/)).toBeVisible();
+  await expect(page.getByText(/Qwen\/Qwen/)).toBeVisible();
   await expect(
     page.getByRole("button", {
       name: "Which recorded budgets need attention?",

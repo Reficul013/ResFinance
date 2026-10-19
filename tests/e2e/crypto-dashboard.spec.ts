@@ -74,13 +74,10 @@ test("shows the promotion gate and records a versioned risk profile", async ({
     page.getByRole("heading", { name: "Savings, translated into choices." }),
   ).toBeVisible();
   await expect(page.getByText("$2,700.00", { exact: true })).toBeVisible();
-  await expect(page.getByText("From Finance savings")).toBeVisible();
-  await expect(page.getByText("finance-savings-v1")).toHaveCount(0);
-  await page.getByText("Data freshness", { exact: true }).click();
-  await expect(
-    page.getByText("Default capital is based on 2 verified Finance records."),
-  ).toBeVisible();
-  await expect(page.getByText("savings_e2e")).toHaveCount(0);
+  await expect(page.getByText("finance-savings-v1")).toBeVisible();
+  await page.getByText("Data Freshness and Provenance").click();
+  await expect(page.getByText(/Finance calculation savings_e2e/)).toBeVisible();
+  await expect(page.getByText("savings_e2e")).toBeVisible();
   await expect(
     page.getByRole("heading", {
       name: "No forecast is eligible for portfolio use.",
@@ -89,8 +86,7 @@ test("shows the promotion gate and records a versioned risk profile", async ({
   await expect(
     page.getByText(/No forecast has passed the required quality checks/),
   ).toBeVisible();
-  await expect(page.getByText("Your preferences")).toBeVisible();
-  await expect(page.getByText("Policy v1")).toHaveCount(0);
+  await expect(page.getByText("Policy v1")).toBeVisible();
   await expect(page.getByText(/milestone/i)).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Analyze Another Amount" }),

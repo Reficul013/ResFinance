@@ -34,13 +34,12 @@ fiat or cryptocurrency, or change Finance from a scenario.
 - Expired forecasts fail closed. Synthetic acceptance forecasts are hidden by
   the normal runtime and require an explicit acceptance-only service flag.
 - The generated `/api/v1` client powers a responsive Crypto dashboard with the
-  questionnaire, default capital, forecast status, constrained allocations,
-  plain-language freshness, a non-mutating scenario control, and TradingView
-  Lightweight Charts price/P10/P50/P90 overlays. Internal savings formula,
-  calculation, policy-version, solver, snapshot, promotion, and source-event
-  identifiers remain in the API and verification records but are not presented
-  as user-facing tags. Forecast eligibility failures are explained as quality
-  checks rather than internal promotion-state terminology.
+  questionnaire, default capital, forecast status, constrained allocations, a
+  Data Freshness and Provenance panel, a non-mutating scenario control, and
+  TradingView Lightweight Charts price/P10/P50/P90 overlays. The panel exposes
+  the Finance formula and calculation IDs, source-event count, forecast snapshot
+  ID, and promotion event ID. Policy and solver tags remain visible where they
+  describe the applied portfolio policy and optimization result.
 
 ## Milestone 7 promotion state
 

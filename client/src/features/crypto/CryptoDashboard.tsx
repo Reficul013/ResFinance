@@ -67,7 +67,7 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
         <Metric
           label="Default capital"
           value={formatUsd(overview.default_capital.minor_units)}
-          note="From Finance savings"
+          note={overview.savings_formula_version}
         />
         <Metric
           label="Risk score"
@@ -135,21 +135,18 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
         <AllocationPanel recommendation={displayed} />
       )}
       <details className="provenance-panel">
-        <summary>Data freshness</summary>
+        <summary>Data Freshness and Provenance</summary>
         <div>
           <p>
-            Default capital is based on{" "}
-            {overview.savings_source_event_ids.length} verified Finance{" "}
-            {overview.savings_source_event_ids.length === 1
-              ? "record"
-              : "records"}
-            .
+            Finance calculation <code>{overview.savings_calculation_id}</code>{" "}
+            references {overview.savings_source_event_ids.length} immutable
+            event(s).
           </p>
           {overview.forecast !== null && (
             <p>
-              The 15-day forecast was updated{" "}
-              {new Date(overview.forecast.as_of_utc).toLocaleString()} and is
-              approved for portfolio analysis.
+              Forecast <code>{overview.forecast.snapshot_id}</code> is
+              authorized by promotion event{" "}
+              <code>{overview.forecast.promotion_event_id}</code>.
             </p>
           )}
         </div>
@@ -186,7 +183,7 @@ function RiskQuestionnaire({
     <section className="entry-panel" aria-labelledby="risk-title">
       <div className="section-heading">
         <div>
-          <p className="section-kicker">Your preferences</p>
+          <p className="section-kicker">Policy v1</p>
           <h2 id="risk-title">Risk questionnaire</h2>
         </div>
         {overview.risk_profile !== null && (
@@ -314,6 +311,7 @@ function AllocationPanel({
           <p className="section-kicker">Constrained recommendation</p>
           <h2 id="allocation-title">Portfolio allocation</h2>
         </div>
+        <span className="freshness-pill">{recommendation.solver}</span>
       </div>
       <div className="allocation-grid">
         {recommendation.allocations.map((item) => (

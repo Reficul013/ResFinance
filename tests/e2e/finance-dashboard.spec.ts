@@ -344,12 +344,13 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByRole("img", { name: /Income \$5,000.00/ }),
   ).toBeVisible();
 
-  await page.getByText("Data freshness", { exact: true }).click();
-  await expect(page.getByText(/^Updated /)).toBeVisible();
-  await expect(page.getByText("Based on 8 verified records.")).toBeVisible();
-  await expect(page.getByText(/Projection v8/)).toHaveCount(0);
-  await expect(page.getByText("finance-savings-v1")).toHaveCount(0);
-  await expect(page.getByText("savings_e2e")).toHaveCount(0);
+  await page.getByText("Data Freshness and Provenance").click();
+  await expect(page.getByText(/Projection v8 rebuilt through/)).toBeVisible();
+  await expect(
+    page.getByText("finance-savings-v1", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("savings_e2e")).toBeVisible();
+  await expect(page.getByText(/5 source event/)).toBeVisible();
   await page.screenshot({
     path: "test-results/finance-dashboard.png",
     fullPage: true,

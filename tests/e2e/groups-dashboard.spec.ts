@@ -4,7 +4,9 @@ const debtor = `0x${"b".repeat(40)}`;
 const creditor = `0x${"a".repeat(40)}`;
 const obligationId = "obl-dinner-sam";
 
-test("approves and settles an obligation partially and fully", async ({ page }) => {
+test("approves and settles an obligation partially and fully", async ({
+  page,
+}) => {
   let projectionVersion = 1;
   let status = "pending";
   let settled = 0;
@@ -19,7 +21,11 @@ test("approves and settles an obligation partially and fully", async ({ page }) 
         request_id?: string;
         intent?: Record<string, unknown>;
       };
-      if (message.source !== "resfinance-page" || message.type !== "SIGN_INTENT") return;
+      if (
+        message.source !== "resfinance-page" ||
+        message.type !== "SIGN_INTENT"
+      )
+        return;
       const intent = message.intent!;
       window.postMessage(
         {
@@ -125,7 +131,9 @@ test("approves and settles an obligation partially and fully", async ({ page }) 
 
   await page.goto("/groups");
   await expect(
-    page.getByRole("heading", { name: "Shared expenses, signed by every participant." }),
+    page.getByRole("heading", {
+      name: "Shared expenses, signed by every participant.",
+    }),
   ).toBeVisible();
   await expect(page.getByText("$60.00 outstanding")).toBeVisible();
 
@@ -133,22 +141,30 @@ test("approves and settles an obligation partially and fully", async ({ page }) 
   await expect(page.getByText("open", { exact: true })).toBeVisible();
 
   await page.getByLabel("Credit amount (USD units)").fill("60.00");
-  await page.getByRole("button", { name: "Approve funding in ResVault" }).click();
+  await page
+    .getByRole("button", { name: "Approve funding in ResVault" })
+    .click();
   await expect(page.getByText("$60.00", { exact: true })).toBeVisible();
 
   await page.getByLabel("Partial or full amount").fill("20.00");
   await page.getByRole("button", { name: "Settle with credits" }).click();
   await expect(page.getByText("$40.00 outstanding")).toBeVisible();
-  await expect(page.getByText("partially settled", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("partially settled", { exact: true }),
+  ).toBeVisible();
 
   await page.getByLabel("Partial or full amount").fill("40.00");
   await page.getByRole("button", { name: "Settle with credits" }).click();
   await expect(page.getByText("$0.00 outstanding")).toBeVisible();
   await expect(page.getByText("settled", { exact: true })).toBeVisible();
   await expect(page.getByText(/non-redeemable, non-monetary/)).toBeVisible();
-  await expect(page.getByText("Based on 5 verified records")).toBeVisible();
-  await expect(page.getByText(/Projection v/)).toHaveCount(0);
-  await page.screenshot({ path: "test-results/groups-dashboard.png", fullPage: true });
+  await expect(page.getByText("Data Freshness and Provenance")).toBeVisible();
+  await expect(page.getByText(/Projection v5/)).toBeVisible();
+  await expect(page.getByText(/5 encrypted source events/)).toBeVisible();
+  await page.screenshot({
+    path: "test-results/groups-dashboard.png",
+    fullPage: true,
+  });
 
   function groupOverview() {
     return {
@@ -204,10 +220,7 @@ test("approves and settles an obligation partially and fully", async ({ page }) 
   }
 });
 
-async function commandResponse(
-  route: Route,
-  label: string,
-) {
+async function commandResponse(route: Route, label: string) {
   await route.fulfill({
     status: 201,
     contentType: "application/json",
