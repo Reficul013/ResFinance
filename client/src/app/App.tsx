@@ -1,11 +1,9 @@
 import { lazy, Suspense } from "react";
 import {
   Navigate,
-  Link,
   NavLink,
   Route,
   Routes,
-  useLocation,
   useNavigate,
 } from "react-router-dom";
 
@@ -32,18 +30,10 @@ const CryptoDashboard = lazy(() =>
 
 export function App() {
   const navigate = useNavigate();
-  const location = useLocation();
   const authentication = useAuthentication();
   const authenticated =
     authentication.state === "authenticated" &&
     authentication.accessToken !== null;
-  const financeActive =
-    location.pathname === "/" || location.pathname === "/finance";
-  const financeDashboard = authenticated ? (
-    <Suspense fallback={<RouteLoading text="Opening Personal Finance…" />}>
-      <FinanceDashboard accessToken={authentication.accessToken!} />
-    </Suspense>
-  ) : null;
 
   async function logout() {
     try {
@@ -81,13 +71,7 @@ export function App() {
         {authenticated && (
           <div className="authenticated-navigation">
             <nav className="dashboard-nav" aria-label="ResFinance dashboards">
-              <Link
-                to="/finance"
-                className={financeActive ? "active" : undefined}
-                aria-current={financeActive ? "page" : undefined}
-              >
-                Personal Finance
-              </Link>
+              <NavLink to="/finance">Personal Finance</NavLink>
               <NavLink to="/groups">Friends &amp; Groups</NavLink>
               <NavLink to="/crypto">Crypto</NavLink>
             </nav>
@@ -97,8 +81,16 @@ export function App() {
       {authenticated ? (
         <>
           <Routes>
-            <Route path="/" element={financeDashboard} />
-            <Route path="/finance" element={financeDashboard} />
+            <Route
+              path="/finance"
+              element={
+                <Suspense
+                  fallback={<RouteLoading text="Opening Personal Finance…" />}
+                >
+                  <FinanceDashboard accessToken={authentication.accessToken!} />
+                </Suspense>
+              }
+            />
             <Route
               path="/groups"
               element={

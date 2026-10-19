@@ -100,8 +100,14 @@ body {
 }
 
 .auth-brand-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: inherit;
+  font: inherit;
+  font-weight: inherit;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .auth-brand-link:focus-visible {

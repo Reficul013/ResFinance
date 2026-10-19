@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
 
 import type { AuthenticationState } from "../features/auth/useAuthentication";
 import { ThemeToggle } from "./ThemeToggle";
@@ -50,13 +49,14 @@ export function AuthCard({
           <p className="auth-kicker">Wallet authentication</p>
           <h2>
             {authenticated ? (
-              <Link
+              <button
                 className="auth-brand-link"
-                to="/"
-                title="Go to ResFinance main screen"
+                type="button"
+                onClick={onLogout}
+                title="Log out and return to the ResFinance welcome screen"
               >
                 ResFinance
-              </Link>
+              </button>
             ) : (
               "Connect ResVault"
             )}

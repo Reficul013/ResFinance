@@ -231,11 +231,14 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     topBar.getByRole("heading", { name: "ResFinance" }),
   ).toBeVisible();
-  const homeLink = topBar.getByRole("link", {
+  const homeButton = topBar.getByRole("button", {
     name: "ResFinance",
     exact: true,
   });
-  await expect(homeLink).toHaveAttribute("href", "/");
+  await expect(homeButton).toHaveAttribute(
+    "title",
+    "Log out and return to the ResFinance welcome screen",
+  );
   await expect(topBar.locator(".auth-brand-logo-light")).toHaveAttribute(
     "src",
     "/favicon.png",
@@ -328,14 +331,6 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   expect(themeToggleBox!.y + themeToggleBox!.height).toBeLessThanOrEqual(
     sessionCardBox!.y + sessionCardBox!.height,
   );
-  await homeLink.click();
-  await expect(page).toHaveURL("http://127.0.0.1:4173/");
-  await expect(
-    dashboardNavigation.getByRole("link", { name: "Personal Finance" }),
-  ).toHaveAttribute("aria-current", "page");
-  await expect(
-    page.getByRole("heading", { name: "Your money, in one view." }),
-  ).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.locator(".theme-toggle")).toHaveAttribute(
     "aria-pressed",
@@ -490,8 +485,30 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     fullPage: true,
   });
 
+  await homeButton.click();
+  await expect(page).toHaveURL("http://127.0.0.1:4173/");
+  await expect(
+    page.getByRole("heading", { name: "ResFinance", level: 1 }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Connect ResVault" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Your money, in one view." }),
+  ).toHaveCount(0);
+
+  await page.goto("/finance");
+  await expect(
+    page.getByRole("heading", { name: "Your money, in one view." }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL("http://127.0.0.1:4173/");
+  await expect(
+    page.getByRole("heading", { name: "ResFinance", level: 1 }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Connect ResVault" }),
+  ).toBeVisible();
   await expect(
     page.getByText("Private finance · Read-only insights"),
   ).toHaveCount(0);
