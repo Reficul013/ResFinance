@@ -376,6 +376,24 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     page.getByRole("heading", { name: "Smart Savings Insights" }),
   ).toBeVisible();
+  const entryFollowsSummary = await page.locator(".summary-grid").evaluate(
+    (node) =>
+      Boolean(
+        node.compareDocumentPosition(
+          document.querySelector(".entry-panel") as Node,
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+  );
+  expect(entryFollowsSummary).toBe(true);
+  const chartsFollowEntry = await page.locator(".entry-panel").evaluate(
+    (node) =>
+      Boolean(
+        node.compareDocumentPosition(
+          document.querySelector(".dashboard-columns") as Node,
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+  );
+  expect(chartsFollowEntry).toBe(true);
   await expect(
     page.locator(".chart-panel").getByText("Projection v8", { exact: true }),
   ).toHaveCount(0);

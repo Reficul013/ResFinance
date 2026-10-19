@@ -74,6 +74,11 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
       </section>
 
       <SummaryCards overview={overview} />
+      <FinanceEntryForms
+        dashboard={dashboard}
+        overview={overview}
+        month={month}
+      />
       <div className="dashboard-columns">
         <CashFlowChart overview={overview} />
         <BudgetPanel overview={overview} />
@@ -82,11 +87,6 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
         overview={overview}
         historyMonths={dashboard.historyMonths}
         history={dashboard.history.map((item) => item.data)}
-      />
-      <FinanceEntryForms
-        dashboard={dashboard}
-        overview={overview}
-        month={month}
       />
       <div className="dashboard-columns records-columns">
         <TransactionPanel overview={overview} />
