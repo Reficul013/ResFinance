@@ -16,6 +16,12 @@ const expectedOrigins = [
   "https://app.resfinance.local/*",
   "http://127.0.0.1:5173/*",
 ];
+const expectedIcons = {
+  16: "icons/resvault-16.png",
+  32: "icons/resvault-32.png",
+  48: "icons/resvault-48.png",
+  128: "icons/resvault-128.png",
+};
 
 assert(
   JSON.stringify(manifest.host_permissions) === JSON.stringify(expectedOrigins),
@@ -29,6 +35,20 @@ assert(
 assert(
   !JSON.stringify(manifest).includes("<all_urls>"),
   "manifest contains <all_urls>",
+);
+assert(
+  JSON.stringify(manifest.icons) === JSON.stringify(expectedIcons),
+  "extension icons are not exact",
+);
+assert(
+  JSON.stringify(manifest.action?.default_icon) ===
+    JSON.stringify(expectedIcons),
+  "toolbar icons are not exact",
+);
+await Promise.all(
+  Object.values(expectedIcons).map((icon) =>
+    readFile(new URL(`../dist/${icon}`, import.meta.url)),
+  ),
 );
 assert(
   content.includes("window.location.origin"),
