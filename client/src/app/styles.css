@@ -77,9 +77,15 @@ body {
 }
 
 .app-shell > .auth-card {
-  grid-template-columns: minmax(0, 1fr) auto;
-  margin: 0 0 2rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  overflow: visible;
+  margin: 0 0 1rem;
   padding: 0.85rem 1rem;
+}
+
+.app-shell > .auth-card::before {
+  border-radius: inherit;
 }
 
 .app-shell > .auth-card .auth-message,
@@ -102,6 +108,14 @@ body {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+}
+
+.authenticated-navigation {
+  display: flex;
+  min-width: 0;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: center;
 }
 
 .app-shell > .auth-card .theme-toggle {
@@ -911,33 +925,25 @@ td.expense {
 
 .dashboard-nav {
   display: flex;
-  gap: 0.55rem;
-  margin: 0.35rem 0 1rem;
-  padding: 0.35rem;
+  min-width: 0;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0.25rem;
   width: fit-content;
   border: 1px solid var(--control-border);
   border-radius: 999px;
   background: var(--control-background);
 }
 
-.app-navigation {
-  position: relative;
-  z-index: 10;
-  display: flex;
-  gap: 0.75rem;
-  align-items: start;
-  justify-content: space-between;
-}
-
 .notification-center {
   position: relative;
-  margin-top: 0.35rem;
+  flex: 0 0 auto;
 }
 
 .notification-center > summary {
   display: flex;
-  min-width: 3.1rem;
-  min-height: 3.1rem;
+  min-width: 2.65rem;
+  min-height: 2.65rem;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
@@ -946,6 +952,15 @@ td.expense {
   background: var(--control-background);
   cursor: pointer;
   list-style: none;
+}
+
+.notification-center > summary:hover {
+  background: var(--control-background-hover);
+}
+
+.notification-center > summary:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--page-accent) 52%, transparent);
+  outline-offset: 3px;
 }
 
 .notification-center > summary::-webkit-details-marker {
@@ -963,8 +978,14 @@ td.expense {
   font-size: 0.66rem;
 }
 
+.notification-bell {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
 .notification-popover {
   position: absolute;
+  z-index: 20;
   top: calc(100% + 0.55rem);
   right: 0;
   display: grid;
@@ -999,10 +1020,18 @@ td.expense {
 }
 
 .notification-item span,
-.notification-all {
+.notification-all,
+.notification-empty {
   color: var(--page-muted);
   font-size: 0.76rem;
   line-height: 1.4;
+}
+
+.notification-empty {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 0.65rem;
+  background: var(--control-background);
 }
 
 .notification-all {
@@ -1097,17 +1126,18 @@ td.expense {
 }
 
 .dashboard-nav a {
-  padding: 0.65rem 1rem;
+  padding: 0.55rem 0.75rem;
   border-radius: 999px;
-  color: var(--muted);
-  font-size: 0.82rem;
+  color: var(--page-muted);
+  font-size: 0.78rem;
   font-weight: 750;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .dashboard-nav a.active {
-  color: var(--button-text);
-  background: var(--accent);
+  color: #fff;
+  background: var(--page-accent);
   box-shadow: 0 0.65rem 1.5rem rgb(29 143 135 / 18%);
 }
 
@@ -1348,6 +1378,26 @@ td.expense {
 }
 
 @media (max-width: 70rem) {
+  .app-shell > .auth-card {
+    grid-template-areas:
+      "session actions"
+      "navigation navigation";
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .app-shell > .auth-card .auth-session {
+    grid-area: session;
+  }
+
+  .app-shell > .auth-card .authenticated-navigation {
+    grid-area: navigation;
+    justify-content: space-between;
+  }
+
+  .app-shell > .auth-card .auth-actions {
+    grid-area: actions;
+  }
+
   .entry-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1416,8 +1466,6 @@ td.expense {
     grid-template-columns: 1fr;
   }
 
-  .dashboard-nav,
-  .app-navigation,
   .inline-actions,
   .inline-settlement {
     width: 100%;
@@ -1425,13 +1473,21 @@ td.expense {
     align-items: stretch;
   }
 
-  .dashboard-nav a {
-    text-align: center;
+  .app-shell > .auth-card .authenticated-navigation {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
   }
 
-  .notification-center {
-    align-self: flex-end;
-    margin-top: 0;
+  .dashboard-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    border-radius: 1rem;
+  }
+
+  .dashboard-nav a {
+    text-align: center;
   }
 
   .wide-field {

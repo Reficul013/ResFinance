@@ -37,7 +37,7 @@ export function InsightsDashboard({ accessToken }: { accessToken: string }) {
     <div className="finance-dashboard insights-dashboard">
       <section className="dashboard-header" aria-labelledby="insights-title">
         <div>
-          <p className="eyebrow">Milestone 8 · Evidence-linked guidance</p>
+          <p className="eyebrow">Evidence-linked guidance</p>
           <h1 id="insights-title">Smart Savings Insights</h1>
           <p className="lede">
             Ask about your recorded savings, budgets, obligations, and crypto

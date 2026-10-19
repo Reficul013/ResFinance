@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import type { AuthenticationState } from "../features/auth/useAuthentication";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -6,6 +8,7 @@ interface AuthCardProps {
   message: string;
   walletAddress: string | null;
   actorAddress: string | null;
+  children?: ReactNode;
   onConnect(): void;
   onLogout(): void;
 }
@@ -15,6 +18,7 @@ export function AuthCard({
   message,
   walletAddress,
   actorAddress,
+  children,
   onConnect,
   onLogout,
 }: AuthCardProps) {
@@ -22,7 +26,7 @@ export function AuthCard({
   const busy = state === "checking" || state === "pending";
   return (
     <section className="auth-card" data-state={state} aria-live="polite">
-      <div>
+      <div className="auth-session">
         <p className="auth-kicker">Wallet authentication</p>
         <h2>{authenticated ? "Session active" : "Connect ResVault"}</h2>
         <p className="auth-message">{message}</p>
@@ -32,6 +36,7 @@ export function AuthCard({
           </code>
         )}
       </div>
+      {authenticated && children}
       {authenticated ? (
         <div className="auth-actions">
           <button

@@ -173,14 +173,29 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByRole("heading", { name: "Your money, in one view." }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Switch to dark mode" }),
+    page.getByRole("button", { name: "Switch to Light Mode" }),
   ).toBeVisible();
+  const topBar = page.locator(".auth-card");
+  const dashboardNavigation = topBar.getByRole("navigation", {
+    name: "ResFinance dashboards",
+  });
+  await expect(dashboardNavigation.getByRole("link")).toHaveCount(4);
+  await expect(
+    dashboardNavigation.getByRole("link", { name: "Personal Finance" }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(topBar.getByLabel("No in-app notifications")).toBeVisible();
+  await expect(topBar.locator(".notification-bell")).toBeVisible();
+  await expect(page.getByText(/milestone/i)).toHaveCount(0);
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
+    "href",
+    "/favicon.png",
+  );
   const sessionCardBox = await page.locator(".auth-card").boundingBox();
   const logoutButtonBox = await page
     .getByRole("button", { name: "Log out" })
     .boundingBox();
   const themeToggleBox = await page
-    .getByRole("button", { name: "Switch to dark mode" })
+    .getByRole("button", { name: "Switch to Light Mode" })
     .boundingBox();
   expect(sessionCardBox).not.toBeNull();
   expect(logoutButtonBox).not.toBeNull();
@@ -195,18 +210,19 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   expect(themeToggleBox!.y + themeToggleBox!.height).toBeLessThanOrEqual(
     sessionCardBox!.y + sessionCardBox!.height,
   );
-  await page.getByRole("button", { name: "Switch to dark mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(
-    page.getByRole("button", { name: "Switch to light mode" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Switch to light mode" }).click();
+  await page.getByRole("button", { name: "Switch to Light Mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(
+    page.getByRole("button", { name: "Switch to Dark Mode" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Switch to Dark Mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 
   await page.setViewportSize({ width: 375, height: 812 });
   const compactSessionCardBox = await page.locator(".auth-card").boundingBox();
   const compactThemeToggleBox = await page
-    .getByRole("button", { name: "Switch to dark mode" })
+    .getByRole("button", { name: "Switch to Light Mode" })
     .boundingBox();
   expect(compactSessionCardBox).not.toBeNull();
   expect(compactThemeToggleBox).not.toBeNull();
@@ -223,6 +239,10 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   ).toBeLessThanOrEqual(
     compactSessionCardBox!.y + compactSessionCardBox!.height,
   );
+  await page.screenshot({
+    path: "test-results/finance-dashboard-mobile.png",
+    fullPage: true,
+  });
   await page.setViewportSize({ width: 1280, height: 720 });
   await expect(page.getByText("$4,100.00", { exact: true })).toBeVisible();
   await expect(page.getByText("$5,000.00", { exact: true })).toBeVisible();

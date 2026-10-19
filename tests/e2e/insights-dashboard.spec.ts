@@ -85,13 +85,20 @@ test("shows evidence-linked insights, notifications, and safe refusals", async (
   await expect(
     page.locator(".insight-result").getByText(evidence.statement).first(),
   ).toBeVisible();
-  await expect(page.getByText("finance-budget · 2 source references")).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Which recorded budgets need attention?" }),
+    page.getByText("finance-budget · 2 source references"),
   ).toBeVisible();
   await expect(
-    page.getByLabel("1 in-app notifications"),
+    page.getByRole("button", {
+      name: "Which recorded budgets need attention?",
+    }),
   ).toBeVisible();
+  await expect(page.getByLabel("1 in-app notifications")).toBeVisible();
+  await expect(
+    page.locator(".auth-card").getByLabel("1 in-app notifications"),
+  ).toBeVisible();
+  await expect(page.locator(".notification-bell")).toBeVisible();
+  await expect(page.getByText(/milestone/i)).toHaveCount(0);
 
   await page
     .getByRole("textbox", { name: "Question" })

@@ -2,20 +2,16 @@ export type ColorTheme = "light" | "dark";
 
 export const COLOR_THEME_STORAGE_KEY = "resfinance-color-theme";
 
-export function resolveColorTheme(
-  storedTheme: string | null,
-  systemPrefersDark: boolean,
-): ColorTheme {
+export function resolveColorTheme(storedTheme: string | null): ColorTheme {
   if (storedTheme === "light" || storedTheme === "dark") {
     return storedTheme;
   }
-  return systemPrefersDark ? "dark" : "light";
+  return "dark";
 }
 
 export function getPreferredColorTheme(): ColorTheme {
   return resolveColorTheme(
     window.localStorage.getItem(COLOR_THEME_STORAGE_KEY),
-    window.matchMedia("(prefers-color-scheme: dark)").matches,
   );
 }
 

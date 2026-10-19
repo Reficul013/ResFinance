@@ -80,8 +80,9 @@ test("shows the promotion gate and records a versioned risk profile", async ({
     }),
   ).toBeVisible();
   await expect(
-    page.getByText(/did not promote its smoke candidate/),
+    page.getByText(/No research candidate has been promoted/),
   ).toBeVisible();
+  await expect(page.getByText(/milestone/i)).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Analyze Another Amount" }),
   ).toBeVisible();

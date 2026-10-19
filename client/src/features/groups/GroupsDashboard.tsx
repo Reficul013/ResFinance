@@ -33,7 +33,7 @@ export function GroupsDashboard({ accessToken, actorAddress }: Props) {
     <div className="dashboard groups-dashboard">
       <header className="dashboard-header">
         <div>
-          <p className="eyebrow">Milestone 4 · Friends &amp; Groups</p>
+          <p className="eyebrow">Friends &amp; Groups</p>
           <h1>Shared expenses, signed by every participant.</h1>
           <p className="lede">
             ResContract is authoritative for obligations and settlements.

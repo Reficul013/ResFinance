@@ -41,7 +41,7 @@ export function App() {
       {!authenticated && <ThemeToggle />}
       {!authenticated && (
         <>
-          <p className="eyebrow">Milestone 8 · Read-only insights</p>
+          <p className="eyebrow">Private finance · Read-only insights</p>
           <h1>ResFinance</h1>
           <p className="lede">
             Connect the hardened ResVault extension to open your encrypted
@@ -56,10 +56,9 @@ export function App() {
         actorAddress={authentication.actorAddress}
         onConnect={() => void authentication.connect()}
         onLogout={() => void authentication.logout()}
-      />
-      {authenticated ? (
-        <>
-          <div className="app-navigation">
+      >
+        {authenticated && (
+          <div className="authenticated-navigation">
             <nav className="dashboard-nav" aria-label="ResFinance dashboards">
               <NavLink to="/finance">Personal Finance</NavLink>
               <NavLink to="/groups">Friends &amp; Groups</NavLink>
@@ -68,6 +67,10 @@ export function App() {
             </nav>
             <NotificationCenter accessToken={authentication.accessToken!} />
           </div>
+        )}
+      </AuthCard>
+      {authenticated ? (
+        <>
           <Routes>
             <Route
               path="/finance"

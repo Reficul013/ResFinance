@@ -46,7 +46,7 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
     <div className="finance-dashboard crypto-dashboard">
       <section className="dashboard-header" aria-labelledby="crypto-title">
         <div>
-          <p className="eyebrow">Milestone 7 · Risk-aware portfolio</p>
+          <p className="eyebrow">Risk-aware portfolio</p>
           <h1 id="crypto-title">Savings, translated into choices.</h1>
           <p className="lede">
             Explore a long-only BTC, ETH, and SOL allocation backed by your risk
@@ -101,9 +101,8 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
           <p className="section-kicker">Promotion gate holding</p>
           <h2>No forecast is eligible for portfolio use.</h2>
           <p>
-            Milestone 6 did not promote its smoke candidate. This dashboard will
-            remain evidence-safe until a model passes the immutable promotion
-            criteria.
+            No research candidate has been promoted. This dashboard will remain
+            evidence-safe until a model passes the immutable promotion criteria.
           </p>
         </section>
       ) : (

@@ -54,7 +54,7 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
     <div className="finance-dashboard">
       <section className="dashboard-header" aria-labelledby="finance-title">
         <div>
-          <p className="eyebrow">Milestone 3 · Personal Finance</p>
+          <p className="eyebrow">Personal Finance</p>
           <h1 id="finance-title">Your money, in one view.</h1>
           <p className="lede">
             Track cash flow, monthly limits, recurring commitments, and the
