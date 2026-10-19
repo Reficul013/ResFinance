@@ -18,7 +18,8 @@ A user will be able to connect a ResVault wallet, manage personal finances, spli
 
 ### Personal Finance
 
-- Record income, expenses, categories, budgets, and recurring items.
+- Record income, expenses, budgets, and recurring items with a fixed,
+  direction-aware category catalog.
 - Track receivables and payables created by shared expenses.
 - View cash-flow summaries, budget alerts, and actual or projected monthly savings.
 - Receive practical, evidence-linked Smart Savings Insights.
@@ -96,7 +97,7 @@ Milestone 1 adds the strict React/Vite and FastAPI foundations, checked OpenAPI-
 
 Milestone 2 adds the hardened Manifest V3 ResVault-compatible extension, branded with the dark ResFinance mark, Argon2id/AES-256-GCM encrypted seed custody, exact-origin approval/signing, challenge login, memory-only access tokens, ResilientDB refresh-session hashes, rotation, replay defense, and logout revocation. The authentication state survived a full four-replica restart, and the rebuilt live FastAPI container passed the complete HTTP flow through its pinned native ResilientDB client. See the [Milestone 2 wallet and authentication evidence](docs/milestone2-wallet-authentication.md).
 
-Milestone 3 adds the authenticated Personal Finance dashboard and encrypted append-only finance domain: categories, income and expenses, compensating voids, monthly budgets and alerts, recurring entries, read-only contract-backed receivable/payable projections, exact integer-cent summaries, and the versioned `finance-savings-v1` calculation. The projection rebuilt identically after a full four-replica restart, the live FastAPI container passed authenticated native-ResilientDB writes and reads, and Chromium Playwright reproduced balances, budget alerts, savings, and provenance. See the [Milestone 3 Personal Finance evidence](docs/milestone3-personal-finance.md).
+Milestone 3 adds the authenticated Personal Finance dashboard and encrypted append-only finance domain: deterministic income/expense categories, transactions, compensating voids, monthly budgets and alerts, recurring entries, read-only contract-backed receivable/payable projections, exact integer-cent summaries, and the versioned `finance-savings-v1` calculation. The fixed catalog is available to a new wallet immediately, so adding a finance record never requires a category-creation step. The projection rebuilt identically after a full four-replica restart, the live FastAPI container passed authenticated native-ResilientDB writes and reads, and Chromium Playwright reproduced balances, budget alerts, savings, and freshness. Technical formula, calculation, event, and projection identifiers remain internal while the dashboard uses plain-language labels. See the [Milestone 3 Personal Finance evidence](docs/milestone3-personal-finance.md).
 
 Milestone 4 adds authenticated Groups, exact shared-expense splits, ResVault-signed participant decisions, obligation notifications, a deployed `ResFinanceSettlement.sol` state machine, non-redeemable internal credits, partial/full settlement, immutable receipts, and confirmed Finance propagation. A real-stack run recovered exactly one missing confirmation after an injected post-contract crash and a restart of every ResilientDB and ResContract process; Group and Finance balances then matched exactly. The Groups UI presents update time and verified-record counts without exposing internal projection versions. See the [Milestone 4 Groups and contractual settlement evidence](docs/milestone4-groups-settlement.md).
 

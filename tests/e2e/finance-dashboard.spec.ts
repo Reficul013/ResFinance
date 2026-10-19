@@ -176,6 +176,34 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByRole("heading", { name: "Your money, in one view." }),
   ).toBeVisible();
   await expect(
+    page.locator("summary").filter({ hasText: /^Category$/ }),
+  ).toHaveCount(0);
+  const transactionForm = page.locator("details").filter({
+    has: page.locator("summary").filter({ hasText: /^Income or expense$/ }),
+  });
+  await transactionForm.locator("summary").click();
+  await expect(
+    transactionForm.getByLabel("Category").locator("option"),
+  ).toHaveText([
+    "Choose category",
+    "Rent",
+    "Utilities",
+    "Shopping",
+    "Entertainment",
+    "Food & Groceries",
+    "Medical Bills",
+    "Miscellaneous",
+  ]);
+  await transactionForm.getByLabel("Type").selectOption("income");
+  await expect(
+    transactionForm.getByLabel("Category").locator("option"),
+  ).toHaveText([
+    "Choose category",
+    "Salary",
+    "Liquid Funds Transfer",
+    "Other Sources",
+  ]);
+  await expect(
     page.getByRole("button", { name: "Switch to Light Mode" }),
   ).toBeVisible();
   const topBar = page.locator(".auth-card");

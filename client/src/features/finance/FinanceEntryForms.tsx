@@ -14,10 +14,42 @@ interface FinanceEntryFormsProps {
   month: string;
 }
 
-const categorySchema = z.object({
-  name: z.string().trim().min(1, "Enter a category name.").max(80),
-  direction: z.enum(["income", "expense"]),
-});
+const deterministicCategories = [
+  { category_id: "salary", name: "Salary", direction: "income" },
+  {
+    category_id: "liquid-funds-transfer",
+    name: "Liquid Funds Transfer",
+    direction: "income",
+  },
+  {
+    category_id: "other-sources",
+    name: "Other Sources",
+    direction: "income",
+  },
+  { category_id: "rent", name: "Rent", direction: "expense" },
+  { category_id: "utilities", name: "Utilities", direction: "expense" },
+  { category_id: "shopping", name: "Shopping", direction: "expense" },
+  {
+    category_id: "entertainment",
+    name: "Entertainment",
+    direction: "expense",
+  },
+  {
+    category_id: "food-groceries",
+    name: "Food & Groceries",
+    direction: "expense",
+  },
+  {
+    category_id: "medical-bills",
+    name: "Medical Bills",
+    direction: "expense",
+  },
+  {
+    category_id: "miscellaneous",
+    name: "Miscellaneous",
+    direction: "expense",
+  },
+] as const;
 
 const transactionSchema = z.object({
   direction: z.enum(["income", "expense"]),
@@ -39,7 +71,6 @@ const recurringSchema = transactionSchema.pick({
   description: true,
 });
 
-type CategoryValues = z.infer<typeof categorySchema>;
 type TransactionValues = z.infer<typeof transactionSchema>;
 type BudgetValues = z.infer<typeof budgetSchema>;
 type RecurringValues = z.infer<typeof recurringSchema>;
@@ -49,10 +80,6 @@ export function FinanceEntryForms({
   overview,
   month,
 }: FinanceEntryFormsProps) {
-  const category = useForm<CategoryValues>({
-    resolver: zodResolver(categorySchema),
-    defaultValues: { name: "", direction: "expense" },
-  });
   const transaction = useForm<TransactionValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -78,8 +105,8 @@ export function FinanceEntryForms({
   });
   const transactionDirection = transaction.watch("direction");
   const recurringDirection = recurring.watch("direction");
-  const expenseCategories = overview.categories.filter(
-    (item) => item.active && item.direction === "expense",
+  const expenseCategories = deterministicCategories.filter(
+    (item) => item.direction === "expense",
   );
 
   return (
@@ -92,42 +119,6 @@ export function FinanceEntryForms({
         <p>Every saved change appends an encrypted, auditable event.</p>
       </div>
       <div className="entry-grid">
-        <details open={overview.categories.length === 0}>
-          <summary>Category</summary>
-          <form
-            onSubmit={category.handleSubmit(async (values) => {
-              const id = crypto.randomUUID();
-              await dashboard.category.mutateAsync({
-                idempotencyKey: `category-${id}`,
-                body: {
-                  category_id: `category-${id}`,
-                  name: values.name,
-                  direction: values.direction,
-                  expected_version: overview.provenance.projection_version,
-                },
-              });
-              category.reset();
-            })}
-          >
-            <Field label="Name" error={category.formState.errors.name?.message}>
-              <input autoComplete="off" {...category.register("name")} />
-            </Field>
-            <Field
-              label="Type"
-              error={category.formState.errors.direction?.message}
-            >
-              <select {...category.register("direction")}>
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-              </select>
-            </Field>
-            <SubmitButton pending={dashboard.category.isPending}>
-              Save category
-            </SubmitButton>
-            <MutationError error={dashboard.category.error} />
-          </form>
-        </details>
-
         <details>
           <summary>Income or expense</summary>
           <form
@@ -162,16 +153,19 @@ export function FinanceEntryForms({
               label="Type"
               error={transaction.formState.errors.direction?.message}
             >
-              <select {...transaction.register("direction")}>
+              <select
+                {...transaction.register("direction", {
+                  onChange: () => transaction.setValue("category_id", ""),
+                })}
+              >
                 <option value="expense">Expense</option>
                 <option value="income">Income</option>
               </select>
             </Field>
             <CategoryField
               label="Category"
-              categories={overview.categories.filter(
-                (item) =>
-                  item.active && item.direction === transactionDirection,
+              categories={deterministicCategories.filter(
+                (item) => item.direction === transactionDirection,
               )}
               registration={transaction.register("category_id")}
               error={transaction.formState.errors.category_id?.message}
@@ -201,15 +195,9 @@ export function FinanceEntryForms({
                 {...transaction.register("description")}
               />
             </Field>
-            <SubmitButton
-              pending={dashboard.transaction.isPending}
-              disabled={overview.categories.length === 0}
-            >
+            <SubmitButton pending={dashboard.transaction.isPending}>
               Save transaction
             </SubmitButton>
-            {overview.categories.length === 0 && (
-              <p className="form-hint">Create a matching category first.</p>
-            )}
             <MutationError error={dashboard.transaction.error} />
           </form>
         </details>
@@ -295,15 +283,19 @@ export function FinanceEntryForms({
               label="Type"
               error={recurring.formState.errors.direction?.message}
             >
-              <select {...recurring.register("direction")}>
+              <select
+                {...recurring.register("direction", {
+                  onChange: () => recurring.setValue("category_id", ""),
+                })}
+              >
                 <option value="expense">Expense</option>
                 <option value="income">Income</option>
               </select>
             </Field>
             <CategoryField
               label="Category"
-              categories={overview.categories.filter(
-                (item) => item.active && item.direction === recurringDirection,
+              categories={deterministicCategories.filter(
+                (item) => item.direction === recurringDirection,
               )}
               registration={recurring.register("category_id")}
               error={recurring.formState.errors.category_id?.message}
@@ -327,10 +319,7 @@ export function FinanceEntryForms({
                 {...recurring.register("description")}
               />
             </Field>
-            <SubmitButton
-              pending={dashboard.recurring.isPending}
-              disabled={overview.categories.length === 0}
-            >
+            <SubmitButton pending={dashboard.recurring.isPending}>
               Save recurring item
             </SubmitButton>
             <MutationError error={dashboard.recurring.error} />
@@ -366,7 +355,10 @@ function CategoryField({
   error,
 }: {
   label: string;
-  categories: FinanceOverview["categories"];
+  categories: readonly {
+    category_id: string;
+    name: string;
+  }[];
   registration: UseFormRegisterReturn;
   error?: string | undefined;
 }) {

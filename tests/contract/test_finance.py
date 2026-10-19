@@ -284,9 +284,86 @@ def test_authenticated_finance_api_exposes_projection_and_provenance() -> None:
     assert overview.status_code == 200
     body = overview.json()
     assert body["provenance"]["projection_version"] == 1
-    assert body["categories"][0]["name"] == "Salary"
+    assert {item["name"] for item in body["categories"]} >= {
+        "Salary",
+        "Liquid Funds Transfer",
+        "Other Sources",
+        "Rent",
+        "Utilities",
+        "Shopping",
+        "Entertainment",
+        "Food & Groceries",
+        "Medical Bills",
+        "Miscellaneous",
+    }
     assert body["summary"]["savings"]["formula_version"] == "finance-savings-v1"
     assert len(body["provenance"]["source_event_ids"]) == 1
 
     unauthorized = client.get("/api/v1/finance/overview?month=2026-10")
     assert unauthorized.status_code == 401
+
+
+def test_deterministic_categories_are_available_without_category_events() -> None:
+    service = finance_service(MemoryKeyValueStore())
+
+    initial = service.overview(actor_address=ACTOR, month="2026-10")
+    assert initial.projection.projection_version == 0
+    assert [
+        category.name
+        for category in initial.projection.categories.values()
+        if category.direction == EntryDirection.INCOME
+    ] == ["Salary", "Liquid Funds Transfer", "Other Sources"]
+
+    service.record_transaction(
+        actor_address=ACTOR,
+        idempotency_key="deterministic-rent-0001",
+        expected_version=0,
+        transaction_id="rent-october",
+        direction=EntryDirection.EXPENSE,
+        category_id="rent",
+        amount_minor_units=120_000,
+        occurred_on=date(2026, 10, 1),
+        description="October rent",
+        recurring_entry_id=None,
+    )
+    overview = service.overview(actor_address=ACTOR, month="2026-10")
+    assert overview.summary.expense_minor_units == 120_000
+
+    service.set_budget(
+        actor_address=ACTOR,
+        idempotency_key="deterministic-budget-0002",
+        expected_version=1,
+        budget_id="rent-2026-10",
+        category_id="rent",
+        month="2026-10",
+        limit_minor_units=150_000,
+    )
+    service.create_recurring_entry(
+        actor_address=ACTOR,
+        idempotency_key="deterministic-income-0003",
+        expected_version=2,
+        recurring_entry_id="monthly-salary",
+        direction=EntryDirection.INCOME,
+        category_id="salary",
+        amount_minor_units=500_000,
+        description="Monthly salary",
+        starts_on=date(2026, 10, 1),
+        ends_on=None,
+    )
+    overview = service.overview(actor_address=ACTOR, month="2026-10")
+    assert overview.summary.budget_statuses[0].category_name == "Rent"
+    assert overview.summary.outstanding_recurring_income_minor_units == 500_000
+
+    with pytest.raises(FinanceRejected, match="direction does not match category"):
+        service.record_transaction(
+            actor_address=ACTOR,
+            idempotency_key="wrong-category-direction-0004",
+            expected_version=3,
+            transaction_id="invalid-rent-income",
+            direction=EntryDirection.INCOME,
+            category_id="rent",
+            amount_minor_units=1_000,
+            occurred_on=date(2026, 10, 2),
+            description="Invalid direction",
+            recurring_entry_id=None,
+        )

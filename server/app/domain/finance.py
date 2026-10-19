@@ -35,6 +35,84 @@ class Category:
     source_event_id: str
 
 
+DETERMINISTIC_CATEGORIES: tuple[Category, ...] = (
+    Category(
+        category_id="salary",
+        name="Salary",
+        direction=EntryDirection.INCOME,
+        active=True,
+        source_event_id="system-finance-category-v1-salary",
+    ),
+    Category(
+        category_id="liquid-funds-transfer",
+        name="Liquid Funds Transfer",
+        direction=EntryDirection.INCOME,
+        active=True,
+        source_event_id="system-finance-category-v1-liquid-funds-transfer",
+    ),
+    Category(
+        category_id="other-sources",
+        name="Other Sources",
+        direction=EntryDirection.INCOME,
+        active=True,
+        source_event_id="system-finance-category-v1-other-sources",
+    ),
+    Category(
+        category_id="rent",
+        name="Rent",
+        direction=EntryDirection.EXPENSE,
+        active=True,
+        source_event_id="system-finance-category-v1-rent",
+    ),
+    Category(
+        category_id="utilities",
+        name="Utilities",
+        direction=EntryDirection.EXPENSE,
+        active=True,
+        source_event_id="system-finance-category-v1-utilities",
+    ),
+    Category(
+        category_id="shopping",
+        name="Shopping",
+        direction=EntryDirection.EXPENSE,
+        active=True,
+        source_event_id="system-finance-category-v1-shopping",
+    ),
+    Category(
+        category_id="entertainment",
+        name="Entertainment",
+        direction=EntryDirection.EXPENSE,
+        active=True,
+        source_event_id="system-finance-category-v1-entertainment",
+    ),
+    Category(
+        category_id="food-groceries",
+        name="Food & Groceries",
+        direction=EntryDirection.EXPENSE,
+        active=True,
+        source_event_id="system-finance-category-v1-food-groceries",
+    ),
+    Category(
+        category_id="medical-bills",
+        name="Medical Bills",
+        direction=EntryDirection.EXPENSE,
+        active=True,
+        source_event_id="system-finance-category-v1-medical-bills",
+    ),
+    Category(
+        category_id="miscellaneous",
+        name="Miscellaneous",
+        direction=EntryDirection.EXPENSE,
+        active=True,
+        source_event_id="system-finance-category-v1-miscellaneous",
+    ),
+)
+
+DETERMINISTIC_CATEGORY_BY_ID = {
+    category.category_id: category for category in DETERMINISTIC_CATEGORIES
+}
+
+
 @dataclass(frozen=True)
 class Transaction:
     transaction_id: str
@@ -133,6 +211,19 @@ class MonthlyFinanceSummary:
     as_of_utc: datetime | None
     source_event_ids: tuple[str, ...]
     budget_statuses: tuple[BudgetStatus, ...]
+
+
+def with_deterministic_categories(
+    projection: FinanceProjection,
+) -> FinanceProjection:
+    """Add the built-in catalog without changing event versions or provenance."""
+    return replace(
+        projection,
+        categories={
+            **projection.categories,
+            **DETERMINISTIC_CATEGORY_BY_ID,
+        },
+    )
 
 
 def reduce_finance_event(

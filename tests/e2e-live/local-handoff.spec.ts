@@ -293,21 +293,9 @@ async function expectWalletLocked(context: BrowserContext) {
 
 async function seedFinance(page: Page) {
   await expect(page.getByRole("heading", { name: "Your money, in one view." })).toBeVisible();
-  const category = page.locator("details").filter({
-    has: page.locator("summary").filter({ hasText: /^Category$/ }),
-  });
-  await category.getByLabel("Name").fill("Salary");
-  await category.getByLabel("Type").selectOption("income");
-  await submitFinanceWrite(page, "/finance/categories", () =>
-    category.getByRole("button", { name: "Save category" }).click(),
-  );
-  await expect(category.getByLabel("Name")).toBeHidden();
-  await category.locator("summary").click();
-  await category.getByLabel("Name").fill("Housing");
-  await category.getByLabel("Type").selectOption("expense");
-  await submitFinanceWrite(page, "/finance/categories", () =>
-    category.getByRole("button", { name: "Save category" }).click(),
-  );
+  await expect(
+    page.locator("summary").filter({ hasText: /^Category$/ }),
+  ).toHaveCount(0);
 
   const transaction = page.locator("details").filter({
     has: page.locator("summary").filter({ hasText: /^Income or expense$/ }),
@@ -321,7 +309,7 @@ async function seedFinance(page: Page) {
     transaction.getByRole("button", { name: "Save transaction" }).click(),
   );
   await transaction.getByLabel("Type").selectOption("expense");
-  await transaction.getByLabel("Category").selectOption({ label: "Housing" });
+  await transaction.getByLabel("Category").selectOption({ label: "Rent" });
   await transaction.getByLabel("Amount in USD").fill("1000.00");
   await transaction.getByLabel("Description").fill("Local handoff rent");
   await submitFinanceWrite(page, "/finance/transactions", () =>
@@ -332,7 +320,7 @@ async function seedFinance(page: Page) {
     has: page.locator("summary").filter({ hasText: /^Monthly budget$/ }),
   });
   await budget.locator("summary").click();
-  await budget.getByLabel("Expense category").selectOption({ label: "Housing" });
+  await budget.getByLabel("Expense category").selectOption({ label: "Rent" });
   await budget.getByLabel("Monthly limit in USD").fill("1200.00");
   await submitFinanceWrite(page, "/finance/budgets", () =>
     budget.getByRole("button", { name: "Save budget" }).click(),

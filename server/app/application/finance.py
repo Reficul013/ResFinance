@@ -9,12 +9,14 @@ from datetime import UTC, date, datetime
 from server.app.application.projections import rebuild_projection
 from server.app.domain.events import AppendEventCommand, AppendResult
 from server.app.domain.finance import (
+    DETERMINISTIC_CATEGORY_BY_ID,
     EntryDirection,
     FinanceProjection,
     MonthlyFinanceSummary,
     ObligationDirection,
     reduce_finance_event,
     summarize_month,
+    with_deterministic_categories,
 )
 from server.app.infrastructure.event_repository import EncryptedEventRepository
 
@@ -115,7 +117,9 @@ class FinanceService:
             projection = self._projection(actor_address)
             if transaction_id in projection.transactions:
                 raise FinanceRejected("transaction ID already exists")
-            category = projection.categories.get(category_id)
+            category = DETERMINISTIC_CATEGORY_BY_ID.get(
+                category_id, projection.categories.get(category_id)
+            )
             if category is None or not category.active:
                 raise FinanceRejected("category is not active")
             if category.direction != direction:
@@ -194,7 +198,9 @@ class FinanceService:
             if (existing := self._repository.find_idempotent(command)) is not None:
                 return existing
             projection = self._projection(actor_address)
-            category = projection.categories.get(category_id)
+            category = DETERMINISTIC_CATEGORY_BY_ID.get(
+                category_id, projection.categories.get(category_id)
+            )
             if (
                 category is None
                 or not category.active
@@ -261,7 +267,9 @@ class FinanceService:
             projection = self._projection(actor_address)
             if recurring_entry_id in projection.recurring_entries:
                 raise FinanceRejected("recurring entry ID already exists")
-            category = projection.categories.get(category_id)
+            category = DETERMINISTIC_CATEGORY_BY_ID.get(
+                category_id, projection.categories.get(category_id)
+            )
             if category is None or not category.active:
                 raise FinanceRejected("category is not active")
             if category.direction != direction:
@@ -382,7 +390,7 @@ class FinanceService:
 
     def overview(self, *, actor_address: str, month: str) -> FinanceOverview:
         month = _month(month)
-        projection = self._projection(actor_address)
+        projection = with_deterministic_categories(self._projection(actor_address))
         return FinanceOverview(
             projection=projection,
             summary=summarize_month(projection, month=month),

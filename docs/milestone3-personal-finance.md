@@ -13,6 +13,7 @@ Evidence date: 2026-10-14 America/Los_Angeles
 - Monthly recurring income and expense entries. A linked transaction satisfies a recurring entry for that month so projected savings does not double count it.
 - Read-only receivable and payable projections. Only the application-only confirmed-contract method can append obligation events, and every such event requires a source event ID and ResContract receipt.
 - A deterministic reducer that rebuilds categories, transactions, budgets, recurring entries, obligations, balances, and savings from the event stream.
+- A built-in catalog available without setup events: `Salary`, `Liquid Funds Transfer`, and `Other Sources` for income; `Rent`, `Utilities`, `Shopping`, `Entertainment`, `Food & Groceries`, `Medical Bills`, and `Miscellaneous` for expenses. The dashboard no longer exposes category creation.
 - Authenticated `/api/v1/finance` endpoints with generated TypeScript types, RFC 9457 errors, optimistic aggregate versions, and required idempotency keys on writes.
 - An accessible `/finance` dashboard with a cash-flow chart, text equivalents, budget progress, validation, empty/loading/error states, responsive tables, and plain-language freshness information. Internal formula, calculation, event, and projection identifiers remain in the API for audit and concurrency controls but are not exposed as user-facing labels.
 - React Hook Form and Zod validation, TanStack Query state management, Recharts visualization, React Router navigation, Vitest coverage, and a checked Chromium Playwright journey.
