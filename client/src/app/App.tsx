@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 
 import { AuthCard } from "../components/AuthCard";
+import { GitHubLink } from "../components/GitHubLink";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useAuthentication } from "../features/auth/useAuthentication";
 import { NotificationCenter } from "../features/insights/NotificationCenter";
@@ -45,7 +46,12 @@ export function App() {
 
   return (
     <main className={authenticated ? "app-shell" : "shell"}>
-      {!authenticated && <ThemeToggle />}
+      {!authenticated && (
+        <div className="welcome-actions">
+          <GitHubLink />
+          <ThemeToggle />
+        </div>
+      )}
       {!authenticated && (
         <>
           <h1>ResFinance</h1>

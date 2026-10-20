@@ -165,7 +165,7 @@ In both profiles:
 1. Open `http://127.0.0.1:5173/finance`.
 2. Choose **Connect wallet**.
 3. Review the ResVault approval window.
-4. Choose **Approve and sign**.
+4. Choose **Approve & Login**.
 5. Confirm the application displays **Session active**.
 
 Keep the two application windows side by side so the audience can see that the

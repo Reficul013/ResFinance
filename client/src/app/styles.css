@@ -35,6 +35,8 @@
   --status-checking: #b27621;
   --status-ready: #197b68;
   --status-error: #b73b55;
+  --status-current: #9c6500;
+  --status-current-glow: rgb(255 193 7 / 42%);
   --panel-background: rgb(255 255 255 / 48%);
   --chart-grid: rgb(70 82 112 / 14%);
   --income: #187867;
@@ -90,7 +92,7 @@ body {
 }
 
 .app-shell > .auth-card .auth-message,
-.app-shell > .auth-card .wallet-address,
+.app-shell > .auth-card .wallet-identity,
 .app-shell > .auth-card .auth-kicker {
   display: none;
 }
@@ -228,6 +230,26 @@ code {
   cursor: pointer;
 }
 
+.welcome-actions {
+  position: fixed;
+  z-index: 10;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.welcome-actions .theme-toggle {
+  position: static;
+}
+
+.welcome-actions .github-link {
+  width: 2.65rem;
+  min-height: 2.65rem;
+  padding: 0;
+}
+
 .theme-toggle:hover {
   background: transparent;
 }
@@ -337,13 +359,94 @@ code {
 .auth-card::before {
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background: linear-gradient(125deg, var(--card-sheen), transparent 42%);
   content: "";
   pointer-events: none;
 }
 
+.auth-card:not([data-state="authenticated"]) {
+  overflow: visible;
+}
+
 .auth-card > * {
   position: relative;
+}
+
+.auth-help {
+  position: absolute;
+  z-index: 4;
+  top: 0.9rem;
+  right: 0.9rem;
+}
+
+.auth-help-button {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  background: var(--control-background);
+  color: var(--page-text);
+  font: inherit;
+  font-size: 1rem;
+  cursor: help;
+}
+
+.auth-help-button:hover,
+.auth-help-button:focus-visible {
+  background: var(--control-background-hover);
+}
+
+.auth-help-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--page-accent) 52%, transparent);
+  outline-offset: 2px;
+}
+
+.auth-help-popover {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 0.55rem);
+  right: 0;
+  width: min(25rem, calc(100vw - 4rem));
+  padding: 1rem;
+  border: 1px solid var(--control-border);
+  border-radius: 0.9rem;
+  background: var(--popover-background);
+  box-shadow: 0 1.2rem 3rem rgb(15 20 35 / 28%);
+  color: var(--page-text);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-0.3rem);
+  visibility: hidden;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.auth-help:hover .auth-help-popover,
+.auth-help:focus-within .auth-help-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.auth-help-popover strong {
+  display: block;
+  margin-bottom: 0.55rem;
+}
+
+.auth-help-popover ol {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--page-muted);
+  font-size: 0.83rem;
+  line-height: 1.45;
 }
 
 .auth-kicker {
@@ -361,9 +464,45 @@ code {
 }
 
 .auth-message {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
   margin: 0.55rem 0;
-  color: var(--page-muted);
+  color: var(--status-current);
+  font-weight: 700;
   line-height: 1.5;
+}
+
+.auth-status-bulb {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  filter: drop-shadow(0 0 0.25rem var(--status-current-glow));
+  animation: status-bulb-pulse 1.15s ease-in-out infinite;
+}
+
+@keyframes status-bulb-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.wallet-identity {
+  margin: 0;
+  color: var(--page-muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.wallet-identity > span {
+  font-weight: 700;
 }
 
 .wallet-address {
@@ -1219,6 +1358,8 @@ td.expense {
   --status-checking: #f2bd5a;
   --status-ready: #38d1c5;
   --status-error: #ff7f7f;
+  --status-current: #f2bd5a;
+  --status-current-glow: rgb(242 189 90 / 48%);
   --panel-background: rgb(19 25 36 / 68%);
   --chart-grid: rgb(255 255 255 / 9%);
   --income: #46d6bd;
@@ -1808,6 +1949,11 @@ td.expense {
     width: 100%;
   }
 
+  .welcome-actions .auth-button,
+  .welcome-actions .theme-toggle {
+    width: auto;
+  }
+
   .app-shell {
     width: min(100% - 1rem, 90rem);
   }
@@ -1866,6 +2012,8 @@ td.expense {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .auth-help-popover,
+  .auth-status-bulb,
   .loading-orb,
   .theme-slider-thumb {
     animation: none;

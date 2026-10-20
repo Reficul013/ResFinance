@@ -11,9 +11,10 @@ interface ApprovalDetails {
 const requestId = new URL(location.href).searchParams.get("request");
 const status = element("status");
 const details = element("details");
+const approve = element("approve");
 let decided = false;
 
-element("approve").addEventListener("click", () => void decide(true));
+approve.addEventListener("click", () => void decide(true));
 element("reject").addEventListener("click", () => void decide(false));
 
 if (requestId === null) {
@@ -44,6 +45,8 @@ async function load(): Promise<void> {
     text("network", value.network_id);
     text("expires", new Date(value.expires_at).toLocaleString());
     text("parameters", JSON.stringify(value.parameters, null, 2));
+    approve.textContent =
+      value.action === "auth.login" ? "Approve & Login" : "Approve and sign";
     status.textContent =
       "Confirm that this exact action and its parameters are expected.";
     details.hidden = false;

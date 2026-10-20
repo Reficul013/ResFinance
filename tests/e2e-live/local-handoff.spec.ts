@@ -172,8 +172,20 @@ test("real ResVault and services preserve the local journey through restart", as
     await ownerPage.getByRole("button", { name: "Log out" }).click();
     expect((await loggedOut).status()).toBe(204);
     await expect(ownerPage).toHaveURL("http://127.0.0.1:5173/");
-    await expect(ownerPage.getByRole("button", { name: "Connect wallet" })).toBeEnabled();
+    await expect(ownerPage.getByText("ResVault is locked.")).toBeVisible();
+    await expect(
+      ownerPage.getByRole("button", { name: "Connect wallet" }),
+    ).toBeDisabled();
     await expectWalletLocked(first);
+    await unlockWallet(first);
+    await expect(
+      ownerPage.getByText(
+        "ResVault Detected! Unlock via extension and connect to wallet.",
+      ),
+    ).toBeVisible();
+    await expect(
+      ownerPage.getByRole("button", { name: "Connect wallet" }),
+    ).toBeEnabled();
     await expect(ownerPage.locator("main")).not.toContainText(beforeRestart);
   } finally {
     await first.close();
@@ -271,7 +283,16 @@ async function approveAfter(context: BrowserContext, action: () => Promise<unkno
     });
   }
   await approval.waitForLoadState("domcontentloaded");
-  await approval.getByRole("button", { name: "Approve and sign" }).click();
+  const approvalBounds = await approval.evaluate(() => ({
+    width: window.outerWidth,
+    height: window.outerHeight,
+  }));
+  expect(approvalBounds.width).toBeLessThanOrEqual(500);
+  expect(approvalBounds.height).toBeLessThanOrEqual(760);
+  const actionName = (await approval.locator("#action").textContent())?.trim();
+  const approvalLabel =
+    actionName === "auth.login" ? "Approve & Login" : "Approve and sign";
+  await approval.getByRole("button", { name: approvalLabel }).click();
 }
 
 async function unlockWallet(context: BrowserContext) {

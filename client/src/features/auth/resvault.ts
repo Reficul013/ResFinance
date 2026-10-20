@@ -3,6 +3,12 @@ export interface WalletIdentity {
   address: string;
 }
 
+export interface WalletStatus {
+  exists: boolean;
+  unlocked: boolean;
+  identity: WalletIdentity | null;
+}
+
 export interface SignedIntent {
   version: 1;
   intent_id: string;
@@ -49,8 +55,47 @@ interface VaultResponse<T> {
   error?: string;
 }
 
+interface VaultStatusNotice {
+  source: "resvault";
+  version: 1;
+  type: "STATUS_CHANGED";
+  status: WalletStatus;
+}
+
+export function getWalletStatus(): Promise<WalletStatus> {
+  return sendVaultRequest<WalletStatus>("GET_STATUS", {}, 1500);
+}
+
 export function getWalletIdentity(): Promise<WalletIdentity | null> {
   return sendVaultRequest<WalletIdentity | null>("GET_IDENTITY", {}, 1500);
+}
+
+export function subscribeWalletStatus(
+  listener: (status: WalletStatus) => void,
+): () => void {
+  function receive(event: MessageEvent<unknown>): void {
+    if (event.source !== window || event.origin !== window.location.origin)
+      return;
+    const notice = parseWalletStatusNotice(event.data);
+    if (notice !== null) listener(notice.status);
+  }
+  window.addEventListener("message", receive);
+  return () => window.removeEventListener("message", receive);
+}
+
+export function parseWalletStatusNotice(
+  value: unknown,
+): VaultStatusNotice | null {
+  if (!isObject(value)) return null;
+  if (
+    value.source !== "resvault" ||
+    value.version !== 1 ||
+    value.type !== "STATUS_CHANGED" ||
+    !isWalletStatus(value.status)
+  ) {
+    return null;
+  }
+  return value as unknown as VaultStatusNotice;
 }
 
 export function signIntent(intent: SignIntentRequest): Promise<SignedIntent> {
@@ -80,7 +125,7 @@ export function formatIntentTimestamp(value: Date): string {
 }
 
 function sendVaultRequest<T>(
-  type: "GET_IDENTITY" | "SIGN_INTENT" | "LOCK",
+  type: "GET_STATUS" | "GET_IDENTITY" | "SIGN_INTENT" | "LOCK",
   payload: object,
   timeoutMs: number,
 ): Promise<T> {
@@ -123,6 +168,22 @@ function sendVaultRequest<T>(
       window.location.origin,
     );
   });
+}
+
+function isWalletStatus(value: unknown): value is WalletStatus {
+  if (!isObject(value)) return false;
+  if (typeof value.exists !== "boolean" || typeof value.unlocked !== "boolean")
+    return false;
+  if (value.identity === null) return true;
+  return (
+    isObject(value.identity) &&
+    typeof value.identity.public_key === "string" &&
+    typeof value.identity.address === "string"
+  );
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function canonicalJson(value: JsonValue): string {

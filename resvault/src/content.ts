@@ -1,6 +1,37 @@
+import { ReconnectingPort } from "./reconnecting-port";
+
 const pageSource = "resfinance-page";
 const vaultSource = "resvault";
-const port = chrome.runtime.connect({ name: "resfinance-page" });
+
+const port = new ReconnectingPort(
+  () => {
+    const connected = chrome.runtime.connect({ name: "resfinance-page" });
+    return {
+      postMessage: (message) => connected.postMessage(message),
+      onMessage: {
+        addListener: (listener) => connected.onMessage.addListener(listener),
+      },
+      onDisconnect: {
+        addListener: (listener) =>
+          connected.onDisconnect.addListener(() => listener()),
+      },
+    };
+  },
+  (message) => {
+    if (
+      !isObject(message) ||
+      message.source !== vaultSource ||
+      message.version !== 1
+    )
+      return;
+    window.postMessage(message, window.location.origin);
+  },
+  (callback) => {
+    window.setTimeout(callback, 250);
+  },
+);
+
+port.start();
 
 window.addEventListener("message", (event: MessageEvent<unknown>) => {
   if (event.source !== window || event.origin !== window.location.origin)
@@ -14,22 +45,13 @@ window.addEventListener("message", (event: MessageEvent<unknown>) => {
     return;
   if (
     message.type !== "GET_IDENTITY" &&
+    message.type !== "GET_STATUS" &&
     message.type !== "SIGN_INTENT" &&
     message.type !== "LOCK"
   ) {
     return;
   }
   port.postMessage(message);
-});
-
-port.onMessage.addListener((message: unknown) => {
-  if (
-    !isObject(message) ||
-    message.source !== vaultSource ||
-    message.version !== 1
-  )
-    return;
-  window.postMessage(message, window.location.origin);
 });
 
 function isObject(value: unknown): value is Record<string, unknown> {
