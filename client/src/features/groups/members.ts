@@ -15,6 +15,10 @@ export function memberDisplayName(
   return member === undefined ? null : member.display_name;
 }
 
+export function memberCountLabel(count: number): string {
+  return `${count} ${count === 1 ? "member" : "members"}`;
+}
+
 export function shortAddress(value: string): string {
   return `${value.slice(0, 8)}…${value.slice(-6)}`;
 }

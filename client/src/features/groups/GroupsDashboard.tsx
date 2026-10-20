@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   formatIntentTimestamp,
@@ -8,9 +8,16 @@ import {
   type SignedIntent,
 } from "../auth/resvault";
 import { formatUsd, usdToMinorUnits } from "../finance/money";
-import { MemberName } from "./MemberName";
-import { shortAddress } from "./members";
-import { parseShares } from "./shares";
+import { MembersMenu } from "./MembersMenu";
+import { memberDisplayName, shortAddress } from "./members";
+import {
+  applyEqualSplit,
+  buildShares,
+  splitProgress,
+  type SplitMode,
+  type SplitRow,
+} from "./split";
+import { SplitEditor } from "./SplitEditor";
 import { useGroupAction } from "./useGroupAction";
 import { useGroupsDashboard } from "./useGroupsDashboard";
 
@@ -139,7 +146,13 @@ function GroupWorkspace({
         <dl className="group-metrics">
           <div>
             <dt>Members</dt>
-            <dd>{group.members.length}</dd>
+            <dd>
+              <MembersMenu
+                actorAddress={actorAddress}
+                ownerAddress={group.owner_address}
+                members={group.members}
+              />
+            </dd>
           </div>
           <div>
             <dt>Your credits</dt>
@@ -149,8 +162,6 @@ function GroupWorkspace({
           </div>
         </dl>
       </section>
-
-      <MembersPanel actorAddress={actorAddress} group={group} />
 
       <div className="group-actions-grid">
         {group.owner_address === actorAddress && (
@@ -183,40 +194,6 @@ function GroupWorkspace({
         <span>{formatTimestamp(group.provenance.as_of_utc)}</span>
       </footer>
     </>
-  );
-}
-
-function MembersPanel({
-  actorAddress,
-  group,
-}: {
-  actorAddress: string;
-  group: GroupOverview;
-}) {
-  const members = group.members.filter((member) => member.active);
-  return (
-    <section className="panel members-panel" aria-labelledby="members-title">
-      <div className="panel-heading">
-        <h2 id="members-title">Members</h2>
-        <span className="provenance-chip">{members.length} total</span>
-      </div>
-      <ul className="member-list">
-        {members.map((member) => (
-          <li key={member.actor_address}>
-            <MemberName address={member.actor_address} members={members} />
-            {member.actor_address === group.owner_address && (
-              <span className="member-tag">Owner</span>
-            )}
-            {member.actor_address === actorAddress && (
-              <span className="member-tag">You</span>
-            )}
-          </li>
-        ))}
-      </ul>
-      <p className="form-note">
-        Hover over or focus a name to see the member's wallet address.
-      </p>
-    </section>
   );
 }
 
@@ -407,22 +384,37 @@ function CreateExpensePanel({
     new Date().toISOString().slice(0, 10),
   );
   const [dueOn, setDueOn] = useState("");
-  const [sharesText, setSharesText] = useState("");
+  const [splitMode, setSplitMode] = useState<SplitMode>("equal");
+  const [excluded, setExcluded] = useState<Record<string, boolean>>({});
+  const [shareAmounts, setShareAmounts] = useState<Record<string, string>>({});
   const action = useGroupAction();
-  const memberHint = useMemo(
-    () => group.members.map((item) => `${item.actor_address}=0.00`).join("\n"),
-    [group.members],
-  );
+  const activeMembers = group.members.filter((member) => member.active);
+  const enteredRows: SplitRow[] = activeMembers.map((member) => ({
+    address: member.actor_address,
+    name: member.display_name,
+    included: excluded[member.actor_address] !== true,
+    amount: shareAmounts[member.actor_address] ?? "",
+  }));
+  const rows =
+    splitMode === "equal"
+      ? applyEqualSplit(amount, enteredRows, actorAddress)
+      : enteredRows;
+  const payerName =
+    memberDisplayName(group.members, actorAddress) ??
+    shortAddress(actorAddress);
   return (
     <section className="panel expense-form">
-      <h2>Create signed expense</h2>
+      <h2>Add an expense</h2>
       <form
         onSubmit={(event) => {
           event.preventDefault();
           void action.run(async () => {
             const expenseId = `expense-${crypto.randomUUID()}`;
-            const amountMinorUnits = usdToMinorUnits(amount);
-            const shares = parseShares(sharesText);
+            const { amountMinorUnits, shares } = buildShares(
+              amount,
+              rows,
+              actorAddress,
+            );
             const parameters: Record<string, JsonValue> = {
               group_id: group.group_id,
               expense_id: expenseId,
@@ -465,7 +457,9 @@ function CreateExpensePanel({
             });
             setDescription("");
             setAmount("");
-            setSharesText("");
+            setSplitMode("equal");
+            setExcluded({});
+            setShareAmounts({});
           });
         }}
       >
@@ -503,16 +497,32 @@ function CreateExpensePanel({
             onChange={(event) => setDueOn(event.target.value)}
           />
         </label>
-        <label className="wide-field">
-          Exact shares, one wallet=amount per line
-          <textarea
-            value={sharesText}
-            onChange={(event) => setSharesText(event.target.value)}
-            placeholder={memberHint}
-            rows={Math.max(group.members.length, 3)}
-            required
-          />
-        </label>
+        <SplitEditor
+          mode={splitMode}
+          onModeChange={(next) => {
+            if (next === "exact" && splitMode === "equal") {
+              setShareAmounts(
+                Object.fromEntries(
+                  rows
+                    .filter((row) => row.included && row.amount !== "")
+                    .map((row) => [row.address, row.amount]),
+                ),
+              );
+            }
+            setSplitMode(next);
+          }}
+          rows={rows}
+          members={group.members}
+          payerAddress={actorAddress}
+          payerName={payerName}
+          progress={splitProgress(amount, rows)}
+          onToggle={(address, included) =>
+            setExcluded((current) => ({ ...current, [address]: !included }))
+          }
+          onAmountChange={(address, value) =>
+            setShareAmounts((current) => ({ ...current, [address]: value }))
+          }
+        />
         <button disabled={isGroupWritePending(dashboard)}>
           Approve split in ResVault
         </button>

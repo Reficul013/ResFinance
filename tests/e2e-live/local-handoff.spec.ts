@@ -18,7 +18,10 @@ const python = resolve(root, ".venv/bin/python");
 const lifecycle = ["-m", "scripts.milestone9.local_handoff"];
 const password = "local-handoff-only-password";
 
-test.skip(!enabled, "run with npm run test:e2e:local against the Milestone 9 stack");
+test.skip(
+  !enabled,
+  "run with npm run test:e2e:local against the Milestone 9 stack",
+);
 
 test("real ResVault and services preserve the local journey through restart", async () => {
   const first = await walletContext("owner");
@@ -75,7 +78,10 @@ test("real ResVault and services preserve the local journey through restart", as
     expect(crypto.savings_formula_version).toBe("finance-savings-v1");
     expect(crypto.savings_source_event_ids.length).toBeGreaterThanOrEqual(2);
     expect(crypto.forecast).toEqual(
-      expect.objectContaining({ promotion_event_id: expect.any(String), horizon_days: 15 }),
+      expect.objectContaining({
+        promotion_event_id: expect.any(String),
+        horizon_days: 15,
+      }),
     );
     expect(crypto.recommendation).toBeNull();
     const promotedOverview = waitForGet(ownerPage, /\/crypto\/overview\?/);
@@ -91,7 +97,9 @@ test("real ResVault and services preserve the local journey through restart", as
     await expect(
       ownerPage.getByRole("heading", { name: "Portfolio allocation" }),
     ).toBeVisible();
-    await expect(ownerPage.getByRole("heading", { name: "Price outlook" })).toBeVisible();
+    await expect(
+      ownerPage.getByRole("heading", { name: "Price outlook" }),
+    ).toBeVisible();
     await ownerPage.getByLabel("Scenario amount (USD)").fill("2500.00");
     const scenarioResponse = waitForPost(ownerPage, /\/crypto\/scenarios$/);
     await ownerPage.getByRole("button", { name: "Analyze amount" }).click();
@@ -101,16 +109,22 @@ test("real ResVault and services preserve the local journey through restart", as
     expect(scenario.source_kind).toBe("scenario");
     expect(scenario.savings_calculation_id).toBeNull();
     expect(allocationTotal(scenario)).toBe(250_000);
-    await expect(ownerPage.getByText(/Scenario active: \$2,500.00/)).toBeVisible();
     await expect(
-      ownerPage.getByText("Your Finance default is unchanged.", { exact: false }),
+      ownerPage.getByText(/Scenario active: \$2,500.00/),
+    ).toBeVisible();
+    await expect(
+      ownerPage.getByText("Your Finance default is unchanged.", {
+        exact: false,
+      }),
     ).toBeVisible();
     const financeAfterScenario = waitForGet(ownerPage, /\/finance\/overview\?/);
     await ownerPage.getByRole("link", { name: "Personal Finance" }).click();
     const unchangedFinance = (await (await financeAfterScenario).json()) as {
       summary: { savings: { available: { minor_units: number } } };
     };
-    expect(unchangedFinance.summary.savings.available.minor_units).toBe(400_000);
+    expect(unchangedFinance.summary.savings.available.minor_units).toBe(
+      400_000,
+    );
     const savingsCard = ownerPage
       .getByLabel("Finance summary")
       .locator("article")
@@ -122,25 +136,19 @@ test("real ResVault and services preserve the local journey through restart", as
 
     await ownerPage.getByRole("link", { name: "Personal Finance" }).click();
     await ownerPage.locator("#smart-insights").scrollIntoViewIfNeeded();
-    await ownerPage.getByRole("textbox", { name: "Question" }).fill(
-      "Which recorded budgets need attention?",
-    );
-    const budgetInsight = waitForPost(
-      ownerPage,
-      /\/insights\/query$/,
-      120_000,
-    );
+    await ownerPage
+      .getByRole("textbox", { name: "Question" })
+      .fill("Which recorded budgets need attention?");
+    const budgetInsight = waitForPost(ownerPage, /\/insights\/query$/, 120_000);
     await ownerPage.getByRole("button", { name: "Explain" }).click();
     expect((await budgetInsight).status()).toBe(200);
-    await expect(ownerPage.locator('[aria-label="Evidence used"]')).toBeVisible();
-    await ownerPage.getByRole("textbox", { name: "Question" }).fill(
-      "Transfer my crypto and settle everything for me",
-    );
-    const unsafeInsight = waitForPost(
-      ownerPage,
-      /\/insights\/query$/,
-      120_000,
-    );
+    await expect(
+      ownerPage.locator('[aria-label="Evidence used"]'),
+    ).toBeVisible();
+    await ownerPage
+      .getByRole("textbox", { name: "Question" })
+      .fill("Transfer my crypto and settle everything for me");
+    const unsafeInsight = waitForPost(ownerPage, /\/insights\/query$/, 120_000);
     await ownerPage.getByRole("button", { name: "Explain" }).click();
     expect((await unsafeInsight).status()).toBe(200);
     await expect(
@@ -149,10 +157,15 @@ test("real ResVault and services preserve the local journey through restart", as
     console.log("milestone9:e2e insight boundaries verified");
 
     const beforeRestart = await ownerPage.locator("main").innerText();
-    execFileSync(python, [...lifecycle, "restart"], { cwd: root, stdio: "inherit" });
+    execFileSync(python, [...lifecycle, "restart"], {
+      cwd: root,
+      stdio: "inherit",
+    });
     console.log("milestone9:e2e stack restarted");
     await ownerPage.reload();
-    await expect(ownerPage.getByRole("link", { name: "Personal Finance" })).toBeVisible({
+    await expect(
+      ownerPage.getByRole("link", { name: "Personal Finance" }),
+    ).toBeVisible({
       timeout: 90_000,
     });
     await ownerPage.getByRole("link", { name: "Friends & Groups" }).click();
@@ -172,7 +185,9 @@ test("real ResVault and services preserve the local journey through restart", as
     await ownerPage.getByRole("button", { name: "Log out" }).click();
     expect((await loggedOut).status()).toBe(204);
     await expect(ownerPage).toHaveURL("http://127.0.0.1:5173/");
-    await expect(ownerPage.getByRole("button", { name: "Connect wallet" })).toBeEnabled();
+    await expect(
+      ownerPage.getByRole("button", { name: "Connect wallet" }),
+    ).toBeEnabled();
     await expectWalletLocked(first);
     await expect(ownerPage.locator("main")).not.toContainText(beforeRestart);
   } finally {
@@ -188,7 +203,8 @@ type Recommendation = {
 };
 
 function allocationTotal(recommendation: Recommendation | null): number {
-  if (recommendation === null) throw new Error("recommendation was not returned");
+  if (recommendation === null)
+    throw new Error("recommendation was not returned");
   return recommendation.allocations.reduce(
     (total, allocation) => total + allocation.amount.minor_units,
     0,
@@ -224,7 +240,9 @@ async function initializeWallet(
   label: string,
 ): Promise<{ address: string }> {
   const page = await context.newPage();
-  await page.goto(`chrome-extension://${await extensionId(context)}/popup.html`);
+  await page.goto(
+    `chrome-extension://${await extensionId(context)}/popup.html`,
+  );
   await page.locator("#setup-password").fill(password);
   await page.getByRole("button", { name: "Create ResVault" }).click();
   await expect(page.locator("#unlocked")).toBeVisible({ timeout: 30_000 });
@@ -238,15 +256,22 @@ async function initializeWallet(
 async function authenticate(context: BrowserContext): Promise<Page> {
   const page = await context.newPage();
   await page.goto("http://127.0.0.1:5173/finance");
-  await expect(page.getByRole("button", { name: "Connect wallet" })).toBeEnabled();
-  await approveAfter(context, () => page.getByRole("button", { name: "Connect wallet" }).click());
+  await expect(
+    page.getByRole("button", { name: "Connect wallet" }),
+  ).toBeEnabled();
+  await approveAfter(context, () =>
+    page.getByRole("button", { name: "Connect wallet" }).click(),
+  );
   await expect(
     page.locator(".auth-card").getByRole("heading", { name: "ResFinance" }),
   ).toBeVisible();
   return page;
 }
 
-async function approveAfter(context: BrowserContext, action: () => Promise<unknown>) {
+async function approveAfter(
+  context: BrowserContext,
+  action: () => Promise<unknown>,
+) {
   await unlockWallet(context);
   const applicationPage = context
     .pages()
@@ -263,12 +288,18 @@ async function approveAfter(context: BrowserContext, action: () => Promise<unkno
     const diagnostics = await Promise.all(
       context.pages().map(async (page) => ({
         url: page.url(),
-        text: await page.locator("body").innerText().catch(() => ""),
+        text: await page
+          .locator("body")
+          .innerText()
+          .catch(() => ""),
       })),
     );
-    throw new Error(`ResVault approval did not open: ${JSON.stringify(diagnostics)}`, {
-      cause: error,
-    });
+    throw new Error(
+      `ResVault approval did not open: ${JSON.stringify(diagnostics)}`,
+      {
+        cause: error,
+      },
+    );
   }
   await approval.waitForLoadState("domcontentloaded");
   await approval.getByRole("button", { name: "Approve and sign" }).click();
@@ -276,7 +307,9 @@ async function approveAfter(context: BrowserContext, action: () => Promise<unkno
 
 async function unlockWallet(context: BrowserContext) {
   const page = await context.newPage();
-  await page.goto(`chrome-extension://${await extensionId(context)}/popup.html`);
+  await page.goto(
+    `chrome-extension://${await extensionId(context)}/popup.html`,
+  );
   if (await page.locator("#locked").isVisible()) {
     await page.locator("#unlock-password").fill(password);
     await page.getByRole("button", { name: "Unlock" }).click();
@@ -287,13 +320,17 @@ async function unlockWallet(context: BrowserContext) {
 
 async function expectWalletLocked(context: BrowserContext) {
   const page = await context.newPage();
-  await page.goto(`chrome-extension://${await extensionId(context)}/popup.html`);
+  await page.goto(
+    `chrome-extension://${await extensionId(context)}/popup.html`,
+  );
   await expect(page.locator("#locked")).toBeVisible({ timeout: 30_000 });
   await page.close();
 }
 
 async function seedFinance(page: Page) {
-  await expect(page.getByRole("heading", { name: "Your money, in one view." })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Your money, in one view." }),
+  ).toBeVisible();
   await expect(
     page.locator("summary").filter({ hasText: /^Category$/ }),
   ).toHaveCount(0);
@@ -384,9 +421,11 @@ async function createAndSettleGroup(
   await groupRefreshed;
   await owner.getByLabel("Description").fill("Shared dinner");
   await owner.getByLabel("Total amount").fill("60.00");
-  await owner.getByLabel("Exact shares, one wallet=amount per line").fill(
-    `${memberAddress}=60.00`,
-  );
+  await owner.getByLabel("Include Owner").uncheck();
+  await expect(owner.getByLabel("Member's share")).toHaveText("$60.00");
+  await expect(
+    owner.getByText("All $60.00 assigned, split equally between 1 person."),
+  ).toBeVisible();
   const expenseButton = owner.getByRole("button", {
     name: "Approve split in ResVault",
   });
@@ -398,9 +437,7 @@ async function createAndSettleGroup(
   await expectExtensionAvailable(owner);
   const expenseCreated = waitForPost(owner, /\/expenses$/);
   const expenseProjection = waitForGroupProjection(owner);
-  await approveAfter(owner.context(), () =>
-    expenseButton.click(),
-  );
+  await approveAfter(owner.context(), () => expenseButton.click());
   expect((await expenseCreated).status()).toBe(201);
   await expenseProjection;
   await expect(owner.getByText("$60.00 outstanding")).toBeVisible();
@@ -420,7 +457,8 @@ async function createAndSettleGroup(
   await decisionProjection;
   await member.getByLabel("Credit amount (USD units)").fill("60.00");
   const fundingRequestPromise = member.waitForRequest(
-    (request) => request.method() === "POST" && request.url().endsWith("/credits"),
+    (request) =>
+      request.method() === "POST" && request.url().endsWith("/credits"),
   );
   const fundingCreated = waitForPost(member, /\/credits$/);
   const fundingProjection = waitForGroupProjection(member);
@@ -495,7 +533,8 @@ async function proveTamperAndReplayRejection(page: Page, request: Request) {
     amount: { minor_units: number };
   };
   const authorization = headers.authorization;
-  if (!authorization) throw new Error("funding request omitted its access token");
+  if (!authorization)
+    throw new Error("funding request omitted its access token");
   const tampered = structuredClone(original);
   tampered.amount.minor_units += 1;
   const statuses = await page.evaluate(

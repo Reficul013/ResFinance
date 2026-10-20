@@ -27,7 +27,7 @@ A user will be able to connect a ResVault wallet, manage personal finances, spli
 
 ### Friends & Groups
 
-- Create groups and shared expenses with equal or custom splits.
+- Create groups and add shared expenses, choosing which members share each expense and splitting it equally or by exact amounts.
 - Ask each participant to approve or reject their obligation with ResVault.
 - Track who owes whom and whether an obligation is pending, open, partially settled, settled, rejected, or cancelled.
 - Settle with internal, non-redeemable credits and receive immutable receipts.

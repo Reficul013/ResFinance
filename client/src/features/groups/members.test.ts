@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { memberDisplayName, shortAddress } from "./members";
+import { memberCountLabel, memberDisplayName, shortAddress } from "./members";
 
 const alex = `0x${"a".repeat(40)}`;
 const sam = `0x${"b".repeat(40)}`;
@@ -17,6 +17,12 @@ describe("group member labels", () => {
 
   it("returns null for a wallet outside the group", () => {
     expect(memberDisplayName(members, `0x${"c".repeat(40)}`)).toBeNull();
+  });
+
+  it("labels the member count in singular and plural", () => {
+    expect(memberCountLabel(1)).toBe("1 member");
+    expect(memberCountLabel(2)).toBe("2 members");
+    expect(memberCountLabel(6)).toBe("6 members");
   });
 
   it("shortens wallet addresses for fallback display", () => {
