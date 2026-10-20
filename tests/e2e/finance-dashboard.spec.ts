@@ -509,6 +509,16 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     page.getByRole("heading", { name: "Connect ResVault" }),
   ).toBeVisible();
+  const loggedOutCard = page.locator(".auth-card");
+  await expect(
+    loggedOutCard.getByRole("link", {
+      name: "Open ResFinance repository on GitHub",
+    }),
+  ).toHaveCount(0);
+  await expect(
+    loggedOutCard.getByRole("button", { name: "Log out" }),
+  ).toHaveCount(0);
+  await expect(loggedOutCard.locator(".theme-toggle")).toHaveCount(0);
   await expect(
     page.getByText("Private finance · Read-only insights"),
   ).toHaveCount(0);
@@ -745,8 +755,19 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
 
   await page.goto("/");
 
+  const authCard = page.locator(".auth-card");
   await expect(page.getByText("ResVault is locked.")).toBeVisible();
   await expect(page.locator(".auth-status-bulb")).toBeVisible();
+  await expect(authCard.locator(".auth-brand-logo-dark")).toBeVisible();
+  await expect(
+    authCard.getByRole("link", {
+      name: "Open ResFinance repository on GitHub",
+    }),
+  ).toHaveCount(0);
+  await expect(authCard.getByRole("button", { name: "Log out" })).toHaveCount(
+    0,
+  );
+  await expect(authCard.locator(".theme-toggle")).toHaveCount(0);
   await expect(page.getByText("Your Wallet Address:")).toBeVisible();
   await expect(page.locator(".wallet-address")).toHaveText(
     `0x${"6".repeat(40)}`,
@@ -801,9 +822,7 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
   });
 
   await expect(
-    page.getByText(
-      "ResVault Detected! Unlock via extension and connect to wallet.",
-    ),
+    page.getByText("ResVault Unlocked! Connect to Wallet now."),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Connect wallet" }),

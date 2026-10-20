@@ -46,6 +46,42 @@ h2 {
   color: #aeb8c8;
   line-height: 1.5;
 }
+.vault-status {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  min-height: 1.5rem;
+}
+.vault-status[data-tone="locked"] {
+  color: #f5b84b;
+  font-weight: 700;
+}
+.vault-status[data-tone="error"] {
+  color: #ff6b6b;
+  font-weight: 700;
+}
+.status-bulb {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  filter: drop-shadow(0 0 0.25rem rgb(245 184 75 / 55%));
+  animation: status-bulb-pulse 1.15s ease-in-out infinite;
+}
+.status-bulb[hidden] {
+  display: none;
+}
+@keyframes status-bulb-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
 label {
   display: grid;
   gap: 0.35rem;
@@ -124,4 +160,10 @@ pre {
 .actions {
   display: flex;
   justify-content: flex-end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-bulb {
+    animation: none;
+  }
 }

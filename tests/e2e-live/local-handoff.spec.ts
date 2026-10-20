@@ -177,11 +177,9 @@ test("real ResVault and services preserve the local journey through restart", as
       ownerPage.getByRole("button", { name: "Connect wallet" }),
     ).toBeDisabled();
     await expectWalletLocked(first);
-    await unlockWallet(first);
+    await unlockWallet(first, true);
     await expect(
-      ownerPage.getByText(
-        "ResVault Detected! Unlock via extension and connect to wallet.",
-      ),
+      ownerPage.getByText("ResVault Unlocked! Connect to Wallet now."),
     ).toBeVisible();
     await expect(
       ownerPage.getByRole("button", { name: "Connect wallet" }),
@@ -260,47 +258,61 @@ async function authenticate(context: BrowserContext): Promise<Page> {
 
 async function approveAfter(context: BrowserContext, action: () => Promise<unknown>) {
   await unlockWallet(context);
+  let worker = context.serviceWorkers()[0];
+  worker ??= await context.waitForEvent("serviceworker");
   const applicationPage = context
     .pages()
     .find((page) => page.url().startsWith("http://127.0.0.1:5173/"));
   if (applicationPage === undefined)
     throw new Error("ResFinance application page is unavailable");
   await expectExtensionAvailable(applicationPage);
-  const popupPromise = context.waitForEvent("page", { timeout: 15_000 });
   await action();
-  let approval: Page;
-  try {
-    approval = await popupPromise;
-  } catch (error) {
-    const diagnostics = await Promise.all(
-      context.pages().map(async (page) => ({
-        url: page.url(),
-        text: await page.locator("body").innerText().catch(() => ""),
-      })),
-    );
-    throw new Error(`ResVault approval did not open: ${JSON.stringify(diagnostics)}`, {
-      cause: error,
+  let approvalUrl = "";
+  await expect.poll(async () => {
+    approvalUrl = await worker.evaluate(async () => {
+      const contexts = await chrome.runtime.getContexts({
+        contextTypes: ["POPUP"],
+      });
+      return contexts.find((context) =>
+        context.documentUrl?.includes("/approval.html?request="),
+      )?.documentUrl ?? "";
     });
-  }
-  await approval.waitForLoadState("domcontentloaded");
-  const approvalBounds = await approval.evaluate(() => ({
-    width: window.outerWidth,
-    height: window.outerHeight,
-  }));
-  expect(approvalBounds.width).toBeLessThanOrEqual(500);
-  expect(approvalBounds.height).toBeLessThanOrEqual(760);
-  const actionName = (await approval.locator("#action").textContent())?.trim();
-  const approvalLabel =
-    actionName === "auth.login" ? "Approve & Login" : "Approve and sign";
-  await approval.getByRole("button", { name: approvalLabel }).click();
+    return approvalUrl;
+  }, { timeout: 15_000 }).toContain("/approval.html?request=");
+  const requestId = new URL(approvalUrl).searchParams.get("request");
+  if (requestId === null) throw new Error("Approval request ID is unavailable");
+  const browserWindowCount = await worker.evaluate(
+    async () => (await chrome.windows.getAll()).length,
+  );
+  expect(browserWindowCount).toBe(1);
+  await expect(applicationPage).toHaveURL(/127\.0\.0\.1:5173/);
+  const result = await worker.evaluate(
+    async (approvalRequestId) => await chrome.runtime.sendMessage({
+      type: "APPROVAL_DECISION",
+      request_id: approvalRequestId,
+      approved: true,
+    }),
+    requestId,
+  );
+  expect(result).toEqual({ ok: true, result: { approved: true } });
+  await applicationPage.bringToFront();
 }
 
-async function unlockWallet(context: BrowserContext) {
+async function unlockWallet(context: BrowserContext, verifyIncorrectPassword = false) {
   const page = await context.newPage();
   await page.goto(`chrome-extension://${await extensionId(context)}/popup.html`);
   if (await page.locator("#locked").isVisible()) {
+    if (verifyIncorrectPassword) {
+      await page.locator("#unlock-password").fill("incorrect-password-value");
+      await page.locator("#unlock-password").press("Enter");
+      await expect(page.locator("#status-text")).toHaveText(
+        "Incorrect Password",
+        { timeout: 30_000 },
+      );
+      await expect(page.locator("#status")).toHaveAttribute("data-tone", "error");
+    }
     await page.locator("#unlock-password").fill(password);
-    await page.getByRole("button", { name: "Unlock" }).click();
+    await page.locator("#unlock-password").press("Enter");
     await expect(page.locator("#unlocked")).toBeVisible({ timeout: 30_000 });
   }
   await page.close();
@@ -310,6 +322,8 @@ async function expectWalletLocked(context: BrowserContext) {
   const page = await context.newPage();
   await page.goto(`chrome-extension://${await extensionId(context)}/popup.html`);
   await expect(page.locator("#locked")).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("#status-text")).toHaveText("ResVault is locked.");
+  await expect(page.locator("#status-bulb")).toBeVisible();
   await page.close();
 }
 

@@ -118,9 +118,9 @@ body {
   outline-offset: 3px;
 }
 
-.app-shell > .auth-card .auth-session {
+.auth-session {
   display: flex;
-  gap: 0.65rem;
+  gap: 0.8rem;
   align-items: center;
 }
 
@@ -128,6 +128,11 @@ body {
   width: 2rem;
   height: 2rem;
   flex: 0 0 auto;
+}
+
+.auth-card:not([data-state="authenticated"]) .auth-brand-logo {
+  width: 2.75rem;
+  height: 2.75rem;
 }
 
 .auth-brand-logo-dark {
@@ -367,6 +372,8 @@ code {
 
 .auth-card:not([data-state="authenticated"]) {
   overflow: visible;
+  gap: 1.5rem;
+  padding: 1.5rem 1.35rem;
 }
 
 .auth-card > * {

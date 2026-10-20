@@ -164,7 +164,8 @@ In both profiles:
 
 1. Open `http://127.0.0.1:5173/finance`.
 2. Choose **Connect wallet**.
-3. Review the ResVault approval window.
+3. Review the ResVault toolbar approval popup while the ResFinance page remains
+   visible behind it.
 4. Choose **Approve & Login**.
 5. Confirm the application displays **Session active**.
 

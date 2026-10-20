@@ -25,7 +25,7 @@ export function AuthCard({
   onConnect,
   onLogout,
 }: AuthCardProps) {
-  const authenticated = state === "authenticated";
+  const authenticated = state === "authenticated" && actorAddress !== null;
   const busy =
     state === "checking" || state === "locked" || state === "pending";
   return (
@@ -51,9 +51,7 @@ export function AuthCard({
                 Install and enable the hardened ResVault extension for wallet
                 authentication.
               </li>
-              <li>
-                Open ResVault, then create, import, or unlock your wallet.
-              </li>
+              <li>Open ResVault extension &amp; unlock your wallet.</li>
               <li>
                 Return here, select <b>Connect wallet</b>, then choose{` `}
                 <b>Approve &amp; Login</b>.
@@ -63,22 +61,18 @@ export function AuthCard({
         </div>
       )}
       <div className="auth-session">
-        {authenticated && (
-          <>
-            <img
-              className="auth-brand-logo auth-brand-logo-light"
-              src="/favicon.png"
-              alt=""
-              aria-hidden="true"
-            />
-            <img
-              className="auth-brand-logo auth-brand-logo-dark"
-              src="/favicon-dark.png"
-              alt=""
-              aria-hidden="true"
-            />
-          </>
-        )}
+        <img
+          className="auth-brand-logo auth-brand-logo-light"
+          src="/favicon.png"
+          alt=""
+          aria-hidden="true"
+        />
+        <img
+          className="auth-brand-logo auth-brand-logo-dark"
+          src="/favicon-dark.png"
+          alt=""
+          aria-hidden="true"
+        />
         <div className="auth-session-copy">
           <p className="auth-kicker">Wallet authentication</p>
           <h2>

@@ -52,17 +52,23 @@ export function useAuthentication(): Authentication {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [actorAddress, setActorAddress] = useState<string | null>(null);
 
-  const applyWalletStatus = useCallback((current: WalletStatus) => {
-    setIdentity(current.identity);
-    setState((existing) => {
-      if (existing === "authenticated" || existing === "pending") {
-        return existing;
-      }
-      if (!current.exists || current.identity === null) return "disconnected";
-      return current.unlocked ? "ready" : "locked";
-    });
-    setMessage(walletStatusMessage(current));
-  }, []);
+  const applyWalletStatus = useCallback(
+    (current: WalletStatus, preserveActiveSession = false) => {
+      setIdentity(current.identity);
+      setState((existing) => {
+        if (
+          preserveActiveSession &&
+          (existing === "authenticated" || existing === "pending")
+        ) {
+          return existing;
+        }
+        if (!current.exists || current.identity === null) return "disconnected";
+        return current.unlocked ? "ready" : "locked";
+      });
+      setMessage(walletStatusMessage(current));
+    },
+    [],
+  );
 
   const inspectWallet = useCallback(async () => {
     try {
@@ -77,7 +83,7 @@ export function useAuthentication(): Authentication {
   }, [applyWalletStatus]);
 
   useEffect(
-    () => subscribeWalletStatus(applyWalletStatus),
+    () => subscribeWalletStatus((status) => applyWalletStatus(status, true)),
     [applyWalletStatus],
   );
 
@@ -189,5 +195,5 @@ function walletStatusMessage(status: WalletStatus): string {
   if (!status.exists || status.identity === null)
     return "Initialize ResVault before connecting.";
   if (!status.unlocked) return "ResVault is locked.";
-  return "ResVault Detected! Unlock via extension and connect to wallet.";
+  return "ResVault Unlocked! Connect to Wallet now.";
 }

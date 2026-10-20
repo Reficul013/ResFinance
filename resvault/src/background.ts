@@ -121,7 +121,7 @@ async function handlePageMessage(
       throw new Error("ResVault request ID is already pending");
     pending.set(requestId, { request: message.intent, origin, port });
     try {
-      await openApprovalWindow(requestId);
+      await openApprovalPopup(requestId, port.sender?.tab);
     } catch (error) {
       pending.delete(requestId);
       throw error;
@@ -254,41 +254,25 @@ async function handleExtensionMessage(message: unknown): Promise<unknown> {
   }
 }
 
-async function openApprovalWindow(requestId: string): Promise<void> {
-  const width = 460;
-  const height = 720;
-  const current = await chrome.windows.getLastFocused();
-  const left = centerCoordinate(current.left, current.width, width);
-  const top = centerCoordinate(current.top, current.height, height);
-  const created = await chrome.windows.create({
-    url: chrome.runtime.getURL(
-      `approval.html?request=${encodeURIComponent(requestId)}`,
-    ),
-    type: "popup",
-    state: "normal",
-    width,
-    height,
-    ...(left === undefined ? {} : { left }),
-    ...(top === undefined ? {} : { top }),
-    focused: true,
+async function openApprovalPopup(
+  requestId: string,
+  sourceTab: chrome.tabs.Tab | undefined,
+): Promise<void> {
+  if (sourceTab?.id === undefined || sourceTab.windowId === undefined) {
+    throw new Error("The ResFinance browser tab is unavailable");
+  }
+  await chrome.action.setPopup({
+    tabId: sourceTab.id,
+    popup: `approval.html?request=${encodeURIComponent(requestId)}`,
   });
-  if (created?.id !== undefined) {
-    await chrome.windows.update(created.id, {
-      state: "normal",
-      width,
-      height,
-      focused: true,
+  try {
+    await chrome.action.openPopup({ windowId: sourceTab.windowId });
+  } finally {
+    await chrome.action.setPopup({
+      tabId: sourceTab.id,
+      popup: "popup.html",
     });
   }
-}
-
-function centerCoordinate(
-  start: number | undefined,
-  available: number | undefined,
-  requested: number,
-): number | undefined {
-  if (start === undefined || available === undefined) return undefined;
-  return Math.max(0, Math.round(start + (available - requested) / 2));
 }
 
 async function walletStatus(): Promise<{
