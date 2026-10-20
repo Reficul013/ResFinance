@@ -89,6 +89,15 @@ label {
   color: #cfd7e3;
   font-size: 0.82rem;
 }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 input {
   width: 100%;
   padding: 0.72rem;
@@ -114,6 +123,12 @@ button.secondary {
   border: 1px solid rgb(255 255 255 / 18%);
   background: rgb(255 255 255 / 8%);
   color: #f5f7fb;
+}
+#locked > button,
+#unlocked > button {
+  width: 100%;
+  margin-right: 0;
+  margin-left: 0;
 }
 button:focus-visible,
 input:focus-visible {

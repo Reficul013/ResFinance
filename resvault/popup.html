@@ -47,23 +47,24 @@
 
       <form id="locked" hidden>
         <h2>Unlock</h2>
-        <label>
-          Password
-          <input
-            id="unlock-password"
-            type="password"
-            autocomplete="current-password"
-          />
-        </label>
-        <button id="unlock" type="submit">Unlock</button>
+        <label class="visually-hidden" for="unlock-password">Password</label>
+        <input
+          id="unlock-password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Enter your password"
+        />
+        <button id="unlock" type="submit">Unlock your Wallet!</button>
       </form>
 
       <section id="unlocked" hidden>
         <h2>Ready to approve</h2>
-        <p class="identity"><span>Address</span><code id="address"></code></p>
+        <p class="identity">
+          <span>Your Wallet Address</span><code id="address"></code>
+        </p>
         <p class="hint">
-          Signing stays in this extension. The wallet locks after five minutes
-          of inactivity.
+          Your private key never leaves ResVault. For your security, the wallet
+          locks automatically after five minutes of inactivity.
         </p>
         <button id="lock" type="button">Lock now</button>
       </section>

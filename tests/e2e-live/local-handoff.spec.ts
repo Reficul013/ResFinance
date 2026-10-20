@@ -302,6 +302,14 @@ async function unlockWallet(context: BrowserContext, verifyIncorrectPassword = f
   const page = await context.newPage();
   await page.goto(`chrome-extension://${await extensionId(context)}/popup.html`);
   if (await page.locator("#locked").isVisible()) {
+    await expect(page.locator("#unlock-password")).toHaveAttribute(
+      "placeholder",
+      "Enter your password",
+    );
+    await expect(page.getByText("Password", { exact: true })).not.toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Unlock your Wallet!" }),
+    ).toBeVisible();
     if (verifyIncorrectPassword) {
       await page.locator("#unlock-password").fill("incorrect-password-value");
       await page.locator("#unlock-password").press("Enter");
@@ -314,6 +322,21 @@ async function unlockWallet(context: BrowserContext, verifyIncorrectPassword = f
     await page.locator("#unlock-password").fill(password);
     await page.locator("#unlock-password").press("Enter");
     await expect(page.locator("#unlocked")).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator(".identity > span")).toHaveText(
+      "Your Wallet Address",
+    );
+    await expect(page.locator("#unlocked .hint")).toHaveText(
+      "Your private key never leaves ResVault. For your security, the wallet locks automatically after five minutes of inactivity.",
+    );
+    const lockButtonBox = await page
+      .getByRole("button", { name: "Lock now" })
+      .boundingBox();
+    const unlockedSectionBox = await page.locator("#unlocked").boundingBox();
+    expect(lockButtonBox).not.toBeNull();
+    expect(unlockedSectionBox).not.toBeNull();
+    expect(
+      Math.abs(lockButtonBox!.width - unlockedSectionBox!.width),
+    ).toBeLessThan(1);
   }
   await page.close();
 }
@@ -324,6 +347,15 @@ async function expectWalletLocked(context: BrowserContext) {
   await expect(page.locator("#locked")).toBeVisible({ timeout: 30_000 });
   await expect(page.locator("#status-text")).toHaveText("ResVault is locked.");
   await expect(page.locator("#status-bulb")).toBeVisible();
+  const unlockButtonBox = await page
+    .getByRole("button", { name: "Unlock your Wallet!" })
+    .boundingBox();
+  const lockedFormBox = await page.locator("#locked").boundingBox();
+  expect(unlockButtonBox).not.toBeNull();
+  expect(lockedFormBox).not.toBeNull();
+  expect(
+    Math.abs(unlockButtonBox!.width - lockedFormBox!.width),
+  ).toBeLessThan(1);
   await page.close();
 }
 
