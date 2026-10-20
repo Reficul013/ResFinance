@@ -628,7 +628,14 @@ test("voids transactions and deactivates recurring items through confirmed audit
   const voidButton = page.getByRole("button", {
     name: "Void transaction October groceries",
   });
-  await expect(voidButton).toContainText("🚫");
+  await expect(voidButton.locator(".lucide-archive-x")).toHaveAttribute(
+    "stroke",
+    "#FF6B4A",
+  );
+  await expect(voidButton.locator(".lucide-archive-x")).toHaveAttribute(
+    "width",
+    "18",
+  );
   await voidButton.click();
   const voidDialog = page.getByRole("dialog", {
     name: "Void this transaction?",
@@ -661,7 +668,14 @@ test("voids transactions and deactivates recurring items through confirmed audit
   const deactivateButton = page.getByRole("button", {
     name: "Deactivate recurring item Expected monthly groceries",
   });
-  await expect(deactivateButton).toContainText("🚫");
+  await expect(deactivateButton.locator(".lucide-archive-x")).toHaveAttribute(
+    "stroke",
+    "#FF6B4A",
+  );
+  await expect(deactivateButton.locator(".lucide-archive-x")).toHaveAttribute(
+    "width",
+    "18",
+  );
   await deactivateButton.click();
   const deactivateDialog = page.getByRole("dialog", {
     name: "Deactivate this recurring item?",

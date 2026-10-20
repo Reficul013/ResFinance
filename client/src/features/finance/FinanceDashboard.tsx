@@ -1,3 +1,4 @@
+import { ArchiveX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   Bar,
@@ -433,7 +434,7 @@ function RecordActionButton({
       title={accessibleLabel}
       onClick={onAction}
     >
-      <span aria-hidden="true">🚫</span>
+      <ArchiveX size={18} color="#FF6B4A" aria-hidden="true" />
     </button>
   );
 }
