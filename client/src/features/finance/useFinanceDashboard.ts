@@ -7,17 +7,25 @@ import {
 
 import {
   createFinanceRecurringEntry,
+  deactivateFinanceRecurringEntry,
   getFinanceOverview,
   recordFinanceTransaction,
   setFinanceBudget,
+  voidFinanceTransaction,
   type BudgetCommand,
+  type DeactivateRecurringCommand,
   type RecurringEntryCommand,
   type TransactionCommand,
+  type VoidTransactionCommand,
 } from "../../lib/api/client";
 
 interface Command<T> {
   body: T;
   idempotencyKey: string;
+}
+
+interface RecordCommand<T> extends Command<T> {
+  recordId: string;
 }
 
 export function useFinanceDashboard(accessToken: string, month: string) {
@@ -45,6 +53,15 @@ export function useFinanceDashboard(accessToken: string, month: string) {
       recordFinanceTransaction(accessToken, idempotencyKey, body),
     onSuccess: refresh,
   });
+  const voidTransaction = useMutation({
+    mutationFn: ({
+      recordId,
+      body,
+      idempotencyKey,
+    }: RecordCommand<VoidTransactionCommand>) =>
+      voidFinanceTransaction(accessToken, recordId, idempotencyKey, body),
+    onSuccess: refresh,
+  });
   const budget = useMutation({
     mutationFn: ({ body, idempotencyKey }: Command<BudgetCommand>) =>
       setFinanceBudget(accessToken, idempotencyKey, body),
@@ -55,7 +72,30 @@ export function useFinanceDashboard(accessToken: string, month: string) {
       createFinanceRecurringEntry(accessToken, idempotencyKey, body),
     onSuccess: refresh,
   });
-  return { overview, historyMonths, history, transaction, budget, recurring };
+  const deactivateRecurring = useMutation({
+    mutationFn: ({
+      recordId,
+      body,
+      idempotencyKey,
+    }: RecordCommand<DeactivateRecurringCommand>) =>
+      deactivateFinanceRecurringEntry(
+        accessToken,
+        recordId,
+        idempotencyKey,
+        body,
+      ),
+    onSuccess: refresh,
+  });
+  return {
+    overview,
+    historyMonths,
+    history,
+    transaction,
+    voidTransaction,
+    budget,
+    recurring,
+    deactivateRecurring,
+  };
 }
 
 function financeTrendMonths(month: string): string[] {

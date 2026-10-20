@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { queryInsights } from "./client";
+import {
+  deactivateFinanceRecurringEntry,
+  queryInsights,
+  voidFinanceTransaction,
+} from "./client";
 
 describe("queryInsights", () => {
   afterEach(() => {
@@ -30,5 +34,65 @@ describe("queryInsights", () => {
 
     await vi.advanceTimersByTimeAsync(30_000);
     await request;
+  });
+});
+
+describe("finance correction commands", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("sends void and deactivation events through the generated API boundary", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({
+            event_id: "event-1",
+            projection_version: 9,
+            occurred_at_utc: "2026-10-19T20:00:00Z",
+            deduplicated: false,
+            receipt_ids: [],
+          }),
+          { status: 201, headers: { "Content-Type": "application/json" } },
+        ),
+    );
+
+    await voidFinanceTransaction(
+      "access-token",
+      "rent duplicate",
+      "void-command-1",
+      { reason: "Duplicate transaction", expected_version: 8 },
+    );
+    await deactivateFinanceRecurringEntry(
+      "access-token",
+      "monthly rent",
+      "deactivate-command-1",
+      { expected_version: 9 },
+    );
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/v1/finance/transactions/rent%20duplicate/void",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          reason: "Duplicate transaction",
+          expected_version: 8,
+        }),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/v1/finance/recurring/monthly%20rent/deactivate",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ expected_version: 9 }),
+      }),
+    );
+    const firstRequest = fetchMock.mock.calls[0]?.[1];
+    expect(firstRequest?.headers).toMatchObject({
+      Authorization: "Bearer access-token",
+      "Idempotency-Key": "void-command-1",
+    });
   });
 });
