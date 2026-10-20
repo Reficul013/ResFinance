@@ -905,11 +905,183 @@ td.expense {
   font-weight: 750;
 }
 
+.record-actions-heading,
+.record-actions-cell {
+  width: 4.5rem;
+  text-align: right;
+}
+
+.record-action-menu {
+  position: relative;
+  display: inline-block;
+  color: var(--page-text);
+  text-align: left;
+}
+
+.record-action-menu summary {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 0.65rem;
+  color: var(--page-muted);
+  font-size: 0.86rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  list-style: none;
+}
+
+.record-action-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.record-action-menu summary:hover,
+.record-action-menu summary:focus-visible,
+.record-action-menu[open] summary {
+  border-color: var(--control-border);
+  color: var(--page-text);
+  background: var(--control-background-hover);
+}
+
+.record-action-menu summary:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--page-accent) 42%, transparent);
+  outline-offset: 2px;
+}
+
+.record-action-menu > div {
+  position: absolute;
+  z-index: 8;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  min-width: 12.5rem;
+  padding: 0.35rem;
+  border: 1px solid var(--control-border);
+  border-radius: 0.75rem;
+  background: var(--popover-background);
+  box-shadow: 0 0.9rem 2rem rgb(22 29 46 / 20%);
+}
+
+.record-action-menu button {
+  width: 100%;
+  padding: 0.65rem 0.72rem;
+  border: 0;
+  border-radius: 0.55rem;
+  color: var(--expense);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+}
+
+.record-action-menu button:hover,
+.record-action-menu button:focus-visible {
+  background: var(--control-background-hover);
+}
+
+.record-action-dialog {
+  width: min(30rem, calc(100% - 2rem));
+  padding: 0;
+  border: 1px solid var(--card-border);
+  border-radius: 1.2rem;
+  color: var(--page-text);
+  background: var(--popover-background);
+  box-shadow: 0 2rem 5rem rgb(15 20 35 / 38%);
+}
+
+.record-action-dialog::backdrop {
+  background: rgb(15 20 35 / 54%);
+  backdrop-filter: blur(0.2rem);
+}
+
+.record-action-dialog form {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.35rem;
+}
+
+.record-action-dialog h2,
+.record-action-dialog p {
+  margin: 0;
+}
+
+.record-action-dialog h2 {
+  font-size: 1.35rem;
+}
+
+.record-action-dialog > form > p:not(.section-kicker, .form-error) {
+  color: var(--page-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.record-action-dialog .audit-note {
+  padding: 0.75rem;
+  border: 1px solid var(--control-border);
+  border-radius: 0.75rem;
+  background: var(--control-background);
+}
+
+.record-action-dialog textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 0.72rem 0.78rem;
+  border: 1px solid var(--control-border);
+  border-radius: 0.72rem;
+  color: var(--page-text);
+  font: inherit;
+  background: var(--control-background);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 0.15rem;
+}
+
+.secondary-button,
+.destructive-button {
+  min-height: 2.55rem;
+  padding: 0.62rem 0.85rem;
+  border: 1px solid var(--control-border);
+  border-radius: 0.72rem;
+  color: var(--page-text);
+  font: inherit;
+  font-weight: 750;
+  background: var(--control-background);
+  cursor: pointer;
+}
+
+.destructive-button {
+  border-color: color-mix(in srgb, var(--expense) 55%, transparent);
+  color: #fff;
+  background: var(--expense);
+}
+
+.secondary-button:disabled,
+.destructive-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.secondary-button:focus-visible,
+.destructive-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--page-accent) 42%, transparent);
+  outline-offset: 2px;
+}
+
 .commitment-list li {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 0.75rem;
   align-items: center;
+}
+
+.commitment-list li:has(.record-action-menu) {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
 }
 
 .commitment-list strong,

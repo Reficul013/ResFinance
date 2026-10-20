@@ -518,3 +518,161 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     fullPage: false,
   });
 });
+
+test("voids transactions and deactivates recurring items through confirmed audit events", async ({
+  page,
+}) => {
+  const currentOverview = structuredClone(overview);
+
+  await page.route("**/api/v1/auth/refresh", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        access_token: "e2e-access-token",
+        token_type: "Bearer",
+        expires_at: "2026-10-19T20:10:00Z",
+        actor_address: `0x${"a".repeat(40)}`,
+      }),
+    });
+  });
+  await page.route("**/api/v1/health", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ status: "ok", service: "resfinance-api" }),
+    });
+  });
+  await page.route("**/api/v1/auth/sessions/current", async (route) => {
+    await route.fulfill({ status: 204 });
+  });
+  await page.route("**/api/v1/insights/overview?month=*", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        month: "2026-10",
+        fact_bundle_id: "facts_finance_actions",
+        insight: {
+          summary: "Your recorded budget is on track for this month.",
+          evidence: [],
+          caveats: [],
+          follow_up_questions: [],
+          mode: "template-fallback",
+          model_id: "template",
+          model_revision: "finance-actions",
+          refused: false,
+        },
+        notifications: [],
+      }),
+    });
+  });
+  await page.route("**/api/v1/finance/overview?month=*", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(currentOverview),
+    });
+  });
+
+  let voidRequest: Record<string, unknown> | null = null;
+  await page.route(
+    "**/api/v1/finance/transactions/groceries/void",
+    async (route) => {
+      voidRequest = route.request().postDataJSON() as Record<string, unknown>;
+      currentOverview.transactions[1].voided = true;
+      currentOverview.summary.expense.minor_units = 0;
+      currentOverview.summary.balance.minor_units = 500000;
+      currentOverview.summary.savings.actual.minor_units = 500000;
+      currentOverview.provenance.projection_version = 9;
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          event_id: "evt_void_expense",
+          projection_version: 9,
+          occurred_at_utc: "2026-10-19T20:00:00Z",
+          deduplicated: false,
+          receipt_ids: [],
+        }),
+      });
+    },
+  );
+
+  let deactivateRequest: Record<string, unknown> | null = null;
+  await page.route(
+    "**/api/v1/finance/recurring/monthly-groceries/deactivate",
+    async (route) => {
+      deactivateRequest = route.request().postDataJSON() as Record<
+        string,
+        unknown
+      >;
+      currentOverview.recurring_entries[0].active = false;
+      currentOverview.provenance.projection_version = 10;
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          event_id: "evt_deactivate_recurring",
+          projection_version: 10,
+          occurred_at_utc: "2026-10-19T20:01:00Z",
+          deduplicated: false,
+          receipt_ids: [],
+        }),
+      });
+    },
+  );
+
+  await page.goto("/finance");
+
+  await page
+    .getByRole("button", { name: "Actions for October groceries" })
+    .click();
+  await page.getByRole("menuitem", { name: "Void Transaction" }).click();
+  const voidDialog = page.getByRole("dialog", {
+    name: "Void this transaction?",
+  });
+  await expect(voidDialog).toBeVisible();
+  await expect(
+    voidDialog.getByText(
+      /original record remains in the append-only audit trail/i,
+    ),
+  ).toBeVisible();
+  await expect(
+    voidDialog.getByRole("button", { name: "Void Transaction" }),
+  ).toBeDisabled();
+  await voidDialog
+    .getByLabel("Reason for voiding")
+    .fill("Duplicate transaction");
+  await voidDialog.getByRole("button", { name: "Void Transaction" }).click();
+
+  await expect(
+    page.getByText("October groceries", { exact: true }),
+  ).toHaveCount(0);
+  expect(voidRequest).toEqual({
+    reason: "Duplicate transaction",
+    expected_version: 8,
+  });
+  await expect(
+    page.locator(".metric-card").filter({ hasText: "Expenses" }),
+  ).toContainText("$0.00");
+
+  await page
+    .getByRole("button", { name: "Actions for Expected monthly groceries" })
+    .click();
+  await page
+    .getByRole("menuitem", { name: "Deactivate Recurring Item" })
+    .click();
+  const deactivateDialog = page.getByRole("dialog", {
+    name: "Deactivate this recurring item?",
+  });
+  await expect(deactivateDialog).toBeVisible();
+  await deactivateDialog
+    .getByRole("button", { name: "Deactivate Recurring Item" })
+    .click();
+
+  await expect(
+    page.getByText("Expected monthly groceries", { exact: true }),
+  ).toHaveCount(0);
+  expect(deactivateRequest).toEqual({ expected_version: 9 });
+});

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -20,8 +20,21 @@ interface FinanceDashboardProps {
   accessToken: string;
 }
 
+type RecordAction =
+  | {
+      kind: "void-transaction";
+      recordId: string;
+      label: string;
+    }
+  | {
+      kind: "deactivate-recurring";
+      recordId: string;
+      label: string;
+    };
+
 export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
   const [month, setMonth] = useState(currentMonth());
+  const [recordAction, setRecordAction] = useState<RecordAction | null>(null);
   const dashboard = useFinanceDashboard(accessToken, month);
 
   if (dashboard.overview.isPending) {
@@ -52,6 +65,41 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
   }
 
   const overview = dashboard.overview.data;
+  const openRecordAction = (action: RecordAction) => {
+    dashboard.voidTransaction.reset();
+    dashboard.deactivateRecurring.reset();
+    setRecordAction(action);
+  };
+  const confirmRecordAction = async (reason: string) => {
+    if (recordAction === null) return;
+    const idempotencyKey = `${recordAction.kind}-${crypto.randomUUID()}`;
+    try {
+      if (recordAction.kind === "void-transaction") {
+        await dashboard.voidTransaction.mutateAsync({
+          recordId: recordAction.recordId,
+          idempotencyKey,
+          body: {
+            reason,
+            expected_version: overview.provenance.projection_version,
+          },
+        });
+      } else {
+        await dashboard.deactivateRecurring.mutateAsync({
+          recordId: recordAction.recordId,
+          idempotencyKey,
+          body: { expected_version: overview.provenance.projection_version },
+        });
+      }
+      setRecordAction(null);
+    } catch {
+      // The mutation exposes its API error inside the confirmation dialog.
+    }
+  };
+  const actionPending =
+    dashboard.voidTransaction.isPending ||
+    dashboard.deactivateRecurring.isPending;
+  const actionError =
+    dashboard.voidTransaction.error ?? dashboard.deactivateRecurring.error;
   return (
     <div className="finance-dashboard">
       <section className="dashboard-header" aria-labelledby="finance-title">
@@ -89,14 +137,23 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
         history={dashboard.history.map((item) => item.data)}
       />
       <div className="dashboard-columns records-columns">
-        <TransactionPanel overview={overview} />
-        <CommitmentsPanel overview={overview} />
+        <TransactionPanel overview={overview} onAction={openRecordAction} />
+        <CommitmentsPanel overview={overview} onAction={openRecordAction} />
       </div>
       <SmartSavingsInsights
         accessToken={accessToken}
         month={month}
         financeOverview={overview}
       />
+      {recordAction === null ? null : (
+        <RecordActionDialog
+          action={recordAction}
+          error={actionError}
+          pending={actionPending}
+          onCancel={() => setRecordAction(null)}
+          onConfirm={confirmRecordAction}
+        />
+      )}
     </div>
   );
 }
@@ -223,7 +280,13 @@ function BudgetPanel({ overview }: { overview: FinanceOverview }) {
   );
 }
 
-function TransactionPanel({ overview }: { overview: FinanceOverview }) {
+function TransactionPanel({
+  overview,
+  onAction,
+}: {
+  overview: FinanceOverview;
+  onAction: (action: RecordAction) => void;
+}) {
   const active = overview.transactions.filter((item) => !item.voided);
   const categories = new Map(
     overview.categories.map((item) => [item.category_id, item.name]),
@@ -247,6 +310,9 @@ function TransactionPanel({ overview }: { overview: FinanceOverview }) {
                 <th scope="col">Description</th>
                 <th scope="col">Category</th>
                 <th scope="col">Amount</th>
+                <th scope="col" className="record-actions-heading">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -259,6 +325,19 @@ function TransactionPanel({ overview }: { overview: FinanceOverview }) {
                     {entry.direction === "expense" ? "−" : "+"}
                     {formatUsd(entry.amount.minor_units)}
                   </td>
+                  <td className="record-actions-cell">
+                    <RecordActionMenu
+                      label={entry.description}
+                      actionLabel="Void Transaction"
+                      onAction={() =>
+                        onAction({
+                          kind: "void-transaction",
+                          recordId: entry.transaction_id,
+                          label: entry.description,
+                        })
+                      }
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -269,7 +348,13 @@ function TransactionPanel({ overview }: { overview: FinanceOverview }) {
   );
 }
 
-function CommitmentsPanel({ overview }: { overview: FinanceOverview }) {
+function CommitmentsPanel({
+  overview,
+  onAction,
+}: {
+  overview: FinanceOverview;
+  onAction: (action: RecordAction) => void;
+}) {
   const recurring = overview.recurring_entries.filter((item) => item.active);
   const openObligations = overview.obligations.filter((item) => !item.settled);
   return (
@@ -297,6 +382,17 @@ function CommitmentsPanel({ overview }: { overview: FinanceOverview }) {
                 <small>Monthly from {item.starts_on}</small>
               </div>
               <span>{formatUsd(item.amount.minor_units)}</span>
+              <RecordActionMenu
+                label={item.description}
+                actionLabel="Deactivate Recurring Item"
+                onAction={() =>
+                  onAction({
+                    kind: "deactivate-recurring",
+                    recordId: item.recurring_entry_id,
+                    label: item.description,
+                  })
+                }
+              />
             </li>
           ))}
           {openObligations.map((item) => (
@@ -321,6 +417,144 @@ function CommitmentsPanel({ overview }: { overview: FinanceOverview }) {
         </ul>
       )}
     </section>
+  );
+}
+
+function RecordActionMenu({
+  label,
+  actionLabel,
+  onAction,
+}: {
+  label: string;
+  actionLabel: string;
+  onAction: () => void;
+}) {
+  return (
+    <details className="record-action-menu">
+      <summary
+        role="button"
+        aria-label={`Actions for ${label}`}
+        title={`Actions for ${label}`}
+      >
+        <span aria-hidden="true">•••</span>
+      </summary>
+      <div role="menu">
+        <button
+          type="button"
+          role="menuitem"
+          onClick={(event) => {
+            event.currentTarget.closest("details")?.removeAttribute("open");
+            onAction();
+          }}
+        >
+          {actionLabel}
+        </button>
+      </div>
+    </details>
+  );
+}
+
+function RecordActionDialog({
+  action,
+  error,
+  pending,
+  onCancel,
+  onConfirm,
+}: {
+  action: RecordAction;
+  error: Error | null;
+  pending: boolean;
+  onCancel: () => void;
+  onConfirm: (reason: string) => Promise<void>;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [reason, setReason] = useState("");
+  const voiding = action.kind === "void-transaction";
+
+  useEffect(() => {
+    const element = dialog.current;
+    if (element !== null && !element.open) element.showModal();
+    return () => {
+      if (element?.open) element.close();
+    };
+  }, []);
+
+  return (
+    <dialog
+      ref={dialog}
+      className="record-action-dialog"
+      aria-labelledby="record-action-title"
+      onCancel={(event) => {
+        if (pending) {
+          event.preventDefault();
+          return;
+        }
+        onCancel();
+      }}
+    >
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          void onConfirm(reason.trim());
+        }}
+      >
+        <p className="section-kicker">Confirm ledger change</p>
+        <h2 id="record-action-title">
+          {voiding
+            ? "Void this transaction?"
+            : "Deactivate this recurring item?"}
+        </h2>
+        <p>
+          {voiding
+            ? `“${action.label}” will stop affecting your active financial calculations.`
+            : `“${action.label}” will stop affecting projected savings calculations.`}
+        </p>
+        <p className="audit-note">
+          The original record remains in the append-only audit trail. This
+          action adds a new event and does not erase history.
+        </p>
+        {voiding ? (
+          <label className="form-field">
+            <span>Reason for voiding</span>
+            <textarea
+              autoFocus
+              required
+              maxLength={160}
+              rows={3}
+              value={reason}
+              placeholder="For example: Duplicate transaction"
+              onChange={(event) => setReason(event.target.value)}
+            />
+          </label>
+        ) : null}
+        {error === null ? null : (
+          <p className="form-error" role="alert">
+            {error.message}
+          </p>
+        )}
+        <div className="dialog-actions">
+          <button
+            className="secondary-button"
+            type="button"
+            disabled={pending}
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button
+            className="destructive-button"
+            type="submit"
+            disabled={pending || (voiding && reason.trim().length === 0)}
+          >
+            {pending
+              ? "Saving…"
+              : voiding
+                ? "Void Transaction"
+                : "Deactivate Recurring Item"}
+          </button>
+        </div>
+      </form>
+    </dialog>
   );
 }
 

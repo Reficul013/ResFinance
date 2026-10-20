@@ -350,7 +350,7 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 **Status:** complete for local development; evidence is recorded in [`milestone3-personal-finance.md`](milestone3-personal-finance.md).
 
 - Implement income/expense events, the fixed direction-aware category catalog, budgets, recurring entries, summaries, savings calculation, and receivable/payable projections.
-- Build accessible charts, validation, empty/loading/error states, and provenance views.
+- Build accessible charts, validation, empty/loading/error states, provenance views, and confirmed per-record correction actions that append void or deactivation events without deleting history.
 - Version the savings formula used by Crypto.
 
 **Acceptance:** unit and Playwright tests reproduce balances from events, budget alerts, monthly savings, and projection rebuilds exactly.
