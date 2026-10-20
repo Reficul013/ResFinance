@@ -908,13 +908,14 @@ td.expense {
 .record-actions-heading,
 .record-actions-cell {
   width: 4.5rem;
-  text-align: right;
+  text-align: center;
 }
 
 .record-action-button {
   display: grid;
   width: 2rem;
   height: 2rem;
+  margin-inline: auto;
   place-items: center;
   border: 1px solid transparent;
   border-radius: 0.65rem;

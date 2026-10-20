@@ -628,6 +628,19 @@ test("voids transactions and deactivates recurring items through confirmed audit
   const voidButton = page.getByRole("button", {
     name: "Void transaction October groceries",
   });
+  const actionsHeadingBox = await page
+    .getByRole("columnheader", { name: "Actions" })
+    .boundingBox();
+  const voidButtonBox = await voidButton.boundingBox();
+  expect(actionsHeadingBox).not.toBeNull();
+  expect(voidButtonBox).not.toBeNull();
+  expect(
+    Math.abs(
+      actionsHeadingBox!.x +
+        actionsHeadingBox!.width / 2 -
+        (voidButtonBox!.x + voidButtonBox!.width / 2),
+    ),
+  ).toBeLessThanOrEqual(1);
   await expect(voidButton.locator(".lucide-archive-x")).toHaveAttribute(
     "stroke",
     "#FF6B4A",
