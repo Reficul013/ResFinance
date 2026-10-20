@@ -9,7 +9,7 @@ Evidence date: 2026-10-14 America/Los_Angeles
 - One encrypted, append-only `finance-account` event stream per wallet-backed user.
 - Income and expense categories with direction validation.
 - Integer-cent USD transactions and compensating void events; persisted events are never edited in place.
-- Per-record action menus for active transactions and recurring items. `Void Transaction` requires an audit reason, `Deactivate Recurring Item` stops an active schedule, and both actions use a confirmation dialog before appending their compensating event.
+- Per-record 🚫 action buttons for active transactions and recurring items. Voiding a transaction requires an audit reason, deactivating a recurring item stops an active schedule, and both actions use a confirmation dialog before appending their compensating event.
 - Monthly category budgets with exact basis-point utilization and `on_track`, `near_limit`, or `over_budget` alerts.
 - Monthly recurring income and expense entries. A linked transaction satisfies a recurring entry for that month so projected savings does not double count it.
 - Read-only receivable and payable projections. Only the application-only confirmed-contract method can append obligation events, and every such event requires a source event ID and ResContract receipt.
@@ -24,7 +24,7 @@ Evidence date: 2026-10-14 America/Los_Angeles
 
 The dashboard provides deletion-like usability without deleting ledger history:
 
-1. The user opens the small action menu beside an active transaction or recurring item.
+1. The user selects the 🚫 action button beside an active transaction or recurring item.
 2. The dashboard explains the calculation impact and that the original record will remain in the append-only audit trail.
 3. Voiding a transaction requires a reason of up to 160 characters. Deactivating a recurring item requires an explicit confirmation.
 4. The browser sends the current projection version and a unique idempotency key to the existing authenticated `/api/v1/finance` correction endpoint.

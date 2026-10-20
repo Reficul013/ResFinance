@@ -326,9 +326,8 @@ function TransactionPanel({
                     {formatUsd(entry.amount.minor_units)}
                   </td>
                   <td className="record-actions-cell">
-                    <RecordActionMenu
-                      label={entry.description}
-                      actionLabel="Void Transaction"
+                    <RecordActionButton
+                      accessibleLabel={`Void transaction ${entry.description}`}
                       onAction={() =>
                         onAction({
                           kind: "void-transaction",
@@ -382,9 +381,8 @@ function CommitmentsPanel({
                 <small>Monthly from {item.starts_on}</small>
               </div>
               <span>{formatUsd(item.amount.minor_units)}</span>
-              <RecordActionMenu
-                label={item.description}
-                actionLabel="Deactivate Recurring Item"
+              <RecordActionButton
+                accessibleLabel={`Deactivate recurring item ${item.description}`}
                 onAction={() =>
                   onAction({
                     kind: "deactivate-recurring",
@@ -420,37 +418,23 @@ function CommitmentsPanel({
   );
 }
 
-function RecordActionMenu({
-  label,
-  actionLabel,
+function RecordActionButton({
+  accessibleLabel,
   onAction,
 }: {
-  label: string;
-  actionLabel: string;
+  accessibleLabel: string;
   onAction: () => void;
 }) {
   return (
-    <details className="record-action-menu">
-      <summary
-        role="button"
-        aria-label={`Actions for ${label}`}
-        title={`Actions for ${label}`}
-      >
-        <span aria-hidden="true">•••</span>
-      </summary>
-      <div role="menu">
-        <button
-          type="button"
-          role="menuitem"
-          onClick={(event) => {
-            event.currentTarget.closest("details")?.removeAttribute("open");
-            onAction();
-          }}
-        >
-          {actionLabel}
-        </button>
-      </div>
-    </details>
+    <button
+      className="record-action-button"
+      type="button"
+      aria-label={accessibleLabel}
+      title={accessibleLabel}
+      onClick={onAction}
+    >
+      <span aria-hidden="true">🚫</span>
+    </button>
   );
 }
 
