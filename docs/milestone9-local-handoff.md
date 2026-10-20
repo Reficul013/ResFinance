@@ -112,7 +112,7 @@ The live journey also exposed and fixed three integration defects:
 10. ask for a prohibited transfer/settlement action and confirm refusal;
 11. restart the lifecycle with volumes intact, reload the browser session, and
     confirm the settled state rebuilds; and
-12. log out and verify the backend session is revoked and ResVault is locked.
+12. log out and verify the backend session is revoked and ResVault is Locked!
 
 Wallet seeds and private keys are generated inside each extension profile and
 are never fixtures. Playwright retains traces and screenshots only on failure;

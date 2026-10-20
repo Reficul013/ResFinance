@@ -172,8 +172,18 @@ test("real ResVault and services preserve the local journey through restart", as
     await ownerPage.getByRole("button", { name: "Log out" }).click();
     expect((await loggedOut).status()).toBe(204);
     await expect(ownerPage).toHaveURL("http://127.0.0.1:5173/");
-    await expect(ownerPage.getByRole("button", { name: "Connect wallet" })).toBeEnabled();
+    await expect(ownerPage.getByText("ResVault is Locked!")).toBeVisible();
+    await expect(
+      ownerPage.getByRole("button", { name: "Connect wallet" }),
+    ).toBeDisabled();
     await expectWalletLocked(first);
+    await unlockWallet(first, true);
+    await expect(
+      ownerPage.getByText("ResVault Unlocked! Connect to Wallet now."),
+    ).toBeVisible();
+    await expect(
+      ownerPage.getByRole("button", { name: "Connect wallet" }),
+    ).toBeEnabled();
     await expect(ownerPage.locator("main")).not.toContainText(beforeRestart);
   } finally {
     await first.close();
@@ -248,39 +258,85 @@ async function authenticate(context: BrowserContext): Promise<Page> {
 
 async function approveAfter(context: BrowserContext, action: () => Promise<unknown>) {
   await unlockWallet(context);
+  let worker = context.serviceWorkers()[0];
+  worker ??= await context.waitForEvent("serviceworker");
   const applicationPage = context
     .pages()
     .find((page) => page.url().startsWith("http://127.0.0.1:5173/"));
   if (applicationPage === undefined)
     throw new Error("ResFinance application page is unavailable");
   await expectExtensionAvailable(applicationPage);
-  const popupPromise = context.waitForEvent("page", { timeout: 15_000 });
   await action();
-  let approval: Page;
-  try {
-    approval = await popupPromise;
-  } catch (error) {
-    const diagnostics = await Promise.all(
-      context.pages().map(async (page) => ({
-        url: page.url(),
-        text: await page.locator("body").innerText().catch(() => ""),
-      })),
-    );
-    throw new Error(`ResVault approval did not open: ${JSON.stringify(diagnostics)}`, {
-      cause: error,
+  let approvalUrl = "";
+  await expect.poll(async () => {
+    approvalUrl = await worker.evaluate(async () => {
+      const contexts = await chrome.runtime.getContexts({
+        contextTypes: ["POPUP"],
+      });
+      return contexts.find((context) =>
+        context.documentUrl?.includes("/approval.html?request="),
+      )?.documentUrl ?? "";
     });
-  }
-  await approval.waitForLoadState("domcontentloaded");
-  await approval.getByRole("button", { name: "Approve and sign" }).click();
+    return approvalUrl;
+  }, { timeout: 15_000 }).toContain("/approval.html?request=");
+  const requestId = new URL(approvalUrl).searchParams.get("request");
+  if (requestId === null) throw new Error("Approval request ID is unavailable");
+  const browserWindowCount = await worker.evaluate(
+    async () => (await chrome.windows.getAll()).length,
+  );
+  expect(browserWindowCount).toBe(1);
+  await expect(applicationPage).toHaveURL(/127\.0\.0\.1:5173/);
+  const result = await worker.evaluate(
+    async (approvalRequestId) => await chrome.runtime.sendMessage({
+      type: "APPROVAL_DECISION",
+      request_id: approvalRequestId,
+      approved: true,
+    }),
+    requestId,
+  );
+  expect(result).toEqual({ ok: true, result: { approved: true } });
+  await applicationPage.bringToFront();
 }
 
-async function unlockWallet(context: BrowserContext) {
+async function unlockWallet(context: BrowserContext, verifyIncorrectPassword = false) {
   const page = await context.newPage();
   await page.goto(`chrome-extension://${await extensionId(context)}/popup.html`);
   if (await page.locator("#locked").isVisible()) {
+    await expect(page.locator("#unlock-password")).toHaveAttribute(
+      "placeholder",
+      "Enter your password",
+    );
+    await expect(page.getByText("Password", { exact: true })).not.toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Unlock your Wallet" }),
+    ).toBeVisible();
+    if (verifyIncorrectPassword) {
+      await page.locator("#unlock-password").fill("incorrect-password-value");
+      await page.locator("#unlock-password").press("Enter");
+      await expect(page.locator("#status-text")).toHaveText(
+        "Incorrect Password",
+        { timeout: 30_000 },
+      );
+      await expect(page.locator("#status")).toHaveAttribute("data-tone", "error");
+    }
     await page.locator("#unlock-password").fill(password);
-    await page.getByRole("button", { name: "Unlock" }).click();
+    await page.locator("#unlock-password").press("Enter");
     await expect(page.locator("#unlocked")).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator(".identity > span")).toHaveText(
+      "Your Wallet Address",
+    );
+    await expect(page.locator("#unlocked .hint")).toHaveText(
+      "Your private key never leaves ResVault. For your security, the wallet locks automatically after five minutes of inactivity.",
+    );
+    const lockButtonBox = await page
+      .getByRole("button", { name: "Lock now" })
+      .boundingBox();
+    const unlockedSectionBox = await page.locator("#unlocked").boundingBox();
+    expect(lockButtonBox).not.toBeNull();
+    expect(unlockedSectionBox).not.toBeNull();
+    expect(
+      Math.abs(lockButtonBox!.width - unlockedSectionBox!.width),
+    ).toBeLessThan(1);
   }
   await page.close();
 }
@@ -289,6 +345,17 @@ async function expectWalletLocked(context: BrowserContext) {
   const page = await context.newPage();
   await page.goto(`chrome-extension://${await extensionId(context)}/popup.html`);
   await expect(page.locator("#locked")).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("#status-text")).toHaveText("ResVault is Locked!");
+  await expect(page.locator("#status-bulb")).toBeVisible();
+  const unlockButtonBox = await page
+    .getByRole("button", { name: "Unlock your Wallet" })
+    .boundingBox();
+  const lockedFormBox = await page.locator("#locked").boundingBox();
+  expect(unlockButtonBox).not.toBeNull();
+  expect(lockedFormBox).not.toBeNull();
+  expect(
+    Math.abs(unlockButtonBox!.width - lockedFormBox!.width),
+  ).toBeLessThan(1);
   await page.close();
 }
 

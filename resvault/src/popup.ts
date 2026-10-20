@@ -1,3 +1,5 @@
+import { unlockErrorMessage } from "./popup-status";
+
 interface StatusResult {
   exists: boolean;
   unlocked: boolean;
@@ -5,6 +7,8 @@ interface StatusResult {
 }
 
 const status = element("status");
+const statusBulb = element("status-bulb");
+const statusText = element("status-text");
 const setup = element("setup");
 const locked = element("locked");
 const unlocked = element("unlocked");
@@ -12,7 +16,10 @@ const address = element("address");
 
 element("create").addEventListener("click", () => void create(false));
 element("import").addEventListener("click", () => void create(true));
-element("unlock").addEventListener("click", () => void unlock());
+element("locked").addEventListener("submit", (event) => {
+  event.preventDefault();
+  void unlock();
+});
 element("lock").addEventListener("click", () => void lock());
 
 void refresh();
@@ -24,20 +31,22 @@ async function refresh(): Promise<void> {
     locked.hidden = !current.exists || current.unlocked;
     unlocked.hidden = !current.unlocked;
     address.textContent = current.identity?.address ?? "";
-    status.textContent = !current.exists
-      ? "No encrypted seed is stored."
-      : current.unlocked
-        ? "Unlocked. Signing still requires explicit approval."
-        : "Locked. Public identity remains available to ResFinance.";
+    if (!current.exists) {
+      setStatus("No encrypted seed is stored.");
+    } else if (current.unlocked) {
+      setStatus("Unlocked! Sign-In required for explicit approval.");
+    } else {
+      setStatus("ResVault is Locked!", "locked");
+    }
   } catch (error) {
-    status.textContent = safeError(error);
+    setStatus(safeError(error), "error");
   }
 }
 
 async function create(importing: boolean): Promise<void> {
   const password = input("setup-password").value;
   const seed = input("seed").value.trim();
-  status.textContent = "Deriving the Argon2id encryption key…";
+  setStatus("Deriving the Argon2id encryption key…");
   try {
     await request({
       type: importing ? "IMPORT" : "CREATE",
@@ -48,18 +57,18 @@ async function create(importing: boolean): Promise<void> {
     input("seed").value = "";
     await refresh();
   } catch (error) {
-    status.textContent = safeError(error);
+    setStatus(safeError(error), "error");
   }
 }
 
 async function unlock(): Promise<void> {
-  status.textContent = "Unlocking encrypted seed…";
+  setStatus("Unlocking encrypted seed…");
   try {
     await request({ type: "UNLOCK", password: input("unlock-password").value });
     input("unlock-password").value = "";
     await refresh();
   } catch (error) {
-    status.textContent = safeError(error);
+    setStatus(unlockErrorMessage(error), "error");
   }
 }
 
@@ -95,4 +104,13 @@ function input(id: string): HTMLInputElement {
 
 function safeError(error: unknown): string {
   return error instanceof Error ? error.message : "ResVault request failed";
+}
+
+function setStatus(
+  message: string,
+  tone: "default" | "locked" | "error" = "default",
+): void {
+  status.dataset.tone = tone;
+  statusBulb.hidden = tone !== "locked";
+  statusText.textContent = message;
 }

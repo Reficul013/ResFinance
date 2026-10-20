@@ -7,10 +7,17 @@ const pending = new Map<
   string,
   { request: SignIntentRequest; origin: string; port: chrome.runtime.Port }
 >();
+const connectedPorts = new Set<chrome.runtime.Port>();
 
-chrome.runtime.onSuspend.addListener(() => vault.lock());
+chrome.runtime.onSuspend.addListener(() => {
+  vault.lock();
+  void broadcastVaultStatus();
+});
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === "resvault-auto-lock") vault.lock();
+  if (alarm.name === "resvault-auto-lock") {
+    vault.lock();
+    void broadcastVaultStatus();
+  }
 });
 
 chrome.runtime.onConnect.addListener((port) => {
@@ -20,10 +27,13 @@ chrome.runtime.onConnect.addListener((port) => {
     port.disconnect();
     return;
   }
+  connectedPorts.add(port);
+  void postVaultStatus(port);
   port.onMessage.addListener((message: unknown) => {
     void handlePageMessage(port, origin, message);
   });
   port.onDisconnect.addListener(() => {
+    connectedPorts.delete(port);
     for (const [requestId, request] of pending) {
       if (request.port === port) pending.delete(requestId);
     }
@@ -77,6 +87,16 @@ async function handlePageMessage(
       });
       return;
     }
+    if (message.type === "GET_STATUS") {
+      port.postMessage({
+        source: "resvault",
+        version: 1,
+        request_id: requestId,
+        ok: true,
+        result: await walletStatus(),
+      });
+      return;
+    }
     if (message.type === "LOCK") {
       vault.lock();
       await chrome.alarms.clear("resvault-auto-lock");
@@ -87,6 +107,7 @@ async function handlePageMessage(
         ok: true,
         result: { locked: true },
       });
+      await broadcastVaultStatus();
       return;
     }
     if (
@@ -99,15 +120,12 @@ async function handlePageMessage(
     if (pending.has(requestId))
       throw new Error("ResVault request ID is already pending");
     pending.set(requestId, { request: message.intent, origin, port });
-    await chrome.windows.create({
-      url: chrome.runtime.getURL(
-        `approval.html?request=${encodeURIComponent(requestId)}`,
-      ),
-      type: "popup",
-      width: 440,
-      height: 680,
-      focused: true,
-    });
+    try {
+      await openApprovalPopup(requestId, port.sender?.tab);
+    } catch (error) {
+      pending.delete(requestId);
+      throw error;
+    }
   } catch (error) {
     port.postMessage({
       source: "resvault",
@@ -125,16 +143,13 @@ async function handleExtensionMessage(message: unknown): Promise<unknown> {
   }
   switch (message.type) {
     case "GET_STATUS":
-      return {
-        exists: await vault.exists(),
-        unlocked: vault.unlocked,
-        identity: await vault.identity(),
-      };
+      return walletStatus();
     case "CREATE": {
       if (typeof message.password !== "string")
         throw new Error("password is required");
       const identity = await vault.create(message.password);
       await scheduleAutoLock();
+      await broadcastVaultStatus();
       return identity;
     }
     case "IMPORT": {
@@ -149,6 +164,7 @@ async function handleExtensionMessage(message: unknown): Promise<unknown> {
         hexToBytes(message.seed_hex),
       );
       await scheduleAutoLock();
+      await broadcastVaultStatus();
       return identity;
     }
     case "UNLOCK": {
@@ -156,15 +172,18 @@ async function handleExtensionMessage(message: unknown): Promise<unknown> {
         throw new Error("password is required");
       const identity = await vault.unlock(message.password);
       await scheduleAutoLock();
+      await broadcastVaultStatus();
       return identity;
     }
     case "LOCK":
       vault.lock();
       await chrome.alarms.clear("resvault-auto-lock");
+      await broadcastVaultStatus();
       return { locked: true };
     case "DELETE":
       await vault.delete();
       await chrome.alarms.clear("resvault-auto-lock");
+      await broadcastVaultStatus();
       return { deleted: true };
     case "APPROVAL_DETAILS": {
       if (typeof message.request_id !== "string")
@@ -233,6 +252,56 @@ async function handleExtensionMessage(message: unknown): Promise<unknown> {
     default:
       throw new Error("ResVault extension request is not supported");
   }
+}
+
+async function openApprovalPopup(
+  requestId: string,
+  sourceTab: chrome.tabs.Tab | undefined,
+): Promise<void> {
+  if (sourceTab?.id === undefined || sourceTab.windowId === undefined) {
+    throw new Error("The ResFinance browser tab is unavailable");
+  }
+  await chrome.action.setPopup({
+    tabId: sourceTab.id,
+    popup: `approval.html?request=${encodeURIComponent(requestId)}`,
+  });
+  try {
+    await chrome.action.openPopup({ windowId: sourceTab.windowId });
+  } finally {
+    await chrome.action.setPopup({
+      tabId: sourceTab.id,
+      popup: "popup.html",
+    });
+  }
+}
+
+async function walletStatus(): Promise<{
+  exists: boolean;
+  unlocked: boolean;
+  identity: Awaited<ReturnType<ResVault["identity"]>>;
+}> {
+  return {
+    exists: await vault.exists(),
+    unlocked: vault.unlocked,
+    identity: await vault.identity(),
+  };
+}
+
+async function postVaultStatus(port: chrome.runtime.Port): Promise<void> {
+  try {
+    port.postMessage({
+      source: "resvault",
+      version: 1,
+      type: "STATUS_CHANGED",
+      status: await walletStatus(),
+    });
+  } catch {
+    connectedPorts.delete(port);
+  }
+}
+
+async function broadcastVaultStatus(): Promise<void> {
+  await Promise.all([...connectedPorts].map((port) => postVaultStatus(port)));
 }
 
 async function scheduleAutoLock(): Promise<void> {

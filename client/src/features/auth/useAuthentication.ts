@@ -8,15 +8,23 @@ import {
 } from "../../lib/api/client";
 import {
   formatIntentTimestamp,
-  getWalletIdentity,
+  getWalletStatus,
   hashParameters,
   lockWallet,
   signIntent,
+  subscribeWalletStatus,
   type WalletIdentity,
+  type WalletStatus,
 } from "./resvault";
 
 export type AuthenticationState =
-  "checking" | "disconnected" | "ready" | "pending" | "authenticated" | "error";
+  | "checking"
+  | "disconnected"
+  | "locked"
+  | "ready"
+  | "pending"
+  | "authenticated"
+  | "error";
 
 interface Authentication {
   state: AuthenticationState;
@@ -44,23 +52,40 @@ export function useAuthentication(): Authentication {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [actorAddress, setActorAddress] = useState<string | null>(null);
 
+  const applyWalletStatus = useCallback(
+    (current: WalletStatus, preserveActiveSession = false) => {
+      setIdentity(current.identity);
+      setState((existing) => {
+        if (
+          preserveActiveSession &&
+          (existing === "authenticated" || existing === "pending")
+        ) {
+          return existing;
+        }
+        if (!current.exists || current.identity === null) return "disconnected";
+        return current.unlocked ? "ready" : "locked";
+      });
+      setMessage(walletStatusMessage(current));
+    },
+    [],
+  );
+
   const inspectWallet = useCallback(async () => {
     try {
-      const current = await getWalletIdentity();
-      setIdentity(current);
-      setState(current === null ? "disconnected" : "ready");
-      setMessage(
-        current === null
-          ? "Initialize ResVault before connecting."
-          : "ResVault is available. Continue to approve login.",
-      );
+      applyWalletStatus(await getWalletStatus());
     } catch {
+      setIdentity(null);
       setState("disconnected");
       setMessage(
         "Install the ResVault extension to use wallet authentication.",
       );
     }
-  }, []);
+  }, [applyWalletStatus]);
+
+  useEffect(
+    () => subscribeWalletStatus((status) => applyWalletStatus(status, true)),
+    [applyWalletStatus],
+  );
 
   useEffect(() => {
     let active = true;
@@ -87,10 +112,17 @@ export function useAuthentication(): Authentication {
     setState("pending");
     setMessage("Preparing a short-lived login challenge…");
     try {
-      const current = identity ?? (await getWalletIdentity());
-      if (current === null) throw new Error("ResVault is not initialized.");
-      setIdentity(current);
-      const challenge = await createChallenge(current);
+      const status = await getWalletStatus();
+      if (!status.exists || status.identity === null)
+        throw new Error("ResVault is not initialized.");
+      if (!status.unlocked) {
+        setIdentity(status.identity);
+        setState("locked");
+        setMessage("ResVault is Locked!");
+        return;
+      }
+      setIdentity(status.identity);
+      const challenge = await createChallenge(status.identity);
       const origin = window.location.origin;
       const parameters = { challenge: challenge.challenge, origin };
       const issuedAt = new Date();
@@ -118,14 +150,19 @@ export function useAuthentication(): Authentication {
         "Wallet challenge approved. Access token is held in memory only.",
       );
     } catch (error) {
-      setState("error");
-      setMessage(
+      const errorMessage =
         error instanceof Error
           ? error.message
-          : "Wallet authentication failed.",
-      );
+          : "Wallet authentication failed.";
+      if (errorMessage === "ResVault is locked") {
+        setState("locked");
+        setMessage("ResVault is Locked!");
+      } else {
+        setState("error");
+        setMessage(errorMessage);
+      }
     }
-  }, [identity]);
+  }, []);
 
   const logout = useCallback(async () => {
     if (accessToken === null) return;
@@ -152,4 +189,11 @@ export function useAuthentication(): Authentication {
     connect,
     logout,
   };
+}
+
+function walletStatusMessage(status: WalletStatus): string {
+  if (!status.exists || status.identity === null)
+    return "Initialize ResVault before connecting.";
+  if (!status.unlocked) return "ResVault is Locked!";
+  return "ResVault Unlocked! Connect to Wallet now.";
 }

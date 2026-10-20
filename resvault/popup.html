@@ -10,7 +10,12 @@
     <main class="panel">
       <p class="eyebrow">ResFinance security boundary</p>
       <h1>ResVault</h1>
-      <p id="status" class="status" aria-live="polite">Loading wallet state…</p>
+      <p id="status" class="status vault-status" aria-live="polite">
+        <span id="status-bulb" class="status-bulb" aria-hidden="true" hidden
+          >💡</span
+        >
+        <span id="status-text">Loading wallet state…</span>
+      </p>
 
       <section id="setup" hidden>
         <h2>Create or import</h2>
@@ -40,25 +45,25 @@
         <button id="import" class="secondary" type="button">Import seed</button>
       </section>
 
-      <section id="locked" hidden>
-        <h2>Unlock</h2>
-        <label>
-          Password
-          <input
-            id="unlock-password"
-            type="password"
-            autocomplete="current-password"
-          />
-        </label>
-        <button id="unlock" type="button">Unlock</button>
-      </section>
+      <form id="locked" hidden>
+        <label class="visually-hidden" for="unlock-password">Password</label>
+        <input
+          id="unlock-password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Enter your password"
+        />
+        <button id="unlock" type="submit">Unlock your Wallet</button>
+      </form>
 
       <section id="unlocked" hidden>
         <h2>Ready to approve</h2>
-        <p class="identity"><span>Address</span><code id="address"></code></p>
+        <p class="identity">
+          <span>Your Wallet Address</span><code id="address"></code>
+        </p>
         <p class="hint">
-          Signing stays in this extension. The wallet locks after five minutes
-          of inactivity.
+          Your private key never leaves ResVault. For your security, the wallet
+          locks automatically after five minutes of inactivity.
         </p>
         <button id="lock" type="button">Lock now</button>
       </section>

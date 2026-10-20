@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 
 import { AuthCard } from "../components/AuthCard";
+import { GitHubLink } from "../components/GitHubLink";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useAuthentication } from "../features/auth/useAuthentication";
 import { NotificationCenter } from "../features/insights/NotificationCenter";
@@ -45,13 +46,19 @@ export function App() {
 
   return (
     <main className={authenticated ? "app-shell" : "shell"}>
-      {!authenticated && <ThemeToggle />}
+      {!authenticated && (
+        <div className="welcome-actions">
+          <GitHubLink />
+          <ThemeToggle />
+        </div>
+      )}
       {!authenticated && (
         <>
           <h1>ResFinance</h1>
           <p className="lede">
-            Connect the hardened ResVault extension to open your encrypted
-            finance and groups dashboards. Your seed stays inside the extension.
+            Connect to the hardened ResVault extension to open your Encrypted
+            Personal Finance, Bill Split, and Crypto Analysis Dashboards. Your
+            seed always stays inside the extension.
           </p>
         </>
       )}

@@ -509,6 +509,16 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     page.getByRole("heading", { name: "Connect ResVault" }),
   ).toBeVisible();
+  const loggedOutCard = page.locator(".auth-card");
+  await expect(
+    loggedOutCard.getByRole("link", {
+      name: "Open ResFinance repository on GitHub",
+    }),
+  ).toHaveCount(0);
+  await expect(
+    loggedOutCard.getByRole("button", { name: "Log out" }),
+  ).toHaveCount(0);
+  await expect(loggedOutCard.locator(".theme-toggle")).toHaveCount(0);
   await expect(
     page.getByText("Private finance · Read-only insights"),
   ).toHaveCount(0);
@@ -702,4 +712,125 @@ test("voids transactions and deactivates recurring items through confirmed audit
     page.getByText("Expected monthly groceries", { exact: true }),
   ).toHaveCount(0);
   expect(deactivateRequest).toEqual({ expected_version: 9 });
+});
+
+test("updates the ResVault login guidance when the extension unlocks", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/auth/refresh", async (route) => {
+    await route.fulfill({ status: 401 });
+  });
+  await page.addInitScript(() => {
+    const identity = {
+      public_key: "e2e-public-key",
+      address: `0x${"6".repeat(40)}`,
+    };
+    window.addEventListener("message", (event) => {
+      const request = event.data as {
+        source?: string;
+        version?: number;
+        request_id?: string;
+        type?: string;
+      };
+      if (
+        event.source !== window ||
+        request.source !== "resfinance-page" ||
+        request.version !== 1 ||
+        request.type !== "GET_STATUS"
+      ) {
+        return;
+      }
+      window.postMessage(
+        {
+          source: "resvault",
+          version: 1,
+          request_id: request.request_id,
+          ok: true,
+          result: { exists: true, unlocked: false, identity },
+        },
+        window.location.origin,
+      );
+    });
+  });
+
+  await page.goto("/");
+
+  const authCard = page.locator(".auth-card");
+  await expect(page.getByText("ResVault is Locked!")).toBeVisible();
+  await expect(page.locator(".auth-status-bulb")).toBeVisible();
+  await expect(authCard.locator(".auth-brand-logo-dark")).toBeVisible();
+  await expect(
+    authCard.getByRole("link", {
+      name: "Open ResFinance repository on GitHub",
+    }),
+  ).toHaveCount(0);
+  await expect(authCard.getByRole("button", { name: "Log out" })).toHaveCount(
+    0,
+  );
+  await expect(authCard.locator(".theme-toggle")).toHaveCount(0);
+  await expect(page.getByText("Your Wallet Address:")).toBeVisible();
+  await expect(page.locator(".wallet-address")).toHaveText(
+    `0x${"6".repeat(40)}`,
+  );
+  await expect(
+    page.getByRole("button", { name: "Connect wallet" }),
+  ).toBeDisabled();
+
+  const helpButton = page.getByRole("button", {
+    name: "How to connect ResVault",
+  });
+  await helpButton.hover();
+  await expect(page.getByRole("tooltip")).toContainText(
+    "Install and enable the hardened ResVault extension",
+  );
+  await expect(page.getByRole("tooltip")).toContainText("Approve & Login");
+  await page.waitForTimeout(200);
+  await page.screenshot({
+    path: "test-results/resvault-login-help.png",
+    fullPage: false,
+  });
+
+  const githubLink = page.getByRole("link", {
+    name: "Open ResFinance repository on GitHub",
+  });
+  const themeToggle = page.getByRole("button", {
+    name: "Switch to Light Mode",
+  });
+  const githubBox = await githubLink.boundingBox();
+  const themeBox = await themeToggle.boundingBox();
+  expect(githubBox).not.toBeNull();
+  expect(themeBox).not.toBeNull();
+  expect(githubBox!.x + githubBox!.width).toBeLessThanOrEqual(themeBox!.x);
+
+  await page.evaluate(() => {
+    window.postMessage(
+      {
+        source: "resvault",
+        version: 1,
+        type: "STATUS_CHANGED",
+        status: {
+          exists: true,
+          unlocked: true,
+          identity: {
+            public_key: "e2e-public-key",
+            address: `0x${"6".repeat(40)}`,
+          },
+        },
+      },
+      window.location.origin,
+    );
+  });
+
+  await expect(
+    page.getByText("ResVault Unlocked! Connect to Wallet now."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Connect wallet" }),
+  ).toBeEnabled();
+  await page.mouse.move(0, 0);
+  await expect(page.getByRole("tooltip")).not.toBeVisible();
+  await page.screenshot({
+    path: "test-results/resvault-login-ready.png",
+    fullPage: false,
+  });
 });
