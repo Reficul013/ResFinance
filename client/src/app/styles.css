@@ -396,15 +396,32 @@ code {
   border: 1px solid var(--control-border);
   border-radius: 999px;
   background: var(--control-background);
-  color: var(--page-text);
+  color: var(--page-accent);
   font: inherit;
   font-size: 1rem;
   cursor: help;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.auth-help-icon {
+  width: 1.15rem;
+  height: 1.15rem;
 }
 
 .auth-help-button:hover,
 .auth-help-button:focus-visible {
   background: var(--control-background-hover);
+  border-color: color-mix(
+    in srgb,
+    var(--page-accent) 45%,
+    var(--control-border)
+  );
+  color: color-mix(in srgb, var(--page-accent) 82%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--page-accent) 22%, transparent);
 }
 
 .auth-help-button:focus-visible {

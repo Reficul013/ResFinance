@@ -38,7 +38,27 @@ export function AuthCard({
             aria-label="How to connect ResVault"
             aria-describedby="resvault-login-help"
           >
-            <span aria-hidden="true">ℹ️</span>
+            <svg
+              className="auth-help-icon"
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              focusable="false"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 11v5" />
+              <circle
+                cx="12"
+                cy="8"
+                r="0.85"
+                fill="currentColor"
+                stroke="none"
+              />
+            </svg>
           </button>
           <div
             className="auth-help-popover"

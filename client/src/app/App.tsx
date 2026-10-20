@@ -56,8 +56,9 @@ export function App() {
         <>
           <h1>ResFinance</h1>
           <p className="lede">
-            Connect the hardened ResVault extension to open your encrypted
-            finance and groups dashboards. Your seed stays inside the extension.
+            Connect to the hardened ResVault extension to open your Encrypted
+            Personal Finance, Bill Split, and Crypto Analysis Dashboards. Your
+            seed always stays inside the extension.
           </p>
         </>
       )}

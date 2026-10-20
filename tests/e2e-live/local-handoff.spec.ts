@@ -172,7 +172,7 @@ test("real ResVault and services preserve the local journey through restart", as
     await ownerPage.getByRole("button", { name: "Log out" }).click();
     expect((await loggedOut).status()).toBe(204);
     await expect(ownerPage).toHaveURL("http://127.0.0.1:5173/");
-    await expect(ownerPage.getByText("ResVault is locked.")).toBeVisible();
+    await expect(ownerPage.getByText("ResVault is Locked!")).toBeVisible();
     await expect(
       ownerPage.getByRole("button", { name: "Connect wallet" }),
     ).toBeDisabled();
@@ -345,7 +345,7 @@ async function expectWalletLocked(context: BrowserContext) {
   const page = await context.newPage();
   await page.goto(`chrome-extension://${await extensionId(context)}/popup.html`);
   await expect(page.locator("#locked")).toBeVisible({ timeout: 30_000 });
-  await expect(page.locator("#status-text")).toHaveText("ResVault is locked.");
+  await expect(page.locator("#status-text")).toHaveText("ResVault is Locked!");
   await expect(page.locator("#status-bulb")).toBeVisible();
   const unlockButtonBox = await page
     .getByRole("button", { name: "Unlock your Wallet" })

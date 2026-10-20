@@ -756,7 +756,7 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
   await page.goto("/");
 
   const authCard = page.locator(".auth-card");
-  await expect(page.getByText("ResVault is locked.")).toBeVisible();
+  await expect(page.getByText("ResVault is Locked!")).toBeVisible();
   await expect(page.locator(".auth-status-bulb")).toBeVisible();
   await expect(authCard.locator(".auth-brand-logo-dark")).toBeVisible();
   await expect(

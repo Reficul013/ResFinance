@@ -118,7 +118,7 @@ export function useAuthentication(): Authentication {
       if (!status.unlocked) {
         setIdentity(status.identity);
         setState("locked");
-        setMessage("ResVault is locked.");
+        setMessage("ResVault is Locked!");
         return;
       }
       setIdentity(status.identity);
@@ -156,7 +156,7 @@ export function useAuthentication(): Authentication {
           : "Wallet authentication failed.";
       if (errorMessage === "ResVault is locked") {
         setState("locked");
-        setMessage("ResVault is locked.");
+        setMessage("ResVault is Locked!");
       } else {
         setState("error");
         setMessage(errorMessage);
@@ -194,6 +194,6 @@ export function useAuthentication(): Authentication {
 function walletStatusMessage(status: WalletStatus): string {
   if (!status.exists || status.identity === null)
     return "Initialize ResVault before connecting.";
-  if (!status.unlocked) return "ResVault is locked.";
+  if (!status.unlocked) return "ResVault is Locked!";
   return "ResVault Unlocked! Connect to Wallet now.";
 }
