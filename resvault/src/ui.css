@@ -51,6 +51,7 @@ h2 {
   gap: 0.45rem;
   align-items: center;
   min-height: 1.5rem;
+  margin: 1rem 0;
 }
 .vault-status[data-tone="locked"] {
   color: #f5b84b;
@@ -106,6 +107,14 @@ input {
   background: rgb(255 255 255 / 8%);
   color: inherit;
   font: inherit;
+}
+#locked:not([hidden]) {
+  display: grid;
+  gap: 0.65rem;
+}
+#locked > input,
+#locked > button {
+  margin: 0;
 }
 button {
   min-height: 2.6rem;

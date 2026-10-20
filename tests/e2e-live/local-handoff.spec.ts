@@ -308,7 +308,7 @@ async function unlockWallet(context: BrowserContext, verifyIncorrectPassword = f
     );
     await expect(page.getByText("Password", { exact: true })).not.toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Unlock your Wallet!" }),
+      page.getByRole("button", { name: "Unlock your Wallet" }),
     ).toBeVisible();
     if (verifyIncorrectPassword) {
       await page.locator("#unlock-password").fill("incorrect-password-value");
@@ -348,7 +348,7 @@ async function expectWalletLocked(context: BrowserContext) {
   await expect(page.locator("#status-text")).toHaveText("ResVault is locked.");
   await expect(page.locator("#status-bulb")).toBeVisible();
   const unlockButtonBox = await page
-    .getByRole("button", { name: "Unlock your Wallet!" })
+    .getByRole("button", { name: "Unlock your Wallet" })
     .boundingBox();
   const lockedFormBox = await page.locator("#locked").boundingBox();
   expect(unlockButtonBox).not.toBeNull();
