@@ -209,7 +209,7 @@ returns, upside probabilities, intervals, and 60-day price history.
 | Default and scenario capital | Pass | The browser journey used Finance-derived `$4,000.00`, reconciled allocations exactly, analyzed `$2,500.00`, and read Finance back unchanged. |
 | Invalid forecast inputs | Pass | Unit/integration coverage confirms stale, corrupted, synthetic, and unpromoted inputs fail closed. |
 | Complete repository suites | Pass | Ruff, mypy, 115 Python tests, 9 client tests, 5 ResWallet tests, both builds, extension inspection, 5 dashboard browser tests, and the upgraded 3.0-minute live journey passed. |
-| Reproducible operator guide | Pass | See [Milestone 7 local operator guide](milestone7-local-operator-guide.md). |
+| Reproducible operator guide | Pass | See [Milestone 7 local operator guide](../local-operator-guide.md). |
 
 Milestone 7 is complete for its declared local scope. The promoted candidate is
 deliberately conservative: validation selected full expected-return abstention,

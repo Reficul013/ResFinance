@@ -536,8 +536,8 @@ substitute for the presenter profiles.
 
 ## Reference evidence
 
-- [Milestone 7 Local Handoff](milestone7-cross-dashboard-local-handoff.md)
-- [Milestone 7 operator guide](milestone7-local-operator-guide.md)
+- [Milestone 7 Local Handoff](milestones/milestone7-cross-dashboard-local-handoff.md)
+- [Milestone 7 operator guide](local-operator-guide.md)
 - [Research protocol](research-protocol.md)
 - [Security contract](security.md)
 - [`config/milestone9-forward-completion-attestation.json`](../config/milestone9-forward-completion-attestation.json)

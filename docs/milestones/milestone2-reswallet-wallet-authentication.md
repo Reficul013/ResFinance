@@ -25,7 +25,7 @@ Evidence date: 2026-10-13 America/Los_Angeles
 - Keyboard-accessible ResWallet creation and unlock forms. Enter creates a new wallet or submits the unlock password exactly like the corresponding button. A failed password displays **Incorrect Password** in red, and the locked popup displays a blinking bulb beside **ResWallet is Locked!** The ready state labels **Your Wallet Address**, keeps **Lock now** full width, and explains that the private key never leaves ResWallet before its five-minute inactivity lock.
 - A pinned native ResilientDB KV client in the FastAPI container; no substitute persistence was introduced.
 
-Exact upstream and cryptography revisions are recorded in [`config/milestone2-lock.json`](../config/milestone2-lock.json). The built extension remains a local-development implementation; this evidence does not claim browser-store review, production key custody, cloud support, or production readiness.
+Exact upstream and cryptography revisions are recorded in [`config/milestone2-lock.json`](../../config/milestone2-lock.json). The built extension remains a local-development implementation; this evidence does not claim browser-store review, production key custody, cloud support, or production readiness.
 
 ## Security acceptance
 
@@ -56,7 +56,7 @@ The rebuilt FastAPI container separately passed the live HTTP flow through its p
 - Logout: `204`
 - Wrong origin: `403`
 
-The sanitized record is [`config/milestone2-local-attestation.json`](../config/milestone2-local-attestation.json).
+The sanitized record is [`config/milestone2-local-attestation.json`](../../config/milestone2-local-attestation.json).
 
 ## Verification
 

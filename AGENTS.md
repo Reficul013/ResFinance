@@ -6,7 +6,7 @@ These instructions apply to the entire repository. Add a nested `AGENTS.md` only
 
 - Use `docs/architecture-implementation-plan.md` for architecture, security, data boundaries, milestone order, and acceptance criteria relevant to the current task.
 - Use `docs/project-spec.md` for product behavior and the end-to-end user journey.
-- Use `docs/milestones.md` for the canonical eight-milestone naming convention and the mapping from legacy artifact identifiers. New planning, status updates, commits, and handoffs must use this convention.
+- Use `docs/milestones/milestones.md` for the canonical eight-milestone naming convention and the mapping from legacy artifact identifiers. New planning, status updates, commits, and handoffs must use this convention.
 - When implementing or debugging ResilientDB, ResWallet, the upstream ResVault reference, or ResContract, consult `docs/development-references.md`, pin the exact upstream revision used, and validate documented behavior against the local stack.
 - Follow the dependency-ordered roadmap. Milestone 1 feasibility gates block dependent feature work when they fail; do not bypass a gate with a substitute technology. Historical `milestone0`–`milestone9` script, configuration, image, attestation, and run identifiers remain stable compatibility names and do not define the current milestone numbering.
 
@@ -62,7 +62,7 @@ These instructions apply to the entire repository. Add a nested `AGENTS.md` only
 - When a task produces substantial, complete repository changes, verify the work, review the diff, create a focused commit with a meaningful Conventional Commit message, and push the current branch to its configured upstream before handing off.
 - Substantial changes include working application code, tests, API or data-model changes, build configuration, and documentation that materially changes project behavior or direction.
 - Before committing and pushing, review `README.md` against the completed diff. Update it in the same commit when user-visible behavior, setup or verification commands, architecture, supported scope, project status, or repository layout changed.
-- Update `ResFinance-Current-Status.md` in the same commit whenever a pushed change materially changes milestone scope, status, behavior, verification evidence, readiness, or known limitations. Keep detailed milestone progress out of the root README.
+- Update `docs/ResFinance-Current-Status.md` in the same commit whenever a pushed change materially changes milestone scope, status, behavior, verification evidence, readiness, or known limitations. Keep detailed milestone progress out of the root README.
 - When the completed diff does not affect README content, confirm that the README remains accurate and do not edit it solely to create documentation churn.
 - Do not commit trivial formatting, typo-only edits, temporary debugging, empty scaffolding by itself, or unfinished/broken work.
 - Stage only changes belonging to the completed task. Preserve unrelated user changes and never commit secrets, local environment files, credentials, generated artifacts, or large data/model files.

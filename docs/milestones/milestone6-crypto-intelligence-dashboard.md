@@ -72,7 +72,7 @@ Browser code uses only the generated REST contract.
 ## Verification
 
 The checked-in attestation is
-[`config/milestone7-local-attestation.json`](../config/milestone7-local-attestation.json).
+[`config/milestone7-local-attestation.json`](../../config/milestone7-local-attestation.json).
 It records real four-replica ResilientDB acceptance for risk persistence and the
 Finance source link, plus deterministic synthetic optimization checks.
 

@@ -77,7 +77,7 @@ Cloud and production deployment are deferred until a separate feasibility review
 ## 4. Five-phase implementation plan
 
 These implementation phases roll up into the canonical eight-milestone
-convention in [`milestones.md`](milestones.md). Phase names describe delivery
+convention in [`milestones/milestones.md`](milestones/milestones.md). Phase names describe delivery
 flow; milestone names are the authoritative labels for planning and status.
 
 ### Phase 1 - Finance Foundation + Shared Ledger

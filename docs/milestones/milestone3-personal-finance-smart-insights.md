@@ -73,7 +73,7 @@ The checked runner appended two categories, income, an expense, a budget, a recu
 - Budget utilization: `9000` basis points, `near_limit`
 - Projection version: `8`
 
-The sanitized record is [`config/milestone3-local-attestation.json`](../config/milestone3-local-attestation.json).
+The sanitized record is [`config/milestone3-local-attestation.json`](../../config/milestone3-local-attestation.json).
 
 The rebuilt FastAPI container also passed a live wallet-authenticated Finance flow through its pinned native ResilientDB client: category creation `201`, idempotent duplicate `201`, overview `200`, and invalid access token `401`.
 
@@ -161,7 +161,7 @@ The selected model is `Qwen/Qwen2.5-1.5B-Instruct` at revision
 `989aa7980e4cf806f80c7fef2b1adb7bc71aa306`, licensed Apache-2.0. Runtime and
 generation policy pins plus SHA-256 hashes for the weights, configuration, and
 tokenizer configuration are recorded in
-[`config/milestone8-model-lock.json`](../config/milestone8-model-lock.json).
+[`config/milestone8-model-lock.json`](../../config/milestone8-model-lock.json).
 
 On the local ARM64 acceptance machine with Python 3.13.2, PyTorch 2.14.1, and
 Transformers 4.57.6, two deterministic selections returned only the permitted
@@ -169,7 +169,7 @@ budget fact with confidence 1.0. Cold selection took 10.04 seconds, the repeated
 selection took 4.46 seconds, and measured resident-memory growth was about 3.12
 GB. These figures are local feasibility evidence, not a production latency or
 capacity claim. Full evidence is in
-[`config/milestone8-model-benchmark.json`](../config/milestone8-model-benchmark.json).
+[`config/milestone8-model-benchmark.json`](../../config/milestone8-model-benchmark.json).
 
 ### API and interface
 
@@ -191,7 +191,7 @@ capacity claim. Full evidence is in
 ### Acceptance evidence
 
 The real four-replica ResilientDB acceptance is recorded in
-[`config/milestone8-local-attestation.json`](../config/milestone8-local-attestation.json).
+[`config/milestone8-local-attestation.json`](../../config/milestone8-local-attestation.json).
 It verified:
 
 - all returned citations belonged to the authenticated fact bundle;
@@ -224,7 +224,7 @@ npm run test:e2e
 ```
 
 The exact model and real-stack commands are listed in the
-[`Milestone 7 local operator guide`](milestone7-local-operator-guide.md). Model
+[`Milestone 7 local operator guide`](../local-operator-guide.md). Model
 weights stay outside Git and are mounted read-only for local runtime.
 
 ### Historical acceptance boundary

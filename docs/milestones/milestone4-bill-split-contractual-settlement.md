@@ -30,7 +30,7 @@ The checked acceptance runner used real ResilientDB and ResContract instances. I
 - creditor Finance receivable: `0`
 - private wallet material transmitted: `false`
 
-The machine-readable summary is in [`config/milestone4-local-attestation.json`](../config/milestone4-local-attestation.json).
+The machine-readable summary is in [`config/milestone4-local-attestation.json`](../../config/milestone4-local-attestation.json).
 
 ```bash
 docker compose --profile tools up -d --build --wait \

@@ -14,7 +14,7 @@ contracts. They are implementation identifiers within current Milestone 1.
 
 The Milestone 1 feasibility work proves that the required Apache ResilientDB ecosystem can support ResFinance without substituting another database, weakening key isolation, or bypassing signed settlement. A gate is `pass`, `fail`, `partial`, or `blocked`. Only `pass` satisfies acceptance.
 
-The machine-readable pins are in [`config/milestone0-lock.json`](../config/milestone0-lock.json). Generated JSON evidence is local-only and must not be committed because it can contain host paths and volatile provider responses.
+The machine-readable pins are in [`config/milestone0-lock.json`](../../config/milestone0-lock.json). Generated JSON evidence is local-only and must not be committed because it can contain host paths and volatile provider responses.
 
 Feasibility code is a narrow spike unless the Milestone 1 platform foundation or a later milestone explicitly adopts it. A spike must use the real pinned integration and meet the same security and storage invariants, but it is not the complete maintainable product implementation assigned to later work.
 
@@ -106,7 +106,7 @@ Observed result:
 - Deduplication after restart: pass
 - Substitute database: none
 
-The sanitized machine-readable record is [`config/milestone1-local-attestation.json`](../config/milestone1-local-attestation.json). This proves local persistence behavior, not cloud or production readiness.
+The sanitized machine-readable record is [`config/milestone1-local-attestation.json`](../../config/milestone1-local-attestation.json). This proves local persistence behavior, not cloud or production readiness.
 
 ### Verification
 

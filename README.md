@@ -5,9 +5,9 @@ connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL
 portfolio analysis through one auditable financial record.
 
 For milestone progress and current readiness, see
-[`ResFinance-Current-Status.md`](ResFinance-Current-Status.md). The canonical
+[`docs/ResFinance-Current-Status.md`](docs/ResFinance-Current-Status.md). The canonical
 eight-milestone convention is defined in
-[`docs/milestones.md`](docs/milestones.md).
+[`docs/milestones/milestones.md`](docs/milestones/milestones.md).
 
 ## Product journey
 
@@ -99,7 +99,7 @@ Install the pinned dependency sets, then run the repository checks:
 
 The historical milestone numbers in executable paths are stable compatibility
 identifiers. For the complete real-stack command sequence, use the
-[`Milestone 7 local operator guide`](docs/milestone7-local-operator-guide.md).
+[`Milestone 7 local operator guide`](docs/local-operator-guide.md).
 
 ## Repository layout
 
@@ -116,24 +116,18 @@ docs/          Product, architecture, milestone evidence, and development refere
 
 ## Documentation
 
-- [Current milestone status](ResFinance-Current-Status.md)
-- [Canonical milestone convention](docs/milestones.md)
-- [Product specification](docs/project-spec.md)
-- [Architecture and implementation plan](docs/architecture-implementation-plan.md)
-- [Milestone 1 foundation evidence](docs/milestone1-resfinance-foundation.md)
-- [Milestone 2 ResWallet evidence](docs/milestone2-reswallet-wallet-authentication.md)
-- [Milestone 3 Personal Finance and Smart Insights evidence](docs/milestone3-personal-finance-smart-insights.md)
-- [Milestone 4 Bill Split evidence](docs/milestone4-bill-split-contractual-settlement.md)
-- [Milestone 5 Crypto research evidence](docs/milestone5-crypto-intelligence-research.md)
-- [Milestone 6 Crypto dashboard evidence](docs/milestone6-crypto-intelligence-dashboard.md)
-- [Milestone 7 integration and Local Handoff evidence](docs/milestone7-cross-dashboard-local-handoff.md)
-- [Milestone 8 deferred production scope](docs/milestone8-production-hardening-deployment.md)
-- [Local demo runbook](docs/local-demo-runbook.md)
-- [REST API contract](docs/rest-api-contract.md)
-- [Security contract](docs/security.md)
-- [Research protocol](docs/research-protocol.md)
+- [Product Specification](docs/project-spec.md)
+- [Architecture and Implementation Plan](docs/architecture-implementation-plan.md)
+- [Local Demo Runbook](docs/local-demo-runbook.md)
+- [Local Operator Guide](docs/local-operator-guide.md)
+- [REST API Contract](docs/rest-api-contract.md)
+- [Security Contract](docs/security.md)
+- [Research Protocol](docs/research-protocol.md)
 - [Provider coverage and terms review](docs/provider-terms-review.md)
 - [ResilientDB ecosystem development references](docs/development-references.md)
+- [Canonical Milestone Convention](docs/milestones/milestones.md)
+- [Milestone Evidence](docs/milestones/)
+- [Current milestone status](docs/ResFinance-Current-Status.md)
 - [Repository instructions for coding agents](AGENTS.md)
 
 ## License

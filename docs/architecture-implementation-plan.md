@@ -4,7 +4,7 @@ Status: Approved planning baseline for local implementation; cloud deployment is
 
 Last reviewed: 2026-10-21
 
-Implementation status: Milestones 1–7 passed for local development and research under the canonical convention in [`milestones.md`](milestones.md). Milestone 7 includes cross-dashboard integration, the local lifecycle, explicit workers, operator guide, continuous real-service browser proof, the original provider-data research run, and the predeclared untouched-forward completion protocol. The validation-locked candidate abstained to the naive return forecast, tied its forward MAE, exceeded required interval coverage, passed the unchanged immutable gate, and published a provenance-complete current-cutoff snapshot. Milestone 8 production hardening and deployment remains on hold.
+Implementation status: Milestones 1–7 passed for local development and research under the canonical convention in [`milestones/milestones.md`](milestones/milestones.md). Milestone 7 includes cross-dashboard integration, the local lifecycle, explicit workers, operator guide, continuous real-service browser proof, the original provider-data research run, and the predeclared untouched-forward completion protocol. The validation-locked candidate abstained to the naive return forecast, tied its forward MAE, exceeded required interval coverage, passed the unchanged immutable gate, and published a provenance-complete current-cutoff snapshot. Milestone 8 production hardening and deployment remains on hold.
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
@@ -314,11 +314,11 @@ Go/no-go validation must prove:
 The milestone titles and consolidation rules below are canonical. Historical
 script modules, configuration files, attestations, image tags, and run IDs keep
 their earlier numbers as stable compatibility identifiers; see
-[`milestones.md`](milestones.md).
+[`milestones/milestones.md`](milestones/milestones.md).
 
 ### Milestone 1: ResFinance Foundation — Architecture, Feasibility Gate & Platform Foundation
 
-**Status:** complete for local feasibility and development; evidence is recorded in [`milestone1-resfinance-foundation.md`](milestone1-resfinance-foundation.md).
+**Status:** complete for local feasibility and development; evidence is recorded in [`milestones/milestone1-resfinance-foundation.md`](milestones/milestone1-resfinance-foundation.md).
 
 Feasibility implementations are narrow, disposable spikes unless the platform foundation explicitly adopts them. They must exercise the real pinned boundaries and preserve every security and storage invariant, but they do not replace maintainable product implementation or tests.
 
@@ -342,7 +342,7 @@ Feasibility implementations are narrow, disposable spikes unless the platform fo
 
 ### Milestone 2: ResWallet — Custom Hardened ResVault & Wallet Authentication
 
-**Status:** complete for local development; evidence is recorded in [`milestone2-reswallet-wallet-authentication.md`](milestone2-reswallet-wallet-authentication.md).
+**Status:** complete for local development; evidence is recorded in [`milestones/milestone2-reswallet-wallet-authentication.md`](milestones/milestone2-reswallet-wallet-authentication.md).
 
 - Implement the Milestone 1 feasibility audit decision by completing the documented custom ResWallet extension required by the failed audit.
 - Implement challenge login, in-memory access tokens, refresh-session hashes in ResilientDB, logout/revocation, address derivation, and signed-intent verification.
@@ -352,7 +352,7 @@ Feasibility implementations are narrow, disposable spikes unless the platform fo
 
 ### Milestone 3: Personal Finance — Dashboard & Smart Insights (Read-only AI)
 
-**Status:** complete for local development; Finance and Smart Insights evidence is recorded in [`milestone3-personal-finance-smart-insights.md`](milestone3-personal-finance-smart-insights.md).
+**Status:** complete for local development; Finance and Smart Insights evidence is recorded in [`milestones/milestone3-personal-finance-smart-insights.md`](milestones/milestone3-personal-finance-smart-insights.md).
 
 - Implement income/expense events, the fixed direction-aware category catalog, budgets, recurring entries, summaries, savings calculation, and receivable/payable projections.
 - Build accessible charts, validation, empty/loading/error states, provenance views, and confirmed per-record correction actions that append void or deactivation events without deleting history.
@@ -364,7 +364,7 @@ Feasibility implementations are narrow, disposable spikes unless the platform fo
 
 ### Milestone 4: Bill Split — Friends, Groups & Contractual Settlement
 
-**Status:** complete for local development; evidence is recorded in [`milestone4-bill-split-contractual-settlement.md`](milestone4-bill-split-contractual-settlement.md).
+**Status:** complete for local development; evidence is recorded in [`milestones/milestone4-bill-split-contractual-settlement.md`](milestones/milestone4-bill-split-contractual-settlement.md).
 
 - Implement groups, membership, expenses, split validation, participant approval, obligation projections, and notifications.
 - Deploy `ResFinanceSettlement.sol`.
@@ -374,7 +374,7 @@ Feasibility implementations are narrow, disposable spikes unless the platform fo
 
 ### Milestone 5: Crypto Intelligence — Crypto Ingestion, Feature Store & Reproducible ML Research
 
-**Status:** complete for local, non-commercial research mechanics; ingestion, feature-store, and reproducible ML evidence is recorded in [`milestone5-crypto-intelligence-research.md`](milestone5-crypto-intelligence-research.md). The deterministic smoke model was not promoted, and no statistical or investment-performance claim is made.
+**Status:** complete for local, non-commercial research mechanics; ingestion, feature-store, and reproducible ML evidence is recorded in [`milestones/milestone5-crypto-intelligence-research.md`](milestones/milestone5-crypto-intelligence-research.md). The deterministic smoke model was not promoted, and no statistical or investment-performance claim is made.
 
 - Add Coin Metrics, CoinGecko, DefiLlama, and GDELT adapters.
 - Persist immutable raw observations, derived features, availability masks, licenses, and checksums.
@@ -392,7 +392,7 @@ Feasibility implementations are narrow, disposable spikes unless the platform fo
 
 ### Milestone 6: Crypto Intelligence — Risk, Portfolio & Crypto Dashboard
 
-**Status:** complete for local development and synthetic acceptance; evidence is recorded in [`milestone6-crypto-intelligence-dashboard.md`](milestone6-crypto-intelligence-dashboard.md). No forecast is available to the normal runtime until a Milestone 5 model passes promotion.
+**Status:** complete for local development and synthetic acceptance; evidence is recorded in [`milestones/milestone6-crypto-intelligence-dashboard.md`](milestones/milestone6-crypto-intelligence-dashboard.md). No forecast is available to the normal runtime until a Milestone 5 model passes promotion.
 
 - Implement questionnaire scoring, policy versioning, CVXPY optimization, fallback behavior, forecasts, chart overlays, allocations, and non-mutating scenarios.
 - Connect the default amount to Finance savings through an immutable source event ID.
@@ -401,7 +401,7 @@ Feasibility implementations are narrow, disposable spikes unless the platform fo
 
 ### Milestone 7: Deliverables — Cross-dashboard Integration & Local Handoff
 
-**Status:** complete for local development and research. Cross-dashboard and Local Handoff evidence is recorded in [`milestone7-cross-dashboard-local-handoff.md`](milestone7-cross-dashboard-local-handoff.md), with operating instructions in [`milestone7-local-operator-guide.md`](milestone7-local-operator-guide.md). The first provider-data candidate remains rejected; the later predeclared untouched-forward candidate passed the unchanged gate and its live recommendation passed the real-stack browser journey.
+**Status:** complete for local development and research. Cross-dashboard and Local Handoff evidence is recorded in [`milestones/milestone7-cross-dashboard-local-handoff.md`](milestones/milestone7-cross-dashboard-local-handoff.md), with operating instructions in [`local-operator-guide.md`](local-operator-guide.md). The first provider-data candidate remains rejected; the later predeclared untouched-forward candidate passed the unchanged gate and its live recommendation passed the real-stack browser journey.
 
 - Complete cross-dashboard navigation and in-app notifications.
 
@@ -427,7 +427,7 @@ The approved completion iteration adds these five required work packages:
 
 ### Milestone 8: Future Scope — Production Hardening & Deployment (On Hold)
 
-**Status:** on hold; scope and resume conditions are recorded in [`milestone8-production-hardening-deployment.md`](milestone8-production-hardening-deployment.md).
+**Status:** on hold; scope and resume conditions are recorded in [`milestones/milestone8-production-hardening-deployment.md`](milestones/milestone8-production-hardening-deployment.md).
 
 - Do not provision cloud infrastructure or implement a production deployment pipeline until this milestone is explicitly resumed.
 - Before resumption, validate the pinned ResilientDB stack in the proposed cloud environment, including networking, persistent storage, restart recovery, replica failure, operational support, and independent failure domains.

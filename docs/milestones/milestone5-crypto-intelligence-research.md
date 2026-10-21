@@ -54,7 +54,7 @@ For each date, the builder selects only a revision whose provider-availability t
 
 The deterministic acceptance writes synthetic provider observations and feature rows through the pinned local ResilientDB client into the running four-replica stack. Synthetic data is used so the acceptance result does not depend on provider availability and does not commit generated research data to Git.
 
-The recorded run in [`config/milestone5-local-attestation.json`](../config/milestone5-local-attestation.json) passed:
+The recorded run in [`config/milestone5-local-attestation.json`](../../config/milestone5-local-attestation.json) passed:
 
 - Exactly `BTC | ETH | SOL`; `DOGE` was rejected before provider or persistence work.
 - 28 immutable raw observations inserted into real ResilientDB.
