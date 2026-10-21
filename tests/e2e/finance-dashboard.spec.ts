@@ -785,6 +785,18 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
 
   const authCard = page.locator(".auth-card");
   await expect(page.getByText("ResWallet is Locked!")).toBeVisible();
+  await page.getByRole("button", { name: "Switch to Light Mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(authCard.locator(".auth-message")).toHaveCSS(
+    "color",
+    "rgb(91, 71, 153)",
+  );
+  await page.screenshot({
+    path: "test-results/reswallet-login-light.png",
+    fullPage: false,
+  });
+  await page.getByRole("button", { name: "Switch to Dark Mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.locator(".auth-status-bulb")).toBeVisible();
   await expect(authCard.locator(".auth-brand-logo-dark")).toBeVisible();
   await expect(
