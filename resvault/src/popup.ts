@@ -34,7 +34,7 @@ async function refresh(): Promise<void> {
     if (!current.exists) {
       setStatus("No encrypted seed is stored.");
     } else if (current.unlocked) {
-      setStatus("Unlocked! Sign-In required for explicit approval.");
+      setStatus("Unlocked! Connect to Wallet for explicit approval.");
     } else {
       setStatus("ResVault is Locked!", "locked");
     }

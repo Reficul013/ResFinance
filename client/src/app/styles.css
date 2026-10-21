@@ -376,6 +376,12 @@ code {
   padding: 1.5rem 1.35rem;
 }
 
+@media (min-width: 32.01rem) {
+  .auth-card:not([data-state="authenticated"]) > .auth-button {
+    transform: translateX(0.45rem);
+  }
+}
+
 .auth-card > * {
   position: relative;
 }
