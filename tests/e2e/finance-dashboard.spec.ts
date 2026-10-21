@@ -801,13 +801,13 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
     `0x${"6".repeat(40)}`,
   );
   await expect(
-    page.getByRole("button", { name: "Connect wallet" }),
+    page.getByRole("button", { name: "Connect Wallet" }),
   ).toBeDisabled();
 
   const cardBox = await authCard.boundingBox();
   const sessionBox = await authCard.locator(".auth-session").boundingBox();
   const connectBox = await page
-    .getByRole("button", { name: "Connect wallet" })
+    .getByRole("button", { name: "Connect Wallet" })
     .boundingBox();
   const helpBox = await page
     .getByRole("button", { name: "How to connect ResWallet" })
@@ -839,7 +839,7 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
   });
   await helpButton.hover();
   await expect(page.getByRole("tooltip")).toContainText(
-    "Install and enable the hardened ResWallet extension",
+    "Install and enable the ResWallet extension",
   );
   await expect(page.getByRole("tooltip")).toContainText("Approve & Login");
   await page.waitForTimeout(200);
@@ -883,7 +883,7 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
     page.getByText("ResWallet Unlocked! Connect to Wallet now."),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Connect wallet" }),
+    page.getByRole("button", { name: "Connect Wallet" }),
   ).toBeEnabled();
   await page.mouse.move(0, 0);
   await expect(page.getByRole("tooltip")).not.toBeVisible();
@@ -919,7 +919,7 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
     });
   });
 
-  await page.getByRole("button", { name: "Connect wallet" }).click();
+  await page.getByRole("button", { name: "Connect Wallet" }).click();
   await expect(
     page.getByText("Review and approve the sign-in request in ResWallet."),
   ).toBeVisible();

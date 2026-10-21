@@ -122,7 +122,7 @@ export function AuthCard({
               ? "Signing in…"
               : state === "pending"
                 ? "Waiting for approval…"
-                : "Connect wallet"}
+                : "Connect Wallet"}
           </button>
           <div className="auth-help">
             <button
@@ -161,12 +161,12 @@ export function AuthCard({
               <strong>How to connect</strong>
               <ol>
                 <li>
-                  Install and enable the hardened ResWallet extension for wallet
+                  Install and enable the ResWallet extension for wallet
                   authentication.
                 </li>
                 <li>Open ResWallet extension &amp; unlock your wallet.</li>
                 <li>
-                  Return here, select <b>Connect wallet</b>, then choose{` `}
+                  Return here, select <b>Connect Wallet</b>, then choose{` `}
                   <b>Approve &amp; Login</b>.
                 </li>
               </ol>

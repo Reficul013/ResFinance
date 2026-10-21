@@ -225,7 +225,7 @@ export function useAuthentication(): Authentication {
 
 function walletStatusMessage(status: WalletStatus): string {
   if (!status.exists || status.identity === null)
-    return "Initialize ResWallet before connecting.";
+    return "Initialize ResWallet before connecting...";
   if (!status.unlocked) return "ResWallet is Locked!";
   return "ResWallet Unlocked! Connect to Wallet now.";
 }

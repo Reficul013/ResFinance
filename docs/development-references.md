@@ -9,7 +9,7 @@ Use these references when implementing or validating the ResilientDB, ResWallet,
 - [Pinned ResContract source](https://github.com/apache/incubator-resilientdb/tree/4de5cb43686276ace4307f44839a1de920ab524a/ecosystem/smart-contract/rescontract)
 - [Pinned upstream ResVault source](https://github.com/apache/incubator-resilientdb/tree/4de5cb43686276ace4307f44839a1de920ab524a/ecosystem/tools/resvault)
 - Machine-readable revisions and dependency hashes: [`config/milestone0-lock.json`](../config/milestone0-lock.json)
-- Hardened ResWallet dependency, policy, and upstream-reference lock: [`config/milestone2-lock.json`](../config/milestone2-lock.json)
+- ResWallet (Custom Hardened ResVault) dependency, policy, and upstream-reference lock: [`config/milestone2-lock.json`](../config/milestone2-lock.json)
 
 ## ExpoLab Beacon documentation
 

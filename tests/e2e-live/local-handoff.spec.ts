@@ -174,7 +174,7 @@ test("real ResWallet and services preserve the local journey through restart", a
     await expect(ownerPage).toHaveURL("http://127.0.0.1:5173/");
     await expect(ownerPage.getByText("ResWallet is Locked!")).toBeVisible();
     await expect(
-      ownerPage.getByRole("button", { name: "Connect wallet" }),
+      ownerPage.getByRole("button", { name: "Connect Wallet" }),
     ).toBeDisabled();
     await expectWalletLocked(first);
     await unlockWallet(first, true);
@@ -182,7 +182,7 @@ test("real ResWallet and services preserve the local journey through restart", a
       ownerPage.getByText("ResWallet Unlocked! Connect to Wallet now."),
     ).toBeVisible();
     await expect(
-      ownerPage.getByRole("button", { name: "Connect wallet" }),
+      ownerPage.getByRole("button", { name: "Connect Wallet" }),
     ).toBeEnabled();
     await expect(ownerPage.locator("main")).not.toContainText(beforeRestart);
   } finally {
@@ -248,7 +248,7 @@ async function initializeWallet(
     applicationPage.getByText("ResWallet Unlocked! Connect to Wallet now."),
   ).toBeVisible();
   await expect(
-    applicationPage.getByRole("button", { name: "Connect wallet" }),
+    applicationPage.getByRole("button", { name: "Connect Wallet" }),
   ).toBeEnabled();
   const address = (await page.locator("#address").textContent())?.trim();
   if (!address) throw new Error(`${label} wallet address was not created`);
@@ -260,8 +260,8 @@ async function initializeWallet(
 async function authenticate(context: BrowserContext): Promise<Page> {
   const page = await context.newPage();
   await page.goto("http://127.0.0.1:5173/finance");
-  await expect(page.getByRole("button", { name: "Connect wallet" })).toBeEnabled();
-  await approveAfter(context, () => page.getByRole("button", { name: "Connect wallet" }).click());
+  await expect(page.getByRole("button", { name: "Connect Wallet" })).toBeEnabled();
+  await approveAfter(context, () => page.getByRole("button", { name: "Connect Wallet" }).click());
   await expect(
     page.locator(".auth-card").getByRole("heading", { name: "ResFinance" }),
   ).toBeVisible();
@@ -338,7 +338,7 @@ async function unlockWallet(context: BrowserContext, verifyIncorrectPassword = f
       "Your Wallet Address",
     );
     await expect(page.locator("#unlocked .hint")).toHaveText(
-      "Your private key never leaves ResWallet. For your security, the wallet locks automatically after five minutes of inactivity.",
+      "Your private key never leaves ResWallet. For your security, the wallet locks automatically after 5 minutes of inactivity.",
     );
     const lockButtonBox = await page
       .getByRole("button", { name: "Lock now" })

@@ -214,7 +214,7 @@ RESFINANCE_AI_MODEL_PATH=/private/tmp/resfinance-qwen2.5-1.5b \
 
 ```text
 client/       React and TypeScript application
-reswallet/     Custom hardened ResWallet browser extension
+reswallet/    ResWallet (Custom Hardened ResVault) browser extension
 server/       FastAPI API, domain services, adapters, and workers
 blockchain/   ResContract contracts, gateway adapter, wallet work, and tests
 ml/           Data, features, forecasting, evaluation, and portfolio optimization

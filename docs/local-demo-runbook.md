@@ -163,7 +163,7 @@ Never export, copy, display, or place a seed or private key in demo notes.
 In both profiles:
 
 1. Open `http://127.0.0.1:5173/finance`.
-2. Choose **Connect wallet**.
+2. Choose **Connect Wallet**.
 3. Review the ResWallet toolbar approval popup while the ResFinance page remains
    visible behind it.
 4. Choose **Approve & Login**.
