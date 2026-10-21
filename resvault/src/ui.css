@@ -186,6 +186,45 @@ pre {
   justify-content: flex-end;
 }
 
+/* Chrome limits toolbar popups to 600px high; keep approval details readable
+   while fitting the usual login request within that space. */
+.approval {
+  padding: 1rem 1.2rem;
+}
+.approval h1 {
+  font-size: 1.7rem;
+}
+.approval .eyebrow {
+  margin-bottom: 0.25rem;
+}
+.approval .status {
+  margin: 0.45rem 0;
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+.approval dl {
+  gap: 0.35rem;
+  margin: 0.7rem 0;
+}
+.approval dl div {
+  padding: 0.45rem 0.6rem;
+}
+.approval dt {
+  font-size: 0.65rem;
+}
+.approval dd {
+  margin-top: 0.15rem;
+  font-size: 0.84rem;
+}
+.approval pre {
+  font-size: 0.78rem;
+}
+.approval .actions button {
+  min-height: 2.4rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .status-bulb {
     animation: none;
