@@ -714,6 +714,57 @@ test("voids transactions and deactivates recurring items through confirmed audit
   expect(deactivateRequest).toEqual({ expected_version: 9 });
 });
 
+test("separates the wallet controls before a wallet is created", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/auth/refresh", async (route) => {
+    await route.fulfill({ status: 401 });
+  });
+  await page.goto("/");
+
+  const card = page.locator(".auth-card");
+  const connect = page.getByRole("button", { name: "Connect Wallet" });
+  const help = page.getByRole("button", { name: "How to connect ResWallet" });
+  await expect(card).toHaveAttribute("data-state", "disconnected");
+  await expect(
+    page.getByText(
+      "Install the ResWallet extension to use wallet authentication.",
+    ),
+  ).toBeVisible();
+  await expect(connect).toBeDisabled();
+
+  const cardBox = await card.boundingBox();
+  const connectBox = await connect.boundingBox();
+  const helpBox = await help.boundingBox();
+  expect(cardBox).not.toBeNull();
+  expect(connectBox).not.toBeNull();
+  expect(helpBox).not.toBeNull();
+  expect(cardBox!.height).toBeGreaterThanOrEqual(168);
+  expect(connectBox!.y - (helpBox!.y + helpBox!.height)).toBeGreaterThanOrEqual(
+    8,
+  );
+  await page.screenshot({
+    path: "test-results/reswallet-disconnected.png",
+    fullPage: false,
+  });
+
+  await page.evaluate(() => {
+    window.postMessage(
+      {
+        source: "reswallet",
+        version: 1,
+        type: "STATUS_CHANGED",
+        status: { exists: false, unlocked: false, identity: null },
+      },
+      window.location.origin,
+    );
+  });
+  await expect(
+    page.getByText("Initialize ResWallet before connecting..."),
+  ).toBeVisible();
+  await expect(card).toHaveAttribute("data-state", "disconnected");
+});
+
 test("updates the ResWallet login guidance after the popup changes wallet state", async ({
   page,
 }) => {
@@ -840,7 +891,7 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
   expect(helpBox!.y - cardBox!.y).toBeGreaterThanOrEqual(12);
   expect(helpBox!.y - cardBox!.y).toBeLessThanOrEqual(24);
   expect(connectBox!.y - (helpBox!.y + helpBox!.height)).toBeGreaterThanOrEqual(
-    8,
+    0,
   );
   expect(
     Math.abs(connectBox!.x + connectBox!.width - (helpBox!.x + helpBox!.width)),
