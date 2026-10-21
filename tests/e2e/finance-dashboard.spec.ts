@@ -802,10 +802,18 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
   expect(helpBox).not.toBeNull();
   expect(sessionBox!.x - cardBox!.x).toBeGreaterThanOrEqual(20);
   expect(connectBox!.x).toBeGreaterThan(sessionBox!.x + sessionBox!.width);
-  expect(connectBox!.x + connectBox!.width).toBeLessThan(helpBox!.x);
+  expect(
+    Math.abs(
+      connectBox!.y +
+        connectBox!.height / 2 -
+        (sessionBox!.y + sessionBox!.height / 2),
+    ),
+  ).toBeLessThanOrEqual(2);
+  expect(helpBox!.y - cardBox!.y).toBeGreaterThanOrEqual(12);
+  expect(helpBox!.y - cardBox!.y).toBeLessThanOrEqual(24);
   expect(
     cardBox!.x + cardBox!.width - (helpBox!.x + helpBox!.width),
-  ).toBeGreaterThanOrEqual(20);
+  ).toBeGreaterThanOrEqual(12);
 
   const helpButton = page.getByRole("button", {
     name: "How to connect ResWallet",

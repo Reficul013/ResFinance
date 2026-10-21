@@ -378,10 +378,7 @@ code {
 }
 
 .auth-connect-controls {
-  display: grid;
-  grid-template-columns: minmax(10rem, 17rem) auto;
-  gap: 0.75rem;
-  align-items: center;
+  width: min(17rem, 100%);
   justify-self: end;
 }
 
@@ -393,9 +390,15 @@ code {
   position: relative;
 }
 
+.auth-card > .auth-connect-controls {
+  position: static;
+}
+
 .auth-help {
-  position: relative;
+  position: absolute;
   z-index: 4;
+  top: 1rem;
+  right: 1rem;
 }
 
 .auth-help-button {
@@ -1986,7 +1989,6 @@ td.expense {
 
   .auth-connect-controls {
     width: 100%;
-    grid-template-columns: minmax(0, 1fr) auto;
     justify-self: stretch;
   }
 
