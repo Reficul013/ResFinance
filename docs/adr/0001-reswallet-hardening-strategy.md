@@ -28,7 +28,7 @@ The hardened implementation must:
 - ResWallet becomes the ResFinance wallet product; the audit does not remove wallet-dependent scope.
 - Milestone 2 is larger than a minimal patch and needs extension-specific security tests and upstream-diff review.
 - The unmodified official extension is prohibited for ResFinance signing.
-- The disposable Milestone 0 signing boundary may unblock feasibility and other wallet-dependent implementation while the persistent browser extension is completed; it cannot satisfy Milestone 2 acceptance or be shipped as the wallet.
+- The disposable Milestone 1 feasibility signing boundary may unblock other wallet-dependent implementation while the persistent browser extension is completed; it cannot satisfy Milestone 2 acceptance or be shipped as the wallet.
 
 ## Rejected alternatives
 

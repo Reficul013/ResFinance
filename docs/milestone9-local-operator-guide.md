@@ -1,4 +1,7 @@
-# Milestone 9 Local Operator Guide
+# Milestone 7 Local Operator Guide
+
+> Compatibility note: the executable commands retain their historical
+> `scripts.milestone9` module names so existing local operations remain stable.
 
 This guide runs the complete ResFinance application locally on the validated
 Apple Silicon development architecture. Cloud and production deployment remain
@@ -11,7 +14,7 @@ on hold.
 - Python 3.13.2 in `.venv`, Node 22.14.0, and npm dependencies installed with
   `npm ci` in both `client/` and `reswallet/`.
 - The source-pinned `resfinance/resilientdb:4de5cb4-m0` image described in the
-  Milestone 0 documentation.
+  Milestone 1 feasibility documentation.
 - Chromium installed for Playwright when running browser acceptance.
 - Optional pinned Qwen weights at an operator-selected path outside Git.
 
@@ -96,7 +99,7 @@ The test creates disposable browser profiles under the operating system's
 temporary directory. It uses the real extension, API, four-replica stores, and
 contract; no request routing is mocked. Local model inference is allowed up to
 120 seconds per Insights request, while the whole journey remains bounded to
-10 minutes. The definitive Milestone 9 acceptance uses the no-model startup so
+10 minutes. The definitive Milestone 7 acceptance uses the no-model startup so
 Smart Insights follows its deterministic evidence-template path; model hashes
 and model-overlay startup are verified separately.
 

@@ -1,4 +1,8 @@
-# Milestone 8 — Read-only AI and Cross-Dashboard Integration
+# Milestones 3 and 7 Evidence — Smart Insights & Cross-dashboard Integration
+
+> Compatibility note: this filename and its `scripts.milestone8` and
+> `config/milestone8-*` references predate the milestone split. Read-only AI is
+> now Milestone 3; cross-dashboard integration is now Milestone 7.
 
 Status: complete for local development and real-stack acceptance. Cloud,
 production, trading, custody, autonomous actions, and investment-advice claims
@@ -6,12 +10,12 @@ remain out of scope.
 
 ## Purpose
 
-Milestone 8 connects the local user journey at the application-feature level
-with wallet-scoped Smart Savings Insights, cross-dashboard navigation, and
-in-app notifications. It explains Finance, Groups, and Crypto state without
+This evidence spans two current milestones: Milestone 3 owns wallet-scoped
+Smart Savings Insights and read-only AI; Milestone 7 owns cross-dashboard
+navigation, notifications, and delivery integration. It explains Finance, Groups, and Crypto state without
 giving a model access to private keys, write commands, ResContract, trading
 systems, direct ResilientDB operations, or the public internet. The continuous
-real-browser/full-stack handoff is intentionally assigned to Milestone 9.
+real-browser/full-stack handoff is part of Milestone 7.
 
 ## Evidence-bound design
 
@@ -117,15 +121,16 @@ npm run build
 npm run test:e2e
 ```
 
-The exact model and real-stack commands are listed in the root README. Model
+The exact model and real-stack commands are listed in the
+[`Milestone 7 local operator guide`](milestone9-local-operator-guide.md). Model
 weights stay outside Git and are mounted read-only for local runtime.
 
 ## Remaining boundary
 
-At Milestone 8 acceptance, no forecasting model was promoted, so Insights
+At the original integration acceptance, no forecasting model was promoted, so Insights
 correctly explained the Crypto gate rather than inventing a recommendation.
-Milestone 9 later completed the local lifecycle and promoted a distinct
+Milestone 7 Local Handoff later completed the local lifecycle and promoted a distinct
 predeclared forward candidate; that later evidence does not change Milestone
-8's read-only AI boundary. Milestone 10 remains explicitly on hold. Milestone 8
+3's read-only AI boundary. Milestone 8 remains explicitly on hold. This evidence
 does not establish cloud, production, commercial, BFT, or
 investment-performance readiness.

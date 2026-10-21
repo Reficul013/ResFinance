@@ -5,7 +5,7 @@ Use these references when implementing or validating the ResilientDB, ResWallet,
 ## Apache source
 
 - [Apache ResilientDB repository](https://github.com/apache/incubator-resilientdb)
-- Milestone 0 pinned commit: [`4de5cb43686276ace4307f44839a1de920ab524a`](https://github.com/apache/incubator-resilientdb/commit/4de5cb43686276ace4307f44839a1de920ab524a)
+- Milestone 1 feasibility pinned commit: [`4de5cb43686276ace4307f44839a1de920ab524a`](https://github.com/apache/incubator-resilientdb/commit/4de5cb43686276ace4307f44839a1de920ab524a)
 - [Pinned ResContract source](https://github.com/apache/incubator-resilientdb/tree/4de5cb43686276ace4307f44839a1de920ab524a/ecosystem/smart-contract/rescontract)
 - [Pinned upstream ResVault source](https://github.com/apache/incubator-resilientdb/tree/4de5cb43686276ace4307f44839a1de920ab524a/ecosystem/tools/resvault)
 - Machine-readable revisions and dependency hashes: [`config/milestone0-lock.json`](../config/milestone0-lock.json)

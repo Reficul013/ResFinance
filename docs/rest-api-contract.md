@@ -1,6 +1,6 @@
 # REST API Contract
 
-Status: Milestone 8 authentication, Finance, Groups, contractual settlement, Crypto portfolio, and read-only AI boundaries implemented for local development
+Status: Milestones 2–7 authentication, Finance, Groups, contractual settlement, Crypto portfolio, read-only AI, and integration boundaries implemented for local development
 
 ## Boundary
 

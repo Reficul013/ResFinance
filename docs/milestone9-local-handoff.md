@@ -1,4 +1,7 @@
-# Milestone 9 — Local Handoff
+# Milestone 7: Deliverables — Cross-dashboard Integration & Local Handoff
+
+> Compatibility note: this filename and its `scripts.milestone9` and
+> `config/milestone9-*` references are stable legacy implementation identifiers.
 
 Status: complete for local development and research. The original provider-data
 candidate remains correctly rejected; the separately predeclared
@@ -12,7 +15,7 @@ readiness.
 
 ## Outcome
 
-Milestone 9 packages the completed ResFinance components behind one bounded
+Milestone 7 packages the completed ResFinance components behind one bounded
 local lifecycle, exercises them in a continuous two-wallet Chromium journey,
 and makes manual ingestion and reconciliation jobs observable through
 append-only ResilientDB records. It also provides the full provider-data
@@ -20,7 +23,7 @@ research runner without weakening the existing forecast-promotion policy.
 
 The local application path is implemented and verified. The approved
 2020-04-10 through 2025-01-01 GDELT daily aggregate was recovered byte-for-byte
-from the preserved Milestone 0 ResilientDB volume, checked against its original
+from the preserved Milestone 1 feasibility ResilientDB volume, checked against its original
 size and SHA-256 attestation, and combined with Coin Metrics and DefiLlama data
 in the complete provider-backed research protocol. The candidate passed
 interval coverage but lost to the naive baseline on MAE. The immutable gate
@@ -183,9 +186,9 @@ returns, upside probabilities, intervals, and 60-day price history.
 | Default and scenario capital | Pass | The browser journey used Finance-derived `$4,000.00`, reconciled allocations exactly, analyzed `$2,500.00`, and read Finance back unchanged. |
 | Invalid forecast inputs | Pass | Unit/integration coverage confirms stale, corrupted, synthetic, and unpromoted inputs fail closed. |
 | Complete repository suites | Pass | Ruff, mypy, 115 Python tests, 9 client tests, 5 ResWallet tests, both builds, extension inspection, 5 dashboard browser tests, and the upgraded 3.0-minute live journey passed. |
-| Reproducible operator guide | Pass | See [Milestone 9 local operator guide](milestone9-local-operator-guide.md). |
+| Reproducible operator guide | Pass | See [Milestone 7 local operator guide](milestone9-local-operator-guide.md). |
 
-Milestone 9 is complete for its declared local scope. The promoted candidate is
+Milestone 7 is complete for its declared local scope. The promoted candidate is
 deliberately conservative: validation selected full expected-return abstention,
 so the result satisfies the no-worse-than-naive rule by equality and does not
 support an outperformance claim. Cloud, production, custody, trading,
@@ -212,7 +215,7 @@ promotion is backed by the distinct predeclared forward run and unchanged rule.
 
 ## Completed forward iteration
 
-The final Milestone 9 work completed as follows:
+The final Milestone 7 work completed as follows:
 
 1. The validation-calibrated adaptive-gating candidate passed the untouched forward protocol frozen in [`research-protocol.md`](research-protocol.md), with MAE equal to naive and coverage above 70 percent.
 2. The immutable `research.model-promoted` event was appended only after that pass, with `forecast-promotion-v1` unchanged.

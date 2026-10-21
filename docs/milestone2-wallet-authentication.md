@@ -1,4 +1,4 @@
-# Milestone 2 Hardened Wallet and Authentication
+# Milestone 2: ResWallet — Custom Hardened ResVault & Wallet Authentication
 
 Status: Complete for local development
 

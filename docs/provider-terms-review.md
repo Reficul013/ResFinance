@@ -2,7 +2,7 @@
 
 Review date: 2026-10-13
 
-Scope: Milestone 0 engineering review for the fixed UTC research period
+Scope: Milestone 1 feasibility review for the fixed UTC research period
 2020-04-10 through 2025-01-01 and the exact asset set `BTC | ETH | SOL`.
 This document is not legal advice. A provider marked conditional or blocked is
 not approved for production ingestion until the stated condition is resolved.

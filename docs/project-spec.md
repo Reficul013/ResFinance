@@ -76,6 +76,10 @@ Cloud and production deployment are deferred until a separate feasibility review
 
 ## 4. Five-phase implementation plan
 
+These implementation phases roll up into the canonical eight-milestone
+convention in [`milestones.md`](milestones.md). Phase names describe delivery
+flow; milestone names are the authoritative labels for planning and status.
+
 ### Phase 1 - Finance Foundation + Shared Ledger
 
 Build wallet-linked profiles, income, expenses, budgets, receivables/payables, and actual/projected monthly savings. ResilientDB stores all financially meaningful events and the derived personal finance view.
@@ -96,9 +100,9 @@ Train baselines, implement MSPCIFormer, and add adaptive gating across market, s
 
 Combine forecasted returns, uncertainty, realized risk/covariance, liquidity, and downside risk with a continuous user risk score. Generate explainable BTC/ETH/SOL weights, backtest, and integrate the complete journey in the local validated environment. Deployment is a separate, deferred milestone and is not required to complete this phase.
 
-### Final local delivery gate - Milestone 9 Local Handoff
+### Final local delivery gate — Milestone 7: Deliverables — Cross-dashboard Integration & Local Handoff
 
-After the functional phases, package the complete local stack behind one documented startup lifecycle and prove one continuous, non-mocked browser journey through ResWallet, React, FastAPI, ResilientDB, ResContract, Crypto, and Smart Insights. The first provider-backed adaptive candidate remains rejected because its MAE was worse than naive. The approved completion iteration subsequently: (1) evaluated a validation-calibrated adaptive-gating candidate on the predeclared untouched forward period and passed the unchanged MAE and 70 percent coverage rules; (2) appended an immutable promotion only after that qualifying run; (3) ingested current point-in-time BTC/ETH/SOL data, froze the final model, and persisted a provenance-complete current 15-day forecast snapshot; (4) proved the normal live recommendation, exact-cent allocations, Finance-derived default savings, non-mutating scenario analysis, and fail-closed stale/corrupt/unpromoted behavior; and (5) repeated all local suites plus the real two-wallet restart journey. Milestone 9 is complete for the declared local scope. Production hardening and deployment remain a separate, deferred Milestone 10.
+After the functional phases, package the complete local stack behind one documented startup lifecycle and prove one continuous, non-mocked browser journey through ResWallet, React, FastAPI, ResilientDB, ResContract, Crypto, and Smart Insights. The first provider-backed adaptive candidate remains rejected because its MAE was worse than naive. The approved completion iteration subsequently: (1) evaluated a validation-calibrated adaptive-gating candidate on the predeclared untouched forward period and passed the unchanged MAE and 70 percent coverage rules; (2) appended an immutable promotion only after that qualifying run; (3) ingested current point-in-time BTC/ETH/SOL data, froze the final model, and persisted a provenance-complete current 15-day forecast snapshot; (4) proved the normal live recommendation, exact-cent allocations, Finance-derived default savings, non-mutating scenario analysis, and fail-closed stale/corrupt/unpromoted behavior; and (5) repeated all local suites plus the real two-wallet restart journey. Milestone 7 is complete for the declared local scope. Production hardening and deployment remain a separate, deferred Milestone 8.
 
 ## 5. Forecasting research: 2 papers + 1 novelty
 

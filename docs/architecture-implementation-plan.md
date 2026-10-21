@@ -1,16 +1,16 @@
-# ExpoLab Finance Platform Architecture and Delivery Plan
+# ResFinance Architecture and Delivery Plan
 
 Status: Approved planning baseline for local implementation; cloud deployment is on hold
 
-Last reviewed: 2026-10-15
+Last reviewed: 2026-10-21
 
-Implementation status: Milestones 0–9 passed for local development and research. Milestone 9 includes the local lifecycle, explicit workers, operator guide, continuous real-service browser proof, the original provider-data research run, and the predeclared untouched-forward completion protocol. The validation-locked candidate abstained to the naive return forecast, tied its forward MAE, exceeded required interval coverage, passed the unchanged immutable gate, and published a provenance-complete current-cutoff snapshot. Milestone 10 production hardening and deployment remains on hold.
+Implementation status: Milestones 1–7 passed for local development and research under the canonical convention in [`milestones.md`](milestones.md). Milestone 7 includes cross-dashboard integration, the local lifecycle, explicit workers, operator guide, continuous real-service browser proof, the original provider-data research run, and the predeclared untouched-forward completion protocol. The validation-locked candidate abstained to the naive return forecast, tied its forward MAE, exceeded required interval coverage, passed the unchanged immutable gate, and published a provenance-complete current-cutoff snapshot. Milestone 8 production hardening and deployment remains on hold.
 
 Deployment status: On hold pending a separate, evidence-backed ResilientDB cloud feasibility review. Current work is limited to local development, integration, research, and end-to-end validation.
 
 ## 1. Summary and Product Boundaries
 
-ExpoLab will be a wallet-authenticated finance platform with three interconnected product dashboards and embedded read-only insights:
+ResFinance is a wallet-authenticated finance platform with three interconnected product dashboards and embedded read-only insights:
 
 1. **Personal Finance** — income, expenses, budgets, savings, receivables, payables, and financial insights.
 2. **Friends & Groups** — shared expenses, participant approval, obligations, internal-credit settlements, and immutable receipts.
@@ -185,7 +185,7 @@ Signed intents use RFC 8785 canonical JSON and Ed25519. The backend verifies sig
 
 ### Wallet and smart-contract behavior
 
-Milestone 0 will audit the pinned official ResVault implementation before choosing a maintenance strategy. The audit must trace seed and private-key handling across extension storage, background code, content scripts, page messaging, network requests, and logs. It will produce one of three evidence-backed outcomes:
+Milestone 1 feasibility audits the pinned official ResVault implementation before choosing a maintenance strategy. The audit must trace seed and private-key handling across extension storage, background code, content scripts, page messaging, network requests, and logs. It produces one of three evidence-backed outcomes:
 
 1. Use the pinned upstream implementation unchanged if it satisfies every key-isolation and signed-intent requirement.
 2. Maintain a minimal fork, documented by an architecture decision record, if narrowly scoped compatibility or security patches are required.
@@ -311,9 +311,16 @@ Go/no-go validation must prove:
 
 ## 4. Dependency-Ordered Roadmap
 
-### Milestone 0 — Architecture and feasibility gate
+The milestone titles and consolidation rules below are canonical. Historical
+script modules, configuration files, attestations, image tags, and run IDs keep
+their earlier numbers as stable compatibility identifiers; see
+[`milestones.md`](milestones.md).
 
-Milestone 0 implementations are narrow, disposable feasibility spikes unless a later milestone explicitly adopts them. They must exercise the real pinned boundaries and preserve every security and storage invariant, but they do not need the complete product UI, domain breadth, or operational hardening assigned to later milestones. Passing a spike proves that the dependency can support the planned design; it does not replace the maintainable implementation or tests required by Milestones 1–9.
+### Milestone 1: ResFinance Foundation — Architecture, Feasibility Gate & Platform Foundation
+
+**Status:** complete for local feasibility and development; evidence is recorded in [`feasibility.md`](feasibility.md) and [`milestone1-platform-foundation.md`](milestone1-platform-foundation.md).
+
+Feasibility implementations are narrow, disposable spikes unless the platform foundation explicitly adopts them. They must exercise the real pinned boundaries and preserve every security and storage invariant, but they do not replace maintainable product implementation or tests.
 
 - Populate the root `AGENTS.md` and add reviewed architecture, feasibility, REST-contract, security, and research-protocol documents.
 - Pin the ResilientDB, ResContract, upstream ResVault reference, ResWallet dependencies, compiler, Python, Node, and model revisions.
@@ -323,39 +330,39 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 - Run all seven go/no-go tests above.
 - Produce a signed decision record for any local fork or compatibility patch.
 
-**Acceptance:** every feasibility test passes in CI or the project remains blocked with reproducible failure evidence.
+**Feasibility acceptance:** every feasibility test passes in CI or the project remains blocked with reproducible failure evidence.
 
-### Milestone 1 — Platform foundation
-
-**Status:** complete for local development; evidence is recorded in [`milestone1-platform-foundation.md`](milestone1-platform-foundation.md).
+#### Platform foundation work
 
 - Establish React/Vite and FastAPI modular boundaries, OpenAPI generation, error format, validation, linting, and CI.
 - Implement the ResilientDB event/blob repository, encryption envelope, deterministic keys, idempotency, projection rebuild, and provider interfaces.
 - Provide four-node development Compose topology and private service networking.
 
-**Acceptance:** contract tests write, restart, read, rebuild, and deduplicate encrypted sample events without another database.
+**Foundation acceptance:** contract tests write, restart, read, rebuild, and deduplicate encrypted sample events without another database.
 
-### Milestone 2 — Hardened wallet and authentication
+### Milestone 2: ResWallet — Custom Hardened ResVault & Wallet Authentication
 
 **Status:** complete for local development; evidence is recorded in [`milestone2-wallet-authentication.md`](milestone2-wallet-authentication.md).
 
-- Implement the Milestone 0 ResVault audit decision by completing the documented custom ResWallet extension required by the failed audit.
+- Implement the Milestone 1 feasibility audit decision by completing the documented custom ResWallet extension required by the failed audit.
 - Implement challenge login, in-memory access tokens, refresh-session hashes in ResilientDB, logout/revocation, address derivation, and signed-intent verification.
 - Add replay, tamper, expiry, wrong-origin, wrong-network, and locked-wallet defenses.
 
 **Acceptance:** approved challenges authenticate; all altered or replayed intents fail; automated inspection finds no key leakage.
 
-### Milestone 3 — Personal Finance dashboard
+### Milestone 3: Personal Finance — Dashboard & Smart Insights (Read-only AI)
 
-**Status:** complete for local development; evidence is recorded in [`milestone3-personal-finance.md`](milestone3-personal-finance.md).
+**Status:** complete for local development; Finance evidence is recorded in [`milestone3-personal-finance.md`](milestone3-personal-finance.md), and Smart Insights evidence is recorded in the corresponding sections of [`milestone8-read-only-ai-integration.md`](milestone8-read-only-ai-integration.md).
 
 - Implement income/expense events, the fixed direction-aware category catalog, budgets, recurring entries, summaries, savings calculation, and receivable/payable projections.
 - Build accessible charts, validation, empty/loading/error states, provenance views, and confirmed per-record correction actions that append void or deactivation events without deleting history.
 - Version the savings formula used by Crypto.
+- Benchmark and pin the local Hugging Face instruction model.
+- Implement wallet-authorized fact bundles, evidence-linked selection, refusal rules, deterministic template fallback, prompt-injection defenses, and embedded Smart Savings Insights.
 
-**Acceptance:** unit and Playwright tests reproduce balances from events, budget alerts, monthly savings, and projection rebuilds exactly.
+**Acceptance:** unit and Playwright tests reproduce balances from events, budget alerts, monthly savings, and projection rebuilds exactly; Insight responses cite only supplied facts; unsupported or prohibited requests are refused; and no AI path can invoke a write or wallet operation.
 
-### Milestone 4 — Groups and contractual settlement
+### Milestone 4: Bill Split — Friends, Groups & Contractual Settlement
 
 **Status:** complete for local development; evidence is recorded in [`milestone4-groups-settlement.md`](milestone4-groups-settlement.md).
 
@@ -365,48 +372,42 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 
 **Acceptance:** multi-user E2E test creates a split, obtains approvals, rejects unsigned/tampered actions, settles partially and fully, prevents overpayment/replay, and shows matching Group and Finance balances after an injected crash.
 
-### Milestone 5 — Crypto ingestion and feature store
+### Milestone 5: Crypto Intelligence — Crypto Ingestion, Feature Store & Reproducible ML Research
 
-**Status:** complete for local, non-commercial research; evidence is recorded in [`milestone5-crypto-ingestion-feature-store.md`](milestone5-crypto-ingestion-feature-store.md).
+**Status:** complete for local, non-commercial research mechanics; evidence is recorded in [`milestone5-crypto-ingestion-feature-store.md`](milestone5-crypto-ingestion-feature-store.md) and [`milestone6-reproducible-ml-research.md`](milestone6-reproducible-ml-research.md). The deterministic smoke model was not promoted, and no statistical or investment-performance claim is made.
 
 - Add Coin Metrics, CoinGecko, DefiLlama, and GDELT adapters.
 - Persist immutable raw observations, derived features, availability masks, licenses, and checksums.
 - Enforce the three-asset enum at every boundary.
 
-**Acceptance:** a repeat ingestion is idempotent, provider failure does not corrupt existing data, point-in-time joins pass leakage tests, and any fourth asset is rejected.
+**Ingestion acceptance:** a repeat ingestion is idempotent, provider failure does not corrupt existing data, point-in-time joins pass leakage tests, and any fourth asset is rejected.
 
-### Milestone 6 — Reproducible ML research
-
-**Status:** complete for local research mechanics; evidence is recorded in [`milestone6-reproducible-ml-research.md`](milestone6-reproducible-ml-research.md). No smoke model was promoted, and no statistical or investment-performance claim is made.
+#### Reproducible ML research work
 
 - Implement baselines, the three-asset MSPCIFormer adaptation, Adaptive Multi-Source Gating, walk-forward evaluation, conformal intervals, ablations, and artifact persistence.
 - Add deterministic smoke datasets generated in test code and a full research-run manifest.
 - Promote models only through explicit evaluation criteria and an immutable promotion event.
 
-**Acceptance:** repeated CPU smoke runs have identical dataset/prediction hashes; full runs retain complete provenance; adaptive gating is reported against every required baseline without overstating statistical significance.
+**Research acceptance:** repeated CPU smoke runs have identical dataset/prediction hashes; full runs retain complete provenance; adaptive gating is reported against every required baseline without overstating statistical significance.
 
-### Milestone 7 — Risk, portfolio, and Crypto dashboard
+### Milestone 6: Crypto Intelligence — Risk, Portfolio & Crypto Dashboard
 
-**Status:** complete for local development and synthetic acceptance; evidence is recorded in [`milestone7-risk-portfolio-crypto-dashboard.md`](milestone7-risk-portfolio-crypto-dashboard.md). No forecast is available to the normal runtime until a Milestone 6 model passes promotion.
+**Status:** complete for local development and synthetic acceptance; evidence is recorded in [`milestone7-risk-portfolio-crypto-dashboard.md`](milestone7-risk-portfolio-crypto-dashboard.md). No forecast is available to the normal runtime until a Milestone 5 model passes promotion.
 
 - Implement questionnaire scoring, policy versioning, CVXPY optimization, fallback behavior, forecasts, chart overlays, allocations, and non-mutating scenarios.
 - Connect the default amount to Finance savings through an immutable source event ID.
 
 **Acceptance:** weights satisfy every constraint, dollar allocations reconcile to the input amount, stale forecasts are rejected, and scenarios leave Finance unchanged.
 
-### Milestone 8 — Read-only AI and cross-dashboard integration
+### Milestone 7: Deliverables — Cross-dashboard Integration & Local Handoff
 
-**Status:** complete for local development; evidence is recorded in [`milestone8-read-only-ai-integration.md`](milestone8-read-only-ai-integration.md). The local model selects authorized facts only; validated server templates render final claims.
+**Status:** complete for local development and research. Cross-dashboard evidence is recorded in [`milestone8-read-only-ai-integration.md`](milestone8-read-only-ai-integration.md). Local Handoff evidence is recorded in [`milestone9-local-handoff.md`](milestone9-local-handoff.md), with operating instructions in [`milestone9-local-operator-guide.md`](milestone9-local-operator-guide.md). The first provider-data candidate remains rejected; the later predeclared untouched-forward candidate passed the unchanged gate and its live recommendation passed the real-stack browser journey.
 
-- Benchmark and pin the local Hugging Face instruction model.
-- Implement authorized fact bundles, evidence-linked generation, refusal rules, template fallback, and prompt-injection defenses.
 - Complete cross-dashboard navigation and in-app notifications.
 
-**Acceptance:** responses cite only supplied facts, unsupported questions trigger a caveat/fallback, and no AI path can invoke a write or wallet operation.
+**Cross-dashboard acceptance:** the authenticated shell connects Finance, Groups, Crypto, notifications, Smart Insights, session lifecycle, and provenance views without adding a fourth dashboard.
 
-### Milestone 9 — Local Handoff
-
-**Status:** complete for local development and research. The first provider-data candidate remains rejected; the later predeclared untouched-forward candidate passed the unchanged gate and its live recommendation passed the real-stack browser journey. Evidence is recorded in [`milestone9-local-handoff.md`](milestone9-local-handoff.md), with operating instructions in [`milestone9-local-operator-guide.md`](milestone9-local-operator-guide.md).
+#### Local Handoff work
 
 - Package a one-command local startup with preflight checks, bounded health waits, status, clean shutdown, and an explicitly confirmed reset path.
 - Prove one continuous, non-mocked browser journey through the real ResWallet extension, React client, FastAPI API, four-replica ResilientDB stack, ResContract, local workers, and read-only AI path.
@@ -420,18 +421,18 @@ The approved completion iteration adds these five required work packages:
 2. Write the immutable `research.model-promoted` event only after that candidate passes the unchanged promotion gate. A rejected or incomplete run cannot be promoted.
 3. Ingest current BTC/ETH/SOL provider observations under `available_at` point-in-time rules, freeze the promoted final model, generate current 15-day returns, upside probabilities, and uncertainty intervals, and persist a forecast snapshot linked to the exact dataset, model artifact, research run, and promotion event.
 4. Prove the normal Crypto dashboard recommendation path, exact-cent allocation reconciliation, Finance-derived default savings, non-mutating `Analyze Another Amount`, and fail-closed behavior for stale, corrupted, or unpromoted forecasts.
-5. Repeat the complete Python, client, ResWallet, build, lint, type-check, and real two-wallet/restart acceptance suites. Mark Milestone 9 complete only after the live recommendation succeeds through the real local stack.
+5. Repeat the complete Python, client, ResWallet, build, lint, type-check, and real two-wallet/restart acceptance suites. Mark Milestone 7 complete only after the live recommendation succeeds through the real local stack.
 
-**Acceptance:** after documented prerequisites, one command starts the complete local stack and reaches healthy state; the predeclared untouched-forward evaluation passes the unchanged promotion criteria; an immutable promotion and provenance-complete current-cutoff snapshot exist; and a real-browser test without API interception completes the wallet-authenticated Finance → Groups → settlement → Finance → Crypto recommendation → non-mutating scenario → Insights journey, including exact-cent allocation and controlled restart. Stale, corrupted, and unpromoted forecast inputs must fail closed. If any condition fails, the safe gated state remains correct but Milestone 9 remains incomplete.
+**Local Handoff acceptance:** after documented prerequisites, one command starts the complete local stack and reaches healthy state; the predeclared untouched-forward evaluation passes the unchanged promotion criteria; an immutable promotion and provenance-complete current-cutoff snapshot exist; and a real-browser test without API interception completes the wallet-authenticated Finance → Groups → settlement → Finance → Crypto recommendation → non-mutating scenario → Insights journey, including exact-cent allocation and controlled restart. Stale, corrupted, and unpromoted forecast inputs must fail closed. If any condition fails, the safe gated state remains correct but Milestone 7 remains incomplete.
 
-### Milestone 10 — Production hardening and deployment — ON HOLD
+### Milestone 8: Future Scope — Production Hardening & Deployment (On Hold)
 
 - Do not provision cloud infrastructure or implement a production deployment pipeline until this milestone is explicitly resumed.
 - Before resumption, validate the pinned ResilientDB stack in the proposed cloud environment, including networking, persistent storage, restart recovery, replica failure, operational support, and independent failure domains.
 - If that validation passes, define the deployment architecture in an ADR before implementing TLS/reverse proxy, static frontend hosting, API/workers, private ResContract, KMS integration, backups, observability, or deployment automation.
 - Local load, accessibility, browser, chaos, and security testing may continue because it also supports implementation quality.
 
-**Acceptance:** deferred. When resumed, acceptance criteria must be re-approved using evidence from the selected cloud environment. Until then, completion of Milestones 0–9 does not imply production readiness or cloud support.
+**Acceptance:** deferred. When resumed, acceptance criteria must be re-approved using evidence from the selected cloud environment. Until then, completion of Milestones 1–7 does not imply production readiness or cloud support.
 
 ## 5. Test Strategy and Risk Gates
 

@@ -1,10 +1,14 @@
-# Milestone 6 Reproducible ML Research
+# Milestone 5: Crypto Intelligence — Reproducible ML Research Evidence
+
+> Compatibility note: this filename and its `scripts.milestone6` and
+> `config/milestone6-*` references predate the 2026-10-21 consolidation and are
+> retained so historical commands and attestations remain reproducible.
 
 Status: complete for local research mechanics and deterministic synthetic acceptance. No model is promoted, and cloud, production, commercial, institutional, trading, and investment-advice uses remain out of scope.
 
 ## Purpose
 
-Milestone 6 turns the point-in-time feature datasets from Milestone 5 into an auditable forecasting research system. It implements the declared models, chronological evaluation, uncertainty calibration, ablations, immutable run records, encrypted model artifacts, and explicit promotion controls without copying code from the unlicensed MSPCIFormer author repository.
+The reproducible ML research portion of Milestone 5 turns the point-in-time feature datasets from the ingestion and feature-store work into an auditable forecasting research system. It implements the declared models, chronological evaluation, uncertainty calibration, ablations, immutable run records, encrypted model artifacts, and explicit promotion controls without copying code from the unlicensed MSPCIFormer author repository.
 
 The deterministic synthetic smoke dataset validates mechanics and reproducibility only. It is not evidence that a model will perform well on the fixed historical provider dataset or future markets.
 
@@ -90,4 +94,4 @@ docker compose --profile tools up -d --build --wait \
 - Model output is research analysis, not financial advice, and no path trades or mutates Finance.
 - No cloud or production readiness is claimed.
 
-Milestone 7 may now implement risk scoring, constrained BTC/ETH/SOL portfolio optimization, forecast presentation, and non-mutating amount scenarios against the immutable forecast/run interfaces. It must reject stale or unpromoted forecasts and may not treat the rejected synthetic smoke candidate as an approved model.
+Milestone 6 implements risk scoring, constrained BTC/ETH/SOL portfolio optimization, forecast presentation, and non-mutating amount scenarios against the immutable forecast/run interfaces. It must reject stale or unpromoted forecasts and may not treat the rejected synthetic smoke candidate as an approved model.

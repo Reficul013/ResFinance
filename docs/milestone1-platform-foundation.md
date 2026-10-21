@@ -1,4 +1,4 @@
-# Milestone 1 Platform Foundation
+# Milestone 1: ResFinance Foundation — Platform Foundation Evidence
 
 Status: Complete for local development
 

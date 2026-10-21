@@ -29,7 +29,7 @@ ResFinance application payloads use separate AES-256-GCM data-encryption keys be
 
 For local development, the Compose certificate initializer generates a 32-byte Finance event key into the existing private Docker certificate volume. The API mounts that file read-only; the key is never committed or written into the container image. This is local non-production key handling and does not lift the deployment hold or replace the deferred production KMS design.
 
-Milestone 1 implements authenticated encryption for event and blob repositories. Event payloads are stored as AES-256-GCM envelopes, and large blobs are compressed, encrypted, content-addressed, chunked, and verified on read. Local acceptance tests use an ephemeral test key; production key custody and destruction remain later-milestone work.
+Milestone 1 implements authenticated encryption for event and blob repositories. Event payloads are stored as AES-256-GCM envelopes, and large blobs are compressed, encrypted, content-addressed, chunked, and verified on read. Local acceptance tests use an ephemeral test key; production key custody and destruction remain Milestone 8 work, which is on hold.
 
 ## Service controls
 

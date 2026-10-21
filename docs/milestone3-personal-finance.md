@@ -1,4 +1,8 @@
-# Milestone 3 Personal Finance Dashboard
+# Milestone 3: Personal Finance — Dashboard & Smart Insights (Read-only AI)
+
+> The Finance evidence is recorded here. Smart Insights evidence remains in
+> [`milestone8-read-only-ai-integration.md`](milestone8-read-only-ai-integration.md)
+> because its filename and attestations predate the 2026-10-21 consolidation.
 
 Status: Complete for local development
 
@@ -106,4 +110,4 @@ docker compose --profile app up -d --build api
 .venv/bin/python -m scripts.milestone3.run_http_finance_acceptance
 ```
 
-This evidence is local-development acceptance. It does not claim cloud, production, or independent Byzantine fault-domain readiness. Smart Savings Insights remain Milestone 8 read-only AI work, and group creation/settlement remains Milestone 4.
+This evidence is local-development acceptance. It does not claim cloud, production, or independent Byzantine fault-domain readiness. Smart Savings Insights are the read-only AI portion of Milestone 3 and are documented in [`milestone8-read-only-ai-integration.md`](milestone8-read-only-ai-integration.md), whose filename is retained for historical evidence compatibility. Group creation and settlement remain Milestone 4.

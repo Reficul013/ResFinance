@@ -1,11 +1,14 @@
-# Milestone 7 — Risk, Portfolio, and Crypto Dashboard
+# Milestone 6: Crypto Intelligence — Risk, Portfolio & Crypto Dashboard
+
+> Compatibility note: this filename and its `scripts.milestone7` and
+> `config/milestone7-*` references are stable legacy implementation identifiers.
 
 Status: complete for local development and synthetic acceptance. Cloud, production,
 trading, custody, and investment-performance claims remain out of scope.
 
 ## Purpose
 
-Milestone 7 turns the versioned Finance savings result into an evidence-bound,
+Milestone 6 turns the versioned Finance savings result into an evidence-bound,
 risk-aware BTC/ETH/SOL portfolio analysis. It does not execute trades, transfer
 fiat or cryptocurrency, or change Finance from a scenario.
 
@@ -41,21 +44,21 @@ fiat or cryptocurrency, or change Finance from a scenario.
   formula/calculation IDs, source-event count, forecast snapshot ID, and
   promotion event ID; the rest of the dashboard uses plain-language labels.
 
-## Milestone 7 promotion state
+## Milestone 6 promotion state
 
-Milestone 6 promoted no model because its deterministic smoke candidate did not
-beat the declared naive-baseline MAE criterion. Milestone 7 does not bypass that
+Milestone 5 promoted no model from its deterministic smoke candidate because it did not
+beat the declared naive-baseline MAE criterion. Milestone 6 does not bypass that
 decision. In the normal application, the Crypto dashboard displays a clear
 promotion-gate state and no recommendation until an eligible forecast snapshot
 references a valid immutable promotion event.
 
-The Milestone 7 acceptance runner injects a deterministic forecast fixture only
+The Milestone 6 acceptance runner injects a deterministic forecast fixture only
 to test constraints. The fixture is labeled `local-synthetic-acceptance`, is not
 stored as a research promotion, and is rejected by the normal runtime.
 
-Milestone 9 later promoted a separate provider-backed forward candidate under
+Milestone 7 later promoted a separate provider-backed forward candidate under
 the unchanged criteria and published the first eligible normal-runtime
-snapshot; it did not retroactively promote the Milestone 6 smoke candidate.
+snapshot; it did not retroactively promote the Milestone 5 smoke candidate.
 
 ## API surface
 
@@ -100,6 +103,7 @@ Playwright, and Docker Compose configuration validation.
 
 ## Remaining boundary
 
-Milestone 8 may add read-only, evidence-linked Smart Savings Insights and finish
-cross-dashboard integration. It must not give the AI write, wallet, settlement,
-or trading capabilities. Production and cloud deployment remain on hold.
+Milestone 3 includes read-only, evidence-linked Smart Savings Insights, and
+Milestone 7 finishes cross-dashboard integration. Neither may give the AI
+write, wallet, settlement, or trading capabilities. Milestone 8 production and
+cloud deployment remain on hold.

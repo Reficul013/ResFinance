@@ -1,4 +1,4 @@
-# Milestone 4 Groups and Contractual Settlement
+# Milestone 4: Bill Split — Friends, Groups & Contractual Settlement
 
 Status: complete for local development. Cloud and production deployment remain on hold.
 

@@ -1,12 +1,15 @@
-# Milestone 5 Crypto Ingestion and Feature Store
+# Milestone 5: Crypto Intelligence — Ingestion & Feature Store Evidence
+
+> Milestone 5 also includes reproducible ML research. Its historical evidence
+> remains in [`milestone6-reproducible-ml-research.md`](milestone6-reproducible-ml-research.md).
 
 Status: complete for local, non-commercial research. Cloud, production, institutional, and commercial use remain on hold.
 
 ## Purpose
 
-Milestone 5 turns the Milestone 0 provider feasibility evidence into an application-owned ingestion and feature-store boundary. It collects only BTC, ETH, and SOL research signals, preserves exactly what was known and when it was available, and stores the resulting observations and derived feature datasets in Apache ResilientDB without introducing another persistent database.
+Milestone 5 turns the Milestone 1 provider-feasibility evidence into an application-owned ingestion and feature-store boundary. It collects only BTC, ETH, and SOL research signals, preserves exactly what was known and when it was available, and stores the resulting observations and derived feature datasets in Apache ResilientDB without introducing another persistent database.
 
-Forecast training, MSPCIFormer, Adaptive Multi-Source Gating, walk-forward evaluation, and model promotion remain Milestone 6 work.
+Forecast training, MSPCIFormer, Adaptive Multi-Source Gating, walk-forward evaluation, and model promotion are the reproducible ML research portion of Milestone 5, documented separately in [`milestone6-reproducible-ml-research.md`](milestone6-reproducible-ml-research.md) under its historical filename.
 
 ## Implemented provider adapters
 
@@ -62,7 +65,7 @@ The recorded run in [`config/milestone5-local-attestation.json`](../config/miles
 Automated verification on 2026-10-14:
 
 - Ruff passed.
-- Mypy passed across the configured Milestone 0–3 and Milestone 5 scripts, backend, ML feature code, blockchain adapters, and wallet helpers.
+- Mypy passed across the configured foundation, wallet, Finance, and Crypto ingestion implementation paths, backend, ML feature code, blockchain adapters, and wallet helpers.
 - Pytest passed all 72 tests with one pre-existing Starlette `TestClient` deprecation warning.
 - The live provider adapter smoke passed.
 - The real ResilientDB Milestone 5 acceptance passed.
@@ -85,4 +88,4 @@ docker compose --profile tools up -d --build --wait \
 - No generated provider payload, dataset, or feature artifact is committed to Git.
 - This milestone does not claim production ingestion reliability or cloud/BFT readiness.
 
-Milestone 6 may now implement deterministic synthetic smoke datasets, baselines, the documented three-asset MSPCIFormer adaptation, Adaptive Multi-Source Gating, chronological walk-forward evaluation, conformal intervals, ablations, and complete research-run manifests.
+The reproducible ML research portion of Milestone 5 implements deterministic synthetic smoke datasets, baselines, the documented three-asset MSPCIFormer adaptation, Adaptive Multi-Source Gating, chronological walk-forward evaluation, conformal intervals, ablations, and complete research-run manifests.

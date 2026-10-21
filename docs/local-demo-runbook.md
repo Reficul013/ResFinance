@@ -44,7 +44,7 @@ Recommended presentation time: 15–20 minutes.
 
 ## Important current-demo limitation
 
-The accepted Milestone 9 snapshot is valid through
+The accepted Milestone 7 snapshot is valid through
 `2026-10-17T00:00:00Z`, which is October 16 at 5:00 PM Pacific. After expiry,
 the Crypto dashboard intentionally fails closed and stops producing a
 recommendation.
@@ -536,8 +536,8 @@ substitute for the presenter profiles.
 
 ## Reference evidence
 
-- [Milestone 9 Local Handoff](milestone9-local-handoff.md)
-- [Milestone 9 operator guide](milestone9-local-operator-guide.md)
+- [Milestone 7 Local Handoff](milestone9-local-handoff.md)
+- [Milestone 7 operator guide](milestone9-local-operator-guide.md)
 - [Research protocol](research-protocol.md)
 - [Security contract](security.md)
 - [`config/milestone9-forward-completion-attestation.json`](../config/milestone9-forward-completion-attestation.json)
