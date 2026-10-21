@@ -17,7 +17,7 @@
         <span id="status-text">Loading wallet state…</span>
       </p>
 
-      <section id="setup" hidden>
+      <form id="setup" hidden>
         <h2>Create or import</h2>
         <label>
           Password
@@ -41,9 +41,9 @@
           Leave the seed empty to create a new wallet. It is encrypted before
           storage.
         </p>
-        <button id="create" type="button">Create ResWallet</button>
+        <button id="create" type="submit">Create ResWallet</button>
         <button id="import" class="secondary" type="button">Import seed</button>
-      </section>
+      </form>
 
       <form id="locked" hidden>
         <label class="visually-hidden" for="unlock-password">Password</label>

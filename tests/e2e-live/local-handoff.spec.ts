@@ -233,15 +233,27 @@ async function initializeWallet(
   context: BrowserContext,
   label: string,
 ): Promise<{ address: string }> {
+  const applicationPage = await context.newPage();
+  await applicationPage.goto("http://127.0.0.1:5173/");
+  await expect(
+    applicationPage.getByText(/Initialize ResWallet before connecting/),
+  ).toBeVisible();
   const page = await context.newPage();
   await page.goto(`chrome-extension://${await extensionId(context)}/popup.html`);
   await page.locator("#setup-password").fill(password);
-  await page.getByRole("button", { name: "Create ResWallet" }).click();
+  await page.locator("#setup-password").press("Enter");
   await expect(page.locator("#unlocked")).toBeVisible({ timeout: 30_000 });
   await expect(page.locator("#address")).not.toHaveText("");
+  await expect(
+    applicationPage.getByText("ResWallet Unlocked! Connect to Wallet now."),
+  ).toBeVisible();
+  await expect(
+    applicationPage.getByRole("button", { name: "Connect wallet" }),
+  ).toBeEnabled();
   const address = (await page.locator("#address").textContent())?.trim();
   if (!address) throw new Error(`${label} wallet address was not created`);
   await page.close();
+  await applicationPage.close();
   return { address };
 }
 

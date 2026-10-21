@@ -14,7 +14,10 @@ const locked = element("locked");
 const unlocked = element("unlocked");
 const address = element("address");
 
-element("create").addEventListener("click", () => void create(false));
+element("setup").addEventListener("submit", (event) => {
+  event.preventDefault();
+  void create(false);
+});
 element("import").addEventListener("click", () => void create(true));
 element("locked").addEventListener("submit", (event) => {
   event.preventDefault();

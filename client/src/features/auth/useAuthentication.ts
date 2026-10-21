@@ -70,22 +70,39 @@ export function useAuthentication(): Authentication {
     [],
   );
 
-  const inspectWallet = useCallback(async () => {
-    try {
-      applyWalletStatus(await getWalletStatus());
-    } catch {
-      setIdentity(null);
-      setState("disconnected");
-      setMessage(
-        "Install the ResWallet extension to use wallet authentication.",
-      );
-    }
-  }, [applyWalletStatus]);
+  const inspectWallet = useCallback(
+    async (preserveActiveSession = false) => {
+      try {
+        applyWalletStatus(await getWalletStatus(), preserveActiveSession);
+      } catch {
+        if (preserveActiveSession) return;
+        setIdentity(null);
+        setState("disconnected");
+        setMessage(
+          "Install the ResWallet extension to use wallet authentication.",
+        );
+      }
+    },
+    [applyWalletStatus],
+  );
 
   useEffect(
     () => subscribeWalletStatus((status) => applyWalletStatus(status, true)),
     [applyWalletStatus],
   );
+
+  useEffect(() => {
+    const refreshVisibleWallet = () => void inspectWallet(true);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") refreshVisibleWallet();
+    };
+    window.addEventListener("focus", refreshVisibleWallet);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.removeEventListener("focus", refreshVisibleWallet);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [inspectWallet]);
 
   useEffect(() => {
     let active = true;

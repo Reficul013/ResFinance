@@ -372,14 +372,21 @@ code {
 
 .auth-card:not([data-state="authenticated"]) {
   overflow: visible;
-  gap: 1.5rem;
-  padding: 1.5rem 1.35rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2rem;
+  padding: 1.5rem;
 }
 
-@media (min-width: 32.01rem) {
-  .auth-card:not([data-state="authenticated"]) > .auth-button {
-    transform: translateX(0.45rem);
-  }
+.auth-connect-controls {
+  display: grid;
+  grid-template-columns: minmax(10rem, 17rem) auto;
+  gap: 0.75rem;
+  align-items: center;
+  justify-self: end;
+}
+
+.auth-connect-controls > .auth-button {
+  width: 100%;
 }
 
 .auth-card > * {
@@ -387,10 +394,8 @@ code {
 }
 
 .auth-help {
-  position: absolute;
+  position: relative;
   z-index: 4;
-  top: 0.9rem;
-  right: 0.9rem;
 }
 
 .auth-help-button {
@@ -1977,6 +1982,12 @@ td.expense {
 
   .auth-button {
     width: 100%;
+  }
+
+  .auth-connect-controls {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) auto;
+    justify-self: stretch;
   }
 
   .welcome-actions .auth-button,

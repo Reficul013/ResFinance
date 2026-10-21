@@ -11,6 +11,10 @@ const background = await readFile(
   new URL("../dist/background.js", import.meta.url),
   "utf8",
 );
+const popup = await readFile(
+  new URL("../dist/popup.html", import.meta.url),
+  "utf8",
+);
 
 const expectedOrigins = [
   "https://app.resfinance.local/*",
@@ -84,6 +88,14 @@ assert(
 assert(
   background.includes("explicit wallet approval"),
   "background bundle has no approval guard",
+);
+assert(
+  popup.includes('<form id="setup"'),
+  "wallet setup controls are not a form",
+);
+assert(
+  popup.includes('<button id="create" type="submit"'),
+  "wallet creation is not the setup form submit action",
 );
 
 console.log("ResWallet build inspection passed");

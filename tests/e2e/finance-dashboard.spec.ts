@@ -714,7 +714,7 @@ test("voids transactions and deactivates recurring items through confirmed audit
   expect(deactivateRequest).toEqual({ expected_version: 9 });
 });
 
-test("updates the ResWallet login guidance when the extension unlocks", async ({
+test("updates the ResWallet login guidance after the popup changes wallet state", async ({
   page,
 }) => {
   await page.route("**/api/v1/auth/refresh", async (route) => {
@@ -724,6 +724,18 @@ test("updates the ResWallet login guidance when the extension unlocks", async ({
     const identity = {
       public_key: "e2e-public-key",
       address: `0x${"6".repeat(40)}`,
+    };
+    const testWindow = window as typeof window & {
+      __reswalletStatus?: {
+        exists: boolean;
+        unlocked: boolean;
+        identity: typeof identity;
+      };
+    };
+    testWindow.__reswalletStatus = {
+      exists: true,
+      unlocked: false,
+      identity,
     };
     window.addEventListener("message", (event) => {
       const request = event.data as {
@@ -746,7 +758,7 @@ test("updates the ResWallet login guidance when the extension unlocks", async ({
           version: 1,
           request_id: request.request_id,
           ok: true,
-          result: { exists: true, unlocked: false, identity },
+          result: testWindow.__reswalletStatus,
         },
         window.location.origin,
       );
@@ -776,6 +788,25 @@ test("updates the ResWallet login guidance when the extension unlocks", async ({
     page.getByRole("button", { name: "Connect wallet" }),
   ).toBeDisabled();
 
+  const cardBox = await authCard.boundingBox();
+  const sessionBox = await authCard.locator(".auth-session").boundingBox();
+  const connectBox = await page
+    .getByRole("button", { name: "Connect wallet" })
+    .boundingBox();
+  const helpBox = await page
+    .getByRole("button", { name: "How to connect ResWallet" })
+    .boundingBox();
+  expect(cardBox).not.toBeNull();
+  expect(sessionBox).not.toBeNull();
+  expect(connectBox).not.toBeNull();
+  expect(helpBox).not.toBeNull();
+  expect(sessionBox!.x - cardBox!.x).toBeGreaterThanOrEqual(20);
+  expect(connectBox!.x).toBeGreaterThan(sessionBox!.x + sessionBox!.width);
+  expect(connectBox!.x + connectBox!.width).toBeLessThan(helpBox!.x);
+  expect(
+    cardBox!.x + cardBox!.width - (helpBox!.x + helpBox!.width),
+  ).toBeGreaterThanOrEqual(20);
+
   const helpButton = page.getByRole("button", {
     name: "How to connect ResWallet",
   });
@@ -803,22 +834,22 @@ test("updates the ResWallet login guidance when the extension unlocks", async ({
   expect(githubBox!.x + githubBox!.width).toBeLessThanOrEqual(themeBox!.x);
 
   await page.evaluate(() => {
-    window.postMessage(
-      {
-        source: "reswallet",
-        version: 1,
-        type: "STATUS_CHANGED",
-        status: {
-          exists: true,
-          unlocked: true,
-          identity: {
-            public_key: "e2e-public-key",
-            address: `0x${"6".repeat(40)}`,
-          },
-        },
+    const testWindow = window as typeof window & {
+      __reswalletStatus?: {
+        exists: boolean;
+        unlocked: boolean;
+        identity: { public_key: string; address: string };
+      };
+    };
+    testWindow.__reswalletStatus = {
+      exists: true,
+      unlocked: true,
+      identity: {
+        public_key: "e2e-public-key",
+        address: `0x${"6".repeat(40)}`,
       },
-      window.location.origin,
-    );
+    };
+    window.dispatchEvent(new Event("focus"));
   });
 
   await expect(
