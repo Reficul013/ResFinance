@@ -880,7 +880,7 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
   });
 
   await expect(
-    page.getByText("ResWallet Unlocked! Connect to Wallet now."),
+    page.getByText("ResWallet Unlocked! Connect to Wallet now..."),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Connect Wallet" }),
@@ -921,7 +921,7 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
 
   await page.getByRole("button", { name: "Connect Wallet" }).click();
   await expect(
-    page.getByText("Review and approve the sign-in request in ResWallet."),
+    page.getByText("Review and approve the sign-in request in ResWallet!"),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Waiting for approval…" }),
@@ -930,10 +930,10 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await page.waitForTimeout(100);
   await expect(
-    page.getByText("Review and approve the sign-in request in ResWallet."),
+    page.getByText("Review and approve the sign-in request in ResWallet!"),
   ).toBeVisible();
   await expect(
-    page.getByText("ResWallet Unlocked! Connect to Wallet now."),
+    page.getByText("ResWallet Unlocked! Connect to Wallet now..."),
   ).toHaveCount(0);
 
   await page.evaluate(() => {
@@ -963,7 +963,7 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
   });
 
   await expect(
-    page.getByText("Approval received. Signing you in to ResFinance…"),
+    page.getByText("Approval Received! Signing you in to ResFinance…"),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Signing in…" }),

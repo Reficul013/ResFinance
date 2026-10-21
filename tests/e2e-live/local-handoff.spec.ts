@@ -179,7 +179,7 @@ test("real ResWallet and services preserve the local journey through restart", a
     await expectWalletLocked(first);
     await unlockWallet(first, true);
     await expect(
-      ownerPage.getByText("ResWallet Unlocked! Connect to Wallet now."),
+      ownerPage.getByText("ResWallet Unlocked! Connect to Wallet now..."),
     ).toBeVisible();
     await expect(
       ownerPage.getByRole("button", { name: "Connect Wallet" }),
@@ -245,7 +245,7 @@ async function initializeWallet(
   await expect(page.locator("#unlocked")).toBeVisible({ timeout: 30_000 });
   await expect(page.locator("#address")).not.toHaveText("");
   await expect(
-    applicationPage.getByText("ResWallet Unlocked! Connect to Wallet now."),
+    applicationPage.getByText("ResWallet Unlocked! Connect to Wallet now..."),
   ).toBeVisible();
   await expect(
     applicationPage.getByRole("button", { name: "Connect Wallet" }),

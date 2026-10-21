@@ -155,7 +155,7 @@ export function useAuthentication(): Authentication {
       const origin = window.location.origin;
       const parameters = { challenge: challenge.challenge, origin };
       const issuedAt = new Date();
-      setMessage("Review and approve the sign-in request in ResWallet.");
+      setMessage("Review and approve the sign-in request in ResWallet!");
       const intent = await signIntent({
         version: 1,
         intent_id: crypto.randomUUID(),
@@ -173,7 +173,7 @@ export function useAuthentication(): Authentication {
         network_id: "pinned-local-network",
       });
       transitionTo("signing-in");
-      setMessage("Approval received. Signing you in to ResFinance…");
+      setMessage("Approval Received! Signing you in to ResFinance…");
       const session = await createSession(challenge.challenge, intent);
       setAccessToken(session.access_token);
       setActorAddress(session.actor_address);
@@ -227,5 +227,5 @@ function walletStatusMessage(status: WalletStatus): string {
   if (!status.exists || status.identity === null)
     return "Initialize ResWallet before connecting...";
   if (!status.unlocked) return "ResWallet is Locked!";
-  return "ResWallet Unlocked! Connect to Wallet now.";
+  return "ResWallet Unlocked! Connect to Wallet now...";
 }
