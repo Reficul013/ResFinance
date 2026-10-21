@@ -839,6 +839,9 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
   ).toBeLessThanOrEqual(2);
   expect(helpBox!.y - cardBox!.y).toBeGreaterThanOrEqual(12);
   expect(helpBox!.y - cardBox!.y).toBeLessThanOrEqual(24);
+  expect(connectBox!.y - (helpBox!.y + helpBox!.height)).toBeGreaterThanOrEqual(
+    8,
+  );
   expect(
     Math.abs(connectBox!.x + connectBox!.width - (helpBox!.x + helpBox!.width)),
   ).toBeLessThanOrEqual(2);
