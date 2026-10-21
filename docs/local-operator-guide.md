@@ -1,4 +1,4 @@
-# Milestone 7 Local Operator Guide
+# Local Operator Guide
 
 > Compatibility note: the executable commands retain their historical
 > `scripts.milestone9` module names so existing local operations remain stable.
@@ -6,6 +6,11 @@
 This guide runs the complete ResFinance application locally on the validated
 Apple Silicon development architecture. Cloud and production deployment remain
 on hold.
+
+For presenting the product to an audience—demo data, talk track, timing, and
+demo-safe recovery—use the
+[`Local Demo Runbook`](local-demo-runbook.md). Keep install, verification,
+lifecycle, and research commands here as the source of truth.
 
 ## Prerequisites and resource expectations
 
@@ -42,6 +47,26 @@ first builds depend on Docker cache and host performance.
 ```
 
 Startup never downloads dependencies, model weights, or provider data.
+
+## Local verification
+
+Install the pinned dependency sets, then run the repository checks:
+
+```bash
+.venv/bin/python -m pip install \
+  -r requirements/requirements-dev.txt \
+  -r requirements/requirements-milestone0.txt \
+  -r requirements/requirements-api.txt \
+  -r requirements/requirements-ml.txt \
+  -r requirements/requirements-portfolio.txt \
+  -r requirements/requirements-ai.txt
+.venv/bin/ruff check .
+.venv/bin/mypy
+.venv/bin/pytest
+
+(cd client && npm ci && npm run generate:api && npm run check && npm run lint && npm run format:check && npm test && npm run build)
+(cd reswallet && npm ci && npm run check && npm run lint && npm run format:check && npm test && npm run build && npm run security:inspect)
+```
 
 ## Preflight and start
 

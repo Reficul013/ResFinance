@@ -1,8 +1,12 @@
 # ResFinance Local Demo Runbook
 
 This guide is for presenting the complete ResFinance product on one local
-machine. It covers startup, browser and wallet preparation, recommended demo
-data, the presentation sequence, the main talking points, and recovery steps.
+machine. It covers browser and wallet preparation, recommended demo data, the
+presentation sequence, the main talking points, and demo-safe recovery steps.
+
+Install dependencies, run repository checks, and start or stop the local stack
+from the [`Local Operator Guide`](local-operator-guide.md). After the stack is
+healthy, continue with the demo steps below.
 
 The demo is local and research-only. It does not demonstrate cloud deployment,
 production readiness, exchange custody, trading, fiat transfers, native crypto
@@ -60,7 +64,7 @@ valid fallback.
 Use the repository root for lifecycle commands:
 
 ```bash
-cd /Users/haseebrahman/Desktop/Projects/ResFinance
+cd /path/to/ResFinance
 ```
 
 Confirm Docker Desktop is running and that the expected Node installation is
@@ -73,24 +77,12 @@ node --version
 ```
 
 The validated versions are Python 3.13, Node 22, and the pinned local Docker
-images described in the operator guide.
+images described in the [`Local Operator Guide`](local-operator-guide.md).
 
-### First-time dependency setup only
-
-Skip this section when the dependencies are already installed.
-
-```bash
-.venv/bin/python -m pip install \
-  -r requirements/requirements-dev.txt \
-  -r requirements/requirements-milestone0.txt \
-  -r requirements/requirements-api.txt \
-  -r requirements/requirements-ml.txt \
-  -r requirements/requirements-portfolio.txt \
-  -r requirements/requirements-ai.txt
-
-(cd client && npm ci && npx playwright install chromium)
-(cd reswallet && npm ci)
-```
+For first-time dependency setup and repository checks, follow **Install once**
+and **Local verification** in the
+[`Local Operator Guide`](local-operator-guide.md). Skip those steps when the
+environment is already installed and verified.
 
 ## 2. Start the complete local stack
 
@@ -98,25 +90,11 @@ The recommended demo uses deterministic, evidence-validated Smart Insights.
 This avoids optional local-model latency and is the same mode used by the final
 real-browser acceptance.
 
-Run preflight:
+Start and check the stack with **Preflight and start** and **Lifecycle** in the
+[`Local Operator Guide`](local-operator-guide.md) (no-model / evidence-template
+mode). Every required preflight check should report `PASS`.
 
-```bash
-.venv/bin/python -m scripts.milestone9.local_handoff preflight
-```
-
-Every required check should report `PASS`. Then start the stack:
-
-```bash
-.venv/bin/python -m scripts.milestone9.local_handoff start
-```
-
-Confirm health:
-
-```bash
-.venv/bin/python -m scripts.milestone9.local_handoff status
-```
-
-Expected result:
+Expected result after `status`:
 
 - four healthy ResilientDB replicas;
 - four healthy ResContract replicas;
@@ -447,23 +425,9 @@ Complete this checklist 30–60 minutes before presenting:
 
 ## 8. Recovery and troubleshooting
 
-### Check status
-
-```bash
-.venv/bin/python -m scripts.milestone9.local_handoff status
-```
-
-### Read recent logs
-
-```bash
-.venv/bin/python -m scripts.milestone9.local_handoff logs --tail 200
-```
-
-### Recover with persisted data
-
-```bash
-.venv/bin/python -m scripts.milestone9.local_handoff restart
-```
+For `status`, `logs`, and `restart` while preserving local data, use
+**Lifecycle** in the [`Local Operator Guide`](local-operator-guide.md). Prefer
+those commands over reinstalling dependencies or rebuilding images mid-demo.
 
 ### ResWallet approval does not open
 
@@ -520,19 +484,10 @@ Also avoid:
 
 ## 10. Optional automated rehearsal
 
-The complete non-mocked journey can be rehearsed automatically against the
-running stack:
-
-```bash
-export PATH=/opt/homebrew/opt/node@22/bin:$PATH
-cd /Users/haseebrahman/Desktop/Projects/ResFinance/client
-npm run test:e2e:local
-```
-
-The test creates disposable browser profiles and exercises the real ResWallet,
-FastAPI, ResilientDB, ResContract, Finance, Groups, Crypto, Insights, restart,
-logout, and vault-lock paths. Use it for rehearsal and verification, not as a
-substitute for the presenter profiles.
+Rehearse the complete non-mocked journey against the running stack with
+**Browser acceptance** in the
+[`Local Operator Guide`](local-operator-guide.md). Use that path for rehearsal
+and verification, not as a substitute for the presenter profiles.
 
 ## Reference evidence
 

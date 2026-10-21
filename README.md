@@ -4,10 +4,9 @@ ResFinance is a locally implemented wallet-authenticated finance platform that
 connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL
 portfolio analysis through one auditable financial record.
 
-For milestone progress and current readiness, see
-[`docs/ResFinance-Current-Status.md`](docs/ResFinance-Current-Status.md). The canonical
-eight-milestone convention is defined in
-[`docs/milestones/milestones.md`](docs/milestones/milestones.md).
+For milestone progress and current readiness, see [`docs/ResFinance-Current-Status.md`](docs/ResFinance-Current-Status.md).
+
+The canonical eight-milestone convention is defined in [`docs/milestones/milestones.md`](docs/milestones/milestones.md).
 
 ## Product journey
 
@@ -21,30 +20,9 @@ the default amount for a risk-aware crypto portfolio analysis.
 
 ## Product areas
 
-### Personal Finance
-
-- Record income, expenses, budgets, and recurring items with a fixed,
-  direction-aware category catalog.
-- Track contract-confirmed receivables and payables from shared expenses.
-- View cash-flow summaries, budget alerts, and actual or projected savings.
-- Receive practical, evidence-linked Smart Savings Insights.
-- Preserve append-only audit history through compensating corrections.
-
-### Friends & Groups
-
-- Create groups and equal or custom shared-expense splits.
-- Require each participant to approve or reject obligations with ResWallet.
-- Settle with internal, non-redeemable credits and immutable receipts.
-- Reflect confirmed obligations and settlements back into Personal Finance.
-
-### Crypto Investments
-
-- Analyze **BTC, ETH, and SOL only** using point-in-time market, sentiment, and
-  on-chain data.
-- Review eligible forecasts with uncertainty, freshness, and provenance.
-- Complete a risk questionnaire and receive an explainable long-only portfolio.
-- Reconcile integer-cent allocations exactly to Finance savings or a separate
-  non-mutating scenario amount.
+| Personal Finance | Friends & Groups | Crypto Investments |
+| --- | --- | --- |
+| <ul><li>Record income, expenses, budgets, and recurring items with a fixed, direction-aware category catalog.</li><li>Track contract-confirmed receivables and payables from shared expenses.</li><li>View cash-flow summaries, budget alerts, and actual or projected savings.</li><li>Receive practical, evidence-linked Smart Savings Insights.</li><li>Preserve append-only audit history through compensating corrections.</li></ul> | <ul><li>Create groups and equal or custom shared-expense splits.</li><li>Require each participant to approve or reject obligations with ResWallet.</li><li>Settle with internal, non-redeemable credits and immutable receipts.</li><li>Reflect confirmed obligations and settlements back into Personal Finance.</li></ul> | <ul><li>Analyze <strong>BTC, ETH, and SOL only</strong> using point-in-time market, sentiment, and on-chain data.</li><li>Review eligible forecasts with uncertainty, freshness, and provenance.</li><li>Complete a risk questionnaire and receive an explainable long-only portfolio.</li><li>Reconcile integer-cent allocations exactly to Finance savings or a separate non-mutating scenario amount.</li></ul> |
 
 ## Architecture
 
@@ -77,30 +55,6 @@ application services only through the generated `/api/v1` REST client.
   wallet, settlement, or trading operations.
 - Cloud and production deployment remain on hold.
 
-## Local verification
-
-Install the pinned dependency sets, then run the repository checks:
-
-```bash
-.venv/bin/python -m pip install \
-  -r requirements/requirements-dev.txt \
-  -r requirements/requirements-milestone0.txt \
-  -r requirements/requirements-api.txt \
-  -r requirements/requirements-ml.txt \
-  -r requirements/requirements-portfolio.txt \
-  -r requirements/requirements-ai.txt
-.venv/bin/ruff check .
-.venv/bin/mypy
-.venv/bin/pytest
-
-(cd client && npm ci && npm run generate:api && npm run check && npm run lint && npm run format:check && npm test && npm run build)
-(cd reswallet && npm ci && npm run check && npm run lint && npm run format:check && npm test && npm run build && npm run security:inspect)
-```
-
-The historical milestone numbers in executable paths are stable compatibility
-identifiers. For the complete real-stack command sequence, use the
-[`Milestone 7 local operator guide`](docs/local-operator-guide.md).
-
 ## Repository layout
 
 ```text
@@ -129,6 +83,11 @@ docs/          Product, architecture, milestone evidence, and development refere
 - [Milestone Evidence](docs/milestones/)
 - [Current milestone status](docs/ResFinance-Current-Status.md)
 - [Repository instructions for coding agents](AGENTS.md)
+
+## Contributors
+
+- [Shaik Haseeb Ur Rahman](https://github.com/haseebshaik00)
+- [Anish Kataria](https://github.com/AnishK10)
 
 ## License
 
