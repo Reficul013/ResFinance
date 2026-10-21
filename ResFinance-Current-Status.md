@@ -29,8 +29,8 @@ custody, trading, investment-advice, or independent-BFT readiness.
 - The upstream ResVault audit failed the required custody boundary and led to
   the custom ResWallet design completed in Milestone 2.
 
-Evidence: [`docs/feasibility.md`](docs/feasibility.md) and
-[`docs/milestone1-platform-foundation.md`](docs/milestone1-platform-foundation.md).
+Evidence:
+[`docs/milestone1-resfinance-foundation.md`](docs/milestone1-resfinance-foundation.md).
 
 ## Milestone 2: ResWallet — Custom Hardened ResVault & Wallet Authentication
 
@@ -50,7 +50,7 @@ Evidence: [`docs/feasibility.md`](docs/feasibility.md) and
   wrong-password feedback, and a blinking locked-state indicator.
 
 Evidence:
-[`docs/milestone2-wallet-authentication.md`](docs/milestone2-wallet-authentication.md).
+[`docs/milestone2-reswallet-wallet-authentication.md`](docs/milestone2-reswallet-wallet-authentication.md).
 
 ## Milestone 3: Personal Finance — Dashboard & Smart Insights (Read-only AI)
 
@@ -80,9 +80,8 @@ Evidence:
   panels, compact verified-evidence bullets, explicit completion feedback, and
   a bounded 30-second request with retry guidance.
 
-Evidence: [`docs/milestone3-personal-finance.md`](docs/milestone3-personal-finance.md)
-and the Smart Insights sections of
-[`docs/milestone8-read-only-ai-integration.md`](docs/milestone8-read-only-ai-integration.md).
+Evidence:
+[`docs/milestone3-personal-finance-smart-insights.md`](docs/milestone3-personal-finance-smart-insights.md).
 
 ## Milestone 4: Bill Split — Friends, Groups & Contractual Settlement
 
@@ -99,7 +98,7 @@ and the Smart Insights sections of
   time to the Data Freshness and Provenance footer.
 
 Evidence:
-[`docs/milestone4-groups-settlement.md`](docs/milestone4-groups-settlement.md).
+[`docs/milestone4-bill-split-contractual-settlement.md`](docs/milestone4-bill-split-contractual-settlement.md).
 
 ## Milestone 5: Crypto Intelligence — Crypto Ingestion, Feature Store & Reproducible ML Research
 
@@ -123,9 +122,7 @@ Evidence:
   the real four-replica ResilientDB stack.
 
 Evidence:
-[`docs/milestone5-crypto-ingestion-feature-store.md`](docs/milestone5-crypto-ingestion-feature-store.md)
-and
-[`docs/milestone6-reproducible-ml-research.md`](docs/milestone6-reproducible-ml-research.md).
+[`docs/milestone5-crypto-intelligence-research.md`](docs/milestone5-crypto-intelligence-research.md).
 
 ## Milestone 6: Crypto Intelligence — Risk, Portfolio & Crypto Dashboard
 
@@ -141,7 +138,7 @@ and
   corrupted, or unpromoted forecast inputs.
 
 Evidence:
-[`docs/milestone7-risk-portfolio-crypto-dashboard.md`](docs/milestone7-risk-portfolio-crypto-dashboard.md).
+[`docs/milestone6-crypto-intelligence-dashboard.md`](docs/milestone6-crypto-intelligence-dashboard.md).
 
 ## Milestone 7: Deliverables — Cross-dashboard Integration & Local Handoff
 
@@ -168,9 +165,9 @@ Evidence:
   persistence, and read-only Insights behavior.
 
 Evidence:
-[`docs/milestone8-read-only-ai-integration.md`](docs/milestone8-read-only-ai-integration.md),
-[`docs/milestone9-local-handoff.md`](docs/milestone9-local-handoff.md), and
-[`docs/milestone9-local-operator-guide.md`](docs/milestone9-local-operator-guide.md).
+[`docs/milestone7-cross-dashboard-local-handoff.md`](docs/milestone7-cross-dashboard-local-handoff.md)
+and
+[`docs/milestone7-local-operator-guide.md`](docs/milestone7-local-operator-guide.md).
 
 ## Milestone 8: Future Scope — Production Hardening & Deployment (On Hold)
 
@@ -184,6 +181,9 @@ Evidence:
   observability, and deployment automation.
 - Local development, integration, research, security, browser, accessibility,
   load, and chaos testing remain in scope.
+
+Evidence:
+[`docs/milestone8-production-hardening-deployment.md`](docs/milestone8-production-hardening-deployment.md).
 
 ## Maintenance rule
 

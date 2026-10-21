@@ -1,14 +1,16 @@
 # Milestone 3: Personal Finance — Dashboard & Smart Insights (Read-only AI)
 
-> The Finance evidence is recorded here. Smart Insights evidence remains in
-> [`milestone8-read-only-ai-integration.md`](milestone8-read-only-ai-integration.md)
-> because its filename and attestations predate the 2026-10-21 consolidation.
+Status: Complete for local development and real-stack acceptance
 
-Status: Complete for local development
+Finance evidence date: 2026-10-14 America/Los_Angeles
 
-Evidence date: 2026-10-14 America/Los_Angeles
+Smart Insights uses historical `scripts.milestone8` and
+`config/milestone8-*` implementation identifiers. Those identifiers remain
+stable for reproducibility even though the feature now belongs to Milestone 3.
 
-## Delivered boundaries
+## Personal Finance dashboard evidence
+
+### Delivered boundaries
 
 - One encrypted, append-only `finance-account` event stream per wallet-backed user.
 - Income and expense categories with direction validation.
@@ -24,7 +26,7 @@ Evidence date: 2026-10-14 America/Los_Angeles
 - Ledger-driven analytics for category spending, category totals, six-month savings-versus-expense comparisons, and a three-month savings outlook. The outlook uses the existing monthly savings calculation, including recurring entries and open obligations, rather than a market or AI forecast.
 - React Hook Form and Zod validation, TanStack Query state management, Recharts visualization, React Router navigation, Vitest coverage, and a checked Chromium Playwright journey.
 
-## Record correction workflow
+### Record correction workflow
 
 The dashboard provides deletion-like usability without deleting ledger history:
 
@@ -37,7 +39,7 @@ The dashboard provides deletion-like usability without deleting ledger history:
 
 Only user-entered active transactions and recurring entries expose these actions. Contract-backed receivables and payables remain controlled by confirmed ResContract state and cannot be voided from the Finance dashboard.
 
-## Versioned savings formula
+### Versioned savings formula
 
 The Crypto dashboard will consume the Finance-owned formula version `finance-savings-v1`.
 
@@ -57,7 +59,7 @@ available savings = max(0, projected savings)
 
 Every response includes the formula version, deterministic calculation ID, projection version, freshness timestamp, and source event IDs. The dashboard confines these technical values to its Data Freshness and Provenance panel so users can inspect the exact inputs behind their savings summary without crowding the primary financial view. Money remains integer USD cents throughout the backend and API. The browser converts validated decimal text to cents without binary-floating-point monetary arithmetic.
 
-## Real-stack acceptance
+### Real-stack acceptance
 
 The checked runner appended two categories, income, an expense, a budget, a recurring expense, a confirmed payable, and a confirmed receivable to the real ResilientDB stack. It proved an idempotent retry, restarted all four replicas and the client proxy, rebuilt the projection from encrypted events, and reproduced the exact result:
 
@@ -75,7 +77,7 @@ The sanitized record is [`config/milestone3-local-attestation.json`](../config/m
 
 The rebuilt FastAPI container also passed a live wallet-authenticated Finance flow through its pinned native ResilientDB client: category creation `201`, idempotent duplicate `201`, overview `200`, and invalid access token `401`.
 
-## Verification
+### Verification
 
 The 2026-10-19 dashboard update added Vitest request-boundary coverage and a Chromium Playwright flow that confirms both dialogs, verifies the void reason and optimistic projection versions sent to the API, and proves the corrected transaction and recurring item disappear from active calculations after the projection refresh.
 
@@ -110,4 +112,132 @@ docker compose --profile app up -d --build api
 .venv/bin/python -m scripts.milestone3.run_http_finance_acceptance
 ```
 
-This evidence is local-development acceptance. It does not claim cloud, production, or independent Byzantine fault-domain readiness. Smart Savings Insights are the read-only AI portion of Milestone 3 and are documented in [`milestone8-read-only-ai-integration.md`](milestone8-read-only-ai-integration.md), whose filename is retained for historical evidence compatibility. Group creation and settlement remain Milestone 4.
+## Smart Insights (read-only AI) evidence
+
+Smart Savings Insights is embedded in Personal Finance. It explains authorized
+Finance, Groups, and Crypto facts without access to private keys, write
+commands, ResContract mutations, trading systems, direct ResilientDB
+operations, or the public internet.
+
+### Evidence-bound design
+
+The authenticated application service assembles a content-addressed fact bundle
+from the existing Finance, Groups, and Portfolio read models. Facts contain a
+stable fact ID, topic, human-readable statement, source kind, immutable source
+IDs, and an as-of timestamp. Group facts include only groups for which the
+wallet is an active member and obligations involving that wallet.
+
+The local instruction model does not author the final response. It may select
+one through four relevant fact IDs and report a confidence value. The server:
+
+- rejects unknown, duplicate, off-topic, or low-confidence selections;
+- renders the final summary directly from the validated fact statements;
+- returns the exact evidence objects used;
+- adds deterministic caveats and allowlisted follow-up questions; and
+- falls back to a deterministic selector when the model or weights are
+  unavailable.
+
+This makes the factual output closed over the authorized bundle: generated text
+cannot introduce a financial claim that lacks a supplied fact ID.
+
+### Refusal and isolation controls
+
+- Prompt-control phrases are treated as untrusted text and refused before model
+  inference.
+- Requests to buy, sell, transfer, settle, sign, approve, edit, delete, or
+  otherwise act are refused before model inference.
+- Unsupported topics return a bounded explanation and suggested supported
+  questions.
+- The question is limited to 500 characters.
+- Runtime model loading is offline-only with `local_files_only=True` and
+  `trust_remote_code=False`.
+- The insights service has only read interfaces. Real-stack acceptance observed
+  zero ResilientDB writes across overview, query, injection, prohibited-action,
+  unsupported-topic, and cross-wallet checks.
+
+### Pinned local model and benchmark
+
+The selected model is `Qwen/Qwen2.5-1.5B-Instruct` at revision
+`989aa7980e4cf806f80c7fef2b1adb7bc71aa306`, licensed Apache-2.0. Runtime and
+generation policy pins plus SHA-256 hashes for the weights, configuration, and
+tokenizer configuration are recorded in
+[`config/milestone8-model-lock.json`](../config/milestone8-model-lock.json).
+
+On the local ARM64 acceptance machine with Python 3.13.2, PyTorch 2.14.1, and
+Transformers 4.57.6, two deterministic selections returned only the permitted
+budget fact with confidence 1.0. Cold selection took 10.04 seconds, the repeated
+selection took 4.46 seconds, and measured resident-memory growth was about 3.12
+GB. These figures are local feasibility evidence, not a production latency or
+capacity claim. Full evidence is in
+[`config/milestone8-model-benchmark.json`](../config/milestone8-model-benchmark.json).
+
+### API and interface
+
+- `GET /api/v1/insights/overview?month=YYYY-MM` returns the fact-bundle ID,
+  initial insight, evidence, caveats, follow-ups, and notifications.
+- `POST /api/v1/insights/query` computes a read-only answer and appends no event.
+- The generated `/api/v1` TypeScript client is the browser's only data path.
+- Smart Savings Insights is embedded below the Personal Finance dashboard in an equal-width two-column
+  question-and-answer workspace and displays the answer, generation mode, explicit completion feedback,
+  a bounded 30-second request with a retry message, compact evidence bullets,
+  caveats, follow-up questions, and a Data
+  Freshness and Provenance panel. Fact-bundle and model-revision values are
+  presented beside Finance projection details in one two-column panel as inspectable provenance tags;
+  evidence bullets use plain-language verified-record counts.
+- The shared notification center surfaces budget alerts, wallet-scoped Group
+  updates, and the current Crypto forecast gate with links to the relevant
+  dashboard.
+
+### Acceptance evidence
+
+The real four-replica ResilientDB acceptance is recorded in
+[`config/milestone8-local-attestation.json`](../config/milestone8-local-attestation.json).
+It verified:
+
+- all returned citations belonged to the authenticated fact bundle;
+- prompt injection, prohibited actions, and unsupported questions were refused;
+- another wallet could not see the seeded wallet's savings;
+- budget and Crypto gate notifications were produced;
+- the actual pinned local model completed evidence selection; and
+- the AI path performed zero ResilientDB writes.
+
+The Chromium journey also exercised the embedded Smart Savings Insights section, evidence display,
+plain-language verified-record counts, notification count, refusal state,
+responsive layout, and the Data Freshness and Provenance panel. The rendered
+screenshot was visually inspected.
+
+### Verification
+
+```bash
+.venv/bin/ruff check .
+.venv/bin/mypy
+.venv/bin/pytest
+
+cd client
+npm run generate:api
+npm run check
+npm run lint
+npm run format:check
+npm test
+npm run build
+npm run test:e2e
+```
+
+The exact model and real-stack commands are listed in the
+[`Milestone 7 local operator guide`](milestone7-local-operator-guide.md). Model
+weights stay outside Git and are mounted read-only for local runtime.
+
+### Historical acceptance boundary
+
+At the original integration acceptance, no forecasting model was promoted, so Insights
+correctly explained the Crypto gate rather than inventing a recommendation.
+Milestone 7 Local Handoff later completed the local lifecycle and promoted a distinct
+predeclared forward candidate; that later evidence does not change Milestone
+3's read-only AI boundary. Milestone 8 remains explicitly on hold. This evidence
+does not establish cloud, production, commercial, BFT, or
+investment-performance readiness.
+
+This evidence is local-development acceptance. It does not claim cloud,
+production, commercial, custody, trading, investment-advice, or independent
+Byzantine fault-domain readiness. Group creation and contractual settlement
+remain Milestone 4; cross-dashboard delivery remains Milestone 7.

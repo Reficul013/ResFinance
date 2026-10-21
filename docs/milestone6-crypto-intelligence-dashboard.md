@@ -1,9 +1,9 @@
 # Milestone 6: Crypto Intelligence — Risk, Portfolio & Crypto Dashboard
 
-> Compatibility note: this filename and its `scripts.milestone7` and
-> `config/milestone7-*` references are stable legacy implementation identifiers.
+> Compatibility note: `scripts.milestone7` and `config/milestone7-*` remain
+> stable legacy implementation identifiers for this Milestone 6 evidence.
 
-Status: complete for local development and synthetic acceptance. Cloud, production,
+Status: Complete for local development and synthetic acceptance. Cloud, production,
 trading, custody, and investment-performance claims remain out of scope.
 
 ## Purpose

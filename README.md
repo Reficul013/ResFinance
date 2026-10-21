@@ -99,7 +99,7 @@ Install the pinned dependency sets, then run the repository checks:
 
 The historical milestone numbers in executable paths are stable compatibility
 identifiers. For the complete real-stack command sequence, use the
-[`Milestone 7 local operator guide`](docs/milestone9-local-operator-guide.md).
+[`Milestone 7 local operator guide`](docs/milestone7-local-operator-guide.md).
 
 ## Repository layout
 
@@ -120,6 +120,14 @@ docs/          Product, architecture, milestone evidence, and development refere
 - [Canonical milestone convention](docs/milestones.md)
 - [Product specification](docs/project-spec.md)
 - [Architecture and implementation plan](docs/architecture-implementation-plan.md)
+- [Milestone 1 foundation evidence](docs/milestone1-resfinance-foundation.md)
+- [Milestone 2 ResWallet evidence](docs/milestone2-reswallet-wallet-authentication.md)
+- [Milestone 3 Personal Finance and Smart Insights evidence](docs/milestone3-personal-finance-smart-insights.md)
+- [Milestone 4 Bill Split evidence](docs/milestone4-bill-split-contractual-settlement.md)
+- [Milestone 5 Crypto research evidence](docs/milestone5-crypto-intelligence-research.md)
+- [Milestone 6 Crypto dashboard evidence](docs/milestone6-crypto-intelligence-dashboard.md)
+- [Milestone 7 integration and Local Handoff evidence](docs/milestone7-cross-dashboard-local-handoff.md)
+- [Milestone 8 deferred production scope](docs/milestone8-production-hardening-deployment.md)
 - [Local demo runbook](docs/local-demo-runbook.md)
 - [REST API contract](docs/rest-api-contract.md)
 - [Security contract](docs/security.md)

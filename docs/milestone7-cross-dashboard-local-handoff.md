@@ -1,19 +1,42 @@
 # Milestone 7: Deliverables — Cross-dashboard Integration & Local Handoff
 
-> Compatibility note: this filename and its `scripts.milestone9` and
-> `config/milestone9-*` references are stable legacy implementation identifiers.
+Status: Complete for the declared local development and research scope
 
-Status: complete for local development and research. The original provider-data
-candidate remains correctly rejected; the separately predeclared
-untouched-forward candidate, immutable promotion, current snapshot, live path,
-and repeated final acceptance all passed.
+Historical `scripts.milestone8`, `scripts.milestone9`,
+`config/milestone8-*`, and `config/milestone9-*` identifiers remain stable
+so integration, model, and handoff evidence stays reproducible.
 
-Production and cloud deployment remain out of scope and on hold for Milestone
-10. This milestone establishes a reproducible local product handoff only; it
-does not establish commercial, custody, trading, production, or independent-BFT
+Production and cloud deployment remain out of scope and on hold in Milestone 8.
+This milestone establishes a reproducible local product handoff only; it does
+not establish commercial, custody, trading, production, or independent-BFT
 readiness.
 
-## Outcome
+## Cross-dashboard integration evidence
+
+- The authenticated shell exposes Personal Finance, Friends & Groups, and
+  Crypto Investments as the three primary dashboards. Smart Savings Insights is
+  embedded in Personal Finance instead of becoming a fourth dashboard.
+- Wallet-scoped notifications link budget alerts, Group updates, and Crypto
+  forecast status to the relevant dashboard without granting the notification
+  or AI path write authority.
+- The shared header presents ResFinance branding, primary dashboard navigation,
+  repository access, theme control, notifications, and logout. Brand selection
+  and logout revoke the session and return to the ResWallet welcome screen.
+- New browser sessions default to Dark Mode while an explicitly saved Light Mode
+  preference remains preserved.
+- Data Freshness and Provenance surfaces are consolidated by dashboard so
+  technical identifiers remain inspectable without crowding the primary user
+  journey.
+- The connected journey preserves the domain direction: Groups updates Finance
+  only after confirmed ResContract state; Finance supplies the default Crypto
+  amount; scenarios do not mutate Finance; Smart Insights remains read-only.
+- Chromium coverage exercised navigation, notification links, responsive
+  layout, theme/session behavior, provenance presentation, and the embedded
+  Insights experience.
+
+## Local Handoff evidence
+
+### Outcome
 
 Milestone 7 packages the completed ResFinance components behind one bounded
 local lifecycle, exercises them in a continuous two-wallet Chromium journey,
@@ -40,7 +63,7 @@ promotion was appended, and a provenance-complete current 15-day snapshot was
 published. This is safe calibration and abstention, not claimed predictive
 outperformance.
 
-## What was implemented
+### What was implemented
 
 - `scripts.milestone9.local_handoff` supplies `preflight`, `start`, `status`,
   `restart`, `logs`, `stop`, and an exact-phrase-confirmed `reset` command.
@@ -95,7 +118,7 @@ The live journey also exposed and fixed three integration defects:
    refresh rendered. Contract-affecting controls now remain disabled across
    every in-flight Group write.
 
-## Real-browser acceptance scope
+### Real-browser acceptance scope
 
 `npm run test:e2e:local` performs one continuous, non-mocked journey:
 
@@ -131,7 +154,7 @@ fallback. The definitive full browser journey still uses the no-model startup;
 the optional model remains a read-only selector and is not required for safe
 operation.
 
-## Research and promotion status
+### Research and promotion status
 
 The approved full research inputs remain exact:
 
@@ -172,7 +195,7 @@ Snapshot `5ff12fcbbe7378ab4a43d7931039b8a602d6ced778b34bdb7bc23f293f4df4ea`
 is tied to all four identities and contains the current 15-day BTC/ETH/SOL
 returns, upside probabilities, intervals, and 60-day price history.
 
-## Acceptance matrix
+### Acceptance matrix
 
 | Criterion | Result | Evidence |
 |---|---|---|
@@ -186,7 +209,7 @@ returns, upside probabilities, intervals, and 60-day price history.
 | Default and scenario capital | Pass | The browser journey used Finance-derived `$4,000.00`, reconciled allocations exactly, analyzed `$2,500.00`, and read Finance back unchanged. |
 | Invalid forecast inputs | Pass | Unit/integration coverage confirms stale, corrupted, synthetic, and unpromoted inputs fail closed. |
 | Complete repository suites | Pass | Ruff, mypy, 115 Python tests, 9 client tests, 5 ResWallet tests, both builds, extension inspection, 5 dashboard browser tests, and the upgraded 3.0-minute live journey passed. |
-| Reproducible operator guide | Pass | See [Milestone 7 local operator guide](milestone9-local-operator-guide.md). |
+| Reproducible operator guide | Pass | See [Milestone 7 local operator guide](milestone7-local-operator-guide.md). |
 
 Milestone 7 is complete for its declared local scope. The promoted candidate is
 deliberately conservative: validation selected full expected-return abstention,
@@ -194,7 +217,7 @@ so the result satisfies the no-worse-than-naive rule by equality and does not
 support an outperformance claim. Cloud, production, custody, trading,
 commercial use, and independent-BFT readiness remain outside this milestone.
 
-## Final verification
+### Final verification
 
 The implementation handoff passed:
 
@@ -213,7 +236,7 @@ local lifecycle status                              pass (API/client and replica
 No promotion was fabricated for the failed original candidate. The later
 promotion is backed by the distinct predeclared forward run and unchanged rule.
 
-## Completed forward iteration
+### Completed forward iteration
 
 The final Milestone 7 work completed as follows:
 

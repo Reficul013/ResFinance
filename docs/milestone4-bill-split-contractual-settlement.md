@@ -1,6 +1,6 @@
 # Milestone 4: Bill Split — Friends, Groups & Contractual Settlement
 
-Status: complete for local development. Cloud and production deployment remain on hold.
+Status: Complete for local development. Cloud and production deployment remain on hold.
 
 ## Delivered behavior
 
