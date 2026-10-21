@@ -386,6 +386,12 @@ code {
   width: 100%;
 }
 
+@media (min-width: 32.01rem) {
+  .auth-connect-controls > .auth-button {
+    transform: translateX(0.5rem);
+  }
+}
+
 .auth-card > * {
   position: relative;
 }
