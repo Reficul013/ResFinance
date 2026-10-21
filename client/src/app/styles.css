@@ -1510,7 +1510,6 @@ td.expense {
 }
 
 .notification-item span,
-.notification-all,
 .notification-empty {
   color: var(--page-muted);
   font-size: 0.76rem;
@@ -1522,11 +1521,6 @@ td.expense {
   padding: 0.75rem;
   border-radius: 0.65rem;
   background: var(--control-background);
-}
-
-.notification-all {
-  padding-top: 0.4rem;
-  text-align: center;
 }
 
 .insights-dashboard {
