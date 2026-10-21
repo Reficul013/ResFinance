@@ -27,7 +27,10 @@ export function AuthCard({
 }: AuthCardProps) {
   const authenticated = state === "authenticated" && actorAddress !== null;
   const busy =
-    state === "checking" || state === "locked" || state === "pending";
+    state === "checking" ||
+    state === "locked" ||
+    state === "pending" ||
+    state === "signing-in";
   return (
     <section className="auth-card" data-state={state} aria-live="polite">
       <div className="auth-session">
@@ -115,7 +118,11 @@ export function AuthCard({
             onClick={onConnect}
             disabled={busy || walletAddress === null}
           >
-            {state === "pending" ? "Waiting for approval…" : "Connect wallet"}
+            {state === "signing-in"
+              ? "Signing in…"
+              : state === "pending"
+                ? "Waiting for approval…"
+                : "Connect wallet"}
           </button>
           <div className="auth-help">
             <button
