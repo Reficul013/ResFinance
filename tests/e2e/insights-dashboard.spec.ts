@@ -177,6 +177,11 @@ test("shows evidence-linked insights, notifications, and safe refusals", async (
     "background-color",
     "rgb(17, 24, 39)",
   );
+  await expect(
+    notificationPopover.getByRole("link", {
+      name: "Open Smart Savings Insights",
+    }),
+  ).toHaveCount(0);
   await page.screenshot({
     path: "test-results/insights-notifications.png",
     fullPage: false,

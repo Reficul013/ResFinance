@@ -13,7 +13,7 @@ transfers, commercial use, or independent Byzantine fault tolerance.
 The audience should leave with a clear understanding of one connected journey:
 
 ```text
-ResVault identity
+ResWallet identity
   → Personal Finance
   → Shared expense and contractual settlement
   → Updated Finance context
@@ -26,7 +26,7 @@ Recommended presentation time: 15–20 minutes.
 
 ## What the demo proves
 
-- Wallet identity and approvals are controlled by the ResVault browser
+- Wallet identity and approvals are controlled by the ResWallet browser
   extension; private keys and seeds never enter the application or backend.
 - Finance records are append-only, encrypted before persistence, stored in
   ResilientDB, and reduced into a rebuildable monthly view.
@@ -89,7 +89,7 @@ Skip this section when the dependencies are already installed.
   -r requirements/requirements-ai.txt
 
 (cd client && npm ci && npx playwright install chromium)
-(cd resvault && npm ci)
+(cd reswallet && npm ci)
 ```
 
 ## 2. Start the complete local stack
@@ -132,7 +132,7 @@ http://127.0.0.1:5173
 ```
 
 Do not use `localhost`, the API port, or a different origin for the application
-page. ResVault intentionally responds only to the approved application origin.
+page. ResWallet intentionally responds only to the approved application origin.
 
 ## 3. Prepare two browser profiles and wallets
 
@@ -149,12 +149,12 @@ In each profile:
 4. Select:
 
    ```text
-   /Users/haseebrahman/Desktop/Projects/ResFinance/resvault/dist
+   /Users/haseebrahman/Desktop/Projects/ResFinance/reswallet/dist
    ```
 
-5. Pin ResVault to the browser toolbar.
-6. Open the ResVault popup.
-7. Enter a demo-only password and choose **Create ResVault**.
+5. Pin ResWallet to the browser toolbar.
+6. Open the ResWallet popup.
+7. Enter a demo-only password and choose **Create ResWallet**.
 8. Confirm the wallet is unlocked and has an address.
 
 Record only the Member wallet's public address for the group demonstration.
@@ -163,8 +163,8 @@ Never export, copy, display, or place a seed or private key in demo notes.
 In both profiles:
 
 1. Open `http://127.0.0.1:5173/finance`.
-2. Choose **Connect wallet**.
-3. Review the ResVault toolbar approval popup while the ResFinance page remains
+2. Choose **Connect Wallet**.
+3. Review the ResWallet toolbar approval popup while the ResFinance page remains
    visible behind it.
 4. Choose **Approve & Login**.
 5. Confirm the application displays **Session active**.
@@ -217,11 +217,11 @@ presentation.
 
 ### Part A — Introduce the architecture and security boundary
 
-Show the Owner ResVault popup and the authenticated application.
+Show the Owner ResWallet popup and the authenticated application.
 
 Explain:
 
-- ResVault owns the wallet seed and private key.
+- ResWallet owns the wallet seed and private key.
 - The browser application requests signatures but never receives key material.
 - FastAPI is the only browser-facing service boundary under `/api/v1`.
 - ResilientDB is the only persistent application and research database.
@@ -276,16 +276,16 @@ Create a signed expense:
 | Total amount | $60.00                          |
 | Exact shares | `<MEMBER_WALLET_ADDRESS>=60.00` |
 
-Choose **Approve split in ResVault**, then approve the signature in the Owner
+Choose **Approve split in ResWallet**, then approve the signature in the Owner
 wallet. Show the `$60.00 outstanding` obligation.
 
 Switch to the Member profile:
 
 1. Open **Friends & Groups**.
 2. Select **Demo Dinner**.
-3. Choose **Approve in ResVault** and approve the intent.
+3. Choose **Approve in ResWallet** and approve the intent.
 4. Enter `$60.00` under **Credit amount (USD units)**.
-5. Choose **Approve funding in ResVault**.
+5. Choose **Approve funding in ResWallet**.
 
 Explain that these are internal, non-redeemable accounting credits. No fiat,
 token, or native cryptocurrency is transferred.
@@ -293,13 +293,13 @@ token, or native cryptocurrency is transferred.
 Demonstrate partial settlement:
 
 1. Enter `$20.00` under **Partial or full amount**.
-2. Choose **Settle with credits** and approve in ResVault.
+2. Choose **Settle with credits** and approve in ResWallet.
 3. Show `$40.00 outstanding`.
 
 Complete settlement:
 
 1. Enter `$40.00`.
-2. Choose **Settle with credits** and approve in ResVault.
+2. Choose **Settle with credits** and approve in ResWallet.
 3. Show `$0.00 outstanding` and the settled status.
 
 Return to the Owner's Finance view and point out the confirmed contractual
@@ -401,7 +401,7 @@ Use `restart`, not `reset`.
 
 ### Part H — Logout and custody closure
 
-Choose **Log out** in the Owner profile. Open ResVault and show that the vault
+Choose **Log out** in the Owner profile. Open ResWallet and show that the vault
 is locked.
 
 Close with this boundary:
@@ -415,7 +415,7 @@ Close with this boundary:
 |      Time | Segment                                         |
 | --------: | ----------------------------------------------- |
 |  1 minute | Product problem and architecture                |
-| 2 minutes | ResVault authentication and security boundary   |
+| 2 minutes | ResWallet authentication and security boundary   |
 | 3 minutes | Personal Finance                                |
 | 4 minutes | Group expense, approval, and settlement         |
 | 3 minutes | Crypto forecast, risk, allocation, and scenario |
@@ -432,7 +432,7 @@ Complete this checklist 30–60 minutes before presenting:
 - [ ] Preflight reports only `PASS` for required checks.
 - [ ] Local lifecycle status shows healthy replicas, API, and client.
 - [ ] `http://127.0.0.1:5173` loads from both browser profiles.
-- [ ] ResVault is loaded from the current `resvault/dist` in both profiles.
+- [ ] ResWallet is loaded from the current `reswallet/dist` in both profiles.
 - [ ] Owner and Member wallets unlock successfully.
 - [ ] The Member public address is available in the presenter notes.
 - [ ] Finance totals match the planned demo amounts.
@@ -465,11 +465,11 @@ Complete this checklist 30–60 minutes before presenting:
 .venv/bin/python -m scripts.milestone9.local_handoff restart
 ```
 
-### ResVault approval does not open
+### ResWallet approval does not open
 
 - Confirm the application URL is exactly `http://127.0.0.1:5173`.
 - Confirm the correct browser profile has the unpacked extension loaded.
-- Open ResVault and unlock it before retrying.
+- Open ResWallet and unlock it before retrying.
 - Do not reuse an old signed intent after a version conflict.
 
 ### A group action reports a version conflict
@@ -529,7 +529,7 @@ cd /Users/haseebrahman/Desktop/Projects/ResFinance/client
 npm run test:e2e:local
 ```
 
-The test creates disposable browser profiles and exercises the real ResVault,
+The test creates disposable browser profiles and exercises the real ResWallet,
 FastAPI, ResilientDB, ResContract, Finance, Groups, Crypto, Insights, restart,
 logout, and vault-lock paths. Use it for rehearsal and verification, not as a
 substitute for the presenter profiles.

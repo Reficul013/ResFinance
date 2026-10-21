@@ -29,7 +29,7 @@ test("approves and settles an obligation partially and fully", async ({
       const intent = message.intent!;
       window.postMessage(
         {
-          source: "resvault",
+          source: "reswallet",
           version: 1,
           request_id: message.request_id,
           ok: true,
@@ -137,12 +137,12 @@ test("approves and settles an obligation partially and fully", async ({
   ).toBeVisible();
   await expect(page.getByText("$60.00 outstanding")).toBeVisible();
 
-  await page.getByRole("button", { name: "Approve in ResVault" }).click();
+  await page.getByRole("button", { name: "Approve in ResWallet" }).click();
   await expect(page.getByText("open", { exact: true })).toBeVisible();
 
   await page.getByLabel("Credit amount (USD units)").fill("60.00");
   await page
-    .getByRole("button", { name: "Approve funding in ResVault" })
+    .getByRole("button", { name: "Approve funding in ResWallet" })
     .click();
   await expect(page.getByText("$60.00", { exact: true })).toBeVisible();
 

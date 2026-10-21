@@ -491,7 +491,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByRole("heading", { name: "ResFinance", level: 1 }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Connect ResVault" }),
+    page.getByRole("heading", { name: "Connect ResWallet" }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Your money, in one view." }),
@@ -507,7 +507,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByRole("heading", { name: "ResFinance", level: 1 }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Connect ResVault" }),
+    page.getByRole("heading", { name: "Connect ResWallet" }),
   ).toBeVisible();
   const loggedOutCard = page.locator(".auth-card");
   await expect(
@@ -714,7 +714,7 @@ test("voids transactions and deactivates recurring items through confirmed audit
   expect(deactivateRequest).toEqual({ expected_version: 9 });
 });
 
-test("updates the ResVault login guidance when the extension unlocks", async ({
+test("updates the ResWallet login guidance after the popup changes wallet state", async ({
   page,
 }) => {
   await page.route("**/api/v1/auth/refresh", async (route) => {
@@ -725,28 +725,56 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
       public_key: "e2e-public-key",
       address: `0x${"6".repeat(40)}`,
     };
+    const testWindow = window as typeof window & {
+      __reswalletStatus?: {
+        exists: boolean;
+        unlocked: boolean;
+        identity: typeof identity;
+      };
+      __reswalletApproval?: {
+        request_id: string;
+        intent: Record<string, unknown>;
+      };
+    };
+    testWindow.__reswalletStatus = {
+      exists: true,
+      unlocked: false,
+      identity,
+    };
     window.addEventListener("message", (event) => {
       const request = event.data as {
         source?: string;
         version?: number;
         request_id?: string;
         type?: string;
+        intent?: Record<string, unknown>;
       };
       if (
         event.source !== window ||
         request.source !== "resfinance-page" ||
-        request.version !== 1 ||
-        request.type !== "GET_STATUS"
+        request.version !== 1
       ) {
         return;
       }
+      if (
+        request.type === "SIGN_INTENT" &&
+        request.request_id !== undefined &&
+        request.intent !== undefined
+      ) {
+        testWindow.__reswalletApproval = {
+          request_id: request.request_id,
+          intent: request.intent,
+        };
+        return;
+      }
+      if (request.type !== "GET_STATUS") return;
       window.postMessage(
         {
-          source: "resvault",
+          source: "reswallet",
           version: 1,
           request_id: request.request_id,
           ok: true,
-          result: { exists: true, unlocked: false, identity },
+          result: testWindow.__reswalletStatus,
         },
         window.location.origin,
       );
@@ -756,7 +784,19 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
   await page.goto("/");
 
   const authCard = page.locator(".auth-card");
-  await expect(page.getByText("ResVault is Locked!")).toBeVisible();
+  await expect(page.getByText("ResWallet is Locked!")).toBeVisible();
+  await page.getByRole("button", { name: "Switch to Light Mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(authCard.locator(".auth-message")).toHaveCSS(
+    "color",
+    "rgb(91, 71, 153)",
+  );
+  await page.screenshot({
+    path: "test-results/reswallet-login-light.png",
+    fullPage: false,
+  });
+  await page.getByRole("button", { name: "Switch to Dark Mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.locator(".auth-status-bulb")).toBeVisible();
   await expect(authCard.locator(".auth-brand-logo-dark")).toBeVisible();
   await expect(
@@ -773,20 +813,50 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
     `0x${"6".repeat(40)}`,
   );
   await expect(
-    page.getByRole("button", { name: "Connect wallet" }),
+    page.getByRole("button", { name: "Connect Wallet" }),
   ).toBeDisabled();
 
+  const cardBox = await authCard.boundingBox();
+  const sessionBox = await authCard.locator(".auth-session").boundingBox();
+  const connectBox = await page
+    .getByRole("button", { name: "Connect Wallet" })
+    .boundingBox();
+  const helpBox = await page
+    .getByRole("button", { name: "How to connect ResWallet" })
+    .boundingBox();
+  expect(cardBox).not.toBeNull();
+  expect(sessionBox).not.toBeNull();
+  expect(connectBox).not.toBeNull();
+  expect(helpBox).not.toBeNull();
+  expect(sessionBox!.x - cardBox!.x).toBeGreaterThanOrEqual(20);
+  expect(connectBox!.x).toBeGreaterThan(sessionBox!.x + sessionBox!.width);
+  expect(
+    Math.abs(
+      connectBox!.y +
+        connectBox!.height / 2 -
+        (sessionBox!.y + sessionBox!.height / 2),
+    ),
+  ).toBeLessThanOrEqual(2);
+  expect(helpBox!.y - cardBox!.y).toBeGreaterThanOrEqual(12);
+  expect(helpBox!.y - cardBox!.y).toBeLessThanOrEqual(24);
+  expect(
+    Math.abs(connectBox!.x + connectBox!.width - (helpBox!.x + helpBox!.width)),
+  ).toBeLessThanOrEqual(2);
+  expect(
+    cardBox!.x + cardBox!.width - (helpBox!.x + helpBox!.width),
+  ).toBeGreaterThanOrEqual(12);
+
   const helpButton = page.getByRole("button", {
-    name: "How to connect ResVault",
+    name: "How to connect ResWallet",
   });
   await helpButton.hover();
   await expect(page.getByRole("tooltip")).toContainText(
-    "Install and enable the hardened ResVault extension",
+    "Install and enable the ResWallet extension",
   );
   await expect(page.getByRole("tooltip")).toContainText("Approve & Login");
   await page.waitForTimeout(200);
   await page.screenshot({
-    path: "test-results/resvault-login-help.png",
+    path: "test-results/reswallet-login-help.png",
     fullPage: false,
   });
 
@@ -803,18 +873,101 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
   expect(githubBox!.x + githubBox!.width).toBeLessThanOrEqual(themeBox!.x);
 
   await page.evaluate(() => {
+    const testWindow = window as typeof window & {
+      __reswalletStatus?: {
+        exists: boolean;
+        unlocked: boolean;
+        identity: { public_key: string; address: string };
+      };
+    };
+    testWindow.__reswalletStatus = {
+      exists: true,
+      unlocked: true,
+      identity: {
+        public_key: "e2e-public-key",
+        address: `0x${"6".repeat(40)}`,
+      },
+    };
+    window.dispatchEvent(new Event("focus"));
+  });
+
+  await expect(
+    page.getByText("ResWallet Unlocked! Connect to Wallet now..."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Connect Wallet" }),
+  ).toBeEnabled();
+  await page.mouse.move(0, 0);
+  await expect(page.getByRole("tooltip")).not.toBeVisible();
+  await page.screenshot({
+    path: "test-results/reswallet-login-ready.png",
+    fullPage: false,
+  });
+
+  await page.route("**/api/v1/auth/challenges", async (route) => {
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        audience: "resfinance-api",
+        challenge: "e2e-login-challenge",
+        challenge_id: "challenge-e2e",
+        expires_at: "2026-10-21T06:00:00Z",
+        network_id: "pinned-local-network",
+      }),
+    });
+  });
+  await page.route("**/api/v1/auth/sessions", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 750));
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        access_token: "e2e-login-token",
+        actor_address: `0x${"6".repeat(40)}`,
+        expires_at: "2026-10-21T06:00:00Z",
+        token_type: "Bearer",
+      }),
+    });
+  });
+
+  await page.getByRole("button", { name: "Connect Wallet" }).click();
+  await expect(
+    page.getByText("Review and approve the sign-in request in ResWallet!"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Waiting for approval…" }),
+  ).toBeDisabled();
+
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await page.waitForTimeout(100);
+  await expect(
+    page.getByText("Review and approve the sign-in request in ResWallet!"),
+  ).toBeVisible();
+  await expect(
+    page.getByText("ResWallet Unlocked! Connect to Wallet now..."),
+  ).toHaveCount(0);
+
+  await page.evaluate(() => {
+    const testWindow = window as typeof window & {
+      __reswalletApproval?: {
+        request_id: string;
+        intent: Record<string, unknown>;
+      };
+    };
+    const approval = testWindow.__reswalletApproval;
+    if (approval === undefined) throw new Error("approval request is missing");
     window.postMessage(
       {
-        source: "resvault",
+        source: "reswallet",
         version: 1,
-        type: "STATUS_CHANGED",
-        status: {
-          exists: true,
-          unlocked: true,
-          identity: {
-            public_key: "e2e-public-key",
-            address: `0x${"6".repeat(40)}`,
-          },
+        request_id: approval.request_id,
+        ok: true,
+        result: {
+          ...approval.intent,
+          actor_public_key: "e2e-public-key",
+          actor_address: `0x${"6".repeat(40)}`,
+          signature: "e2e-signature",
         },
       },
       window.location.origin,
@@ -822,15 +975,10 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
   });
 
   await expect(
-    page.getByText("ResVault Unlocked! Connect to Wallet now."),
+    page.getByText("Approval Received! Signing you in to ResFinance…"),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Connect wallet" }),
-  ).toBeEnabled();
-  await page.mouse.move(0, 0);
-  await expect(page.getByRole("tooltip")).not.toBeVisible();
-  await page.screenshot({
-    path: "test-results/resvault-login-ready.png",
-    fullPage: false,
-  });
+    page.getByRole("button", { name: "Signing in…" }),
+  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "ResFinance" })).toBeVisible();
 });

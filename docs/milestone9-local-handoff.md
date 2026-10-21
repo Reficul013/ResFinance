@@ -44,7 +44,7 @@ outperformance.
 - Preflight verifies Apple Silicon, the live Docker engine and Compose, Node
   22, Python 3.13, installed client/extension dependencies, and the pinned
   local-model hashes when weights are present or required.
-- Startup builds ResVault and the React client, starts the four ResilientDB and
+- Startup builds ResWallet and the React client, starts the four ResilientDB and
   four ResContract replicas plus proxies, tools, contract initialization, and
   FastAPI, then starts the locally owned Vite process. Compose health is bounded
   to 180 seconds and API/client health polling to 120 seconds.
@@ -78,7 +78,7 @@ outperformance.
   a non-blocking single-flight guard, so concurrent requests fail closed to the
   template instead of building an unbounded CPU queue.
 - The browser acceptance uses two isolated Chromium profiles and the built
-  ResVault extension. It contains no route interception and exercises the real
+  ResWallet extension. It contains no route interception and exercises the real
   `/api/v1`, ResilientDB, and ResContract paths.
 
 The live journey also exposed and fixed three integration defects:
@@ -112,7 +112,7 @@ The live journey also exposed and fixed three integration defects:
 10. ask for a prohibited transfer/settlement action and confirm refusal;
 11. restart the lifecycle with volumes intact, reload the browser session, and
     confirm the settled state rebuilds; and
-12. log out and verify the backend session is revoked and ResVault is Locked!
+12. log out and verify the backend session is revoked and ResWallet is Locked!
 
 Wallet seeds and private keys are generated inside each extension profile and
 are never fixtures. Playwright retains traces and screenshots only on failure;
@@ -174,7 +174,7 @@ returns, upside probabilities, intervals, and 60-day price history.
 | Criterion | Result | Evidence |
 |---|---|---|
 | One-command bounded startup and lifecycle | Pass | Hash-verified model startup reached both health endpoints; lifecycle-owned status passed. |
-| Continuous real ResVault/browser/full-stack journey | Pass | Two profiles exercised Finance, Groups, ResContract, the promoted Crypto recommendation and scenario, deterministic Insights fallback, tamper/replay defenses, restart, and logout without API interception. |
+| Continuous real ResWallet/browser/full-stack journey | Pass | Two profiles exercised Finance, Groups, ResContract, the promoted Crypto recommendation and scenario, deterministic Insights fallback, tamper/replay defenses, restart, and logout without API interception. |
 | Restart persistence and projection rebuild | Pass | The settled obligation remained at `$0.00 outstanding` after the controlled stack restart. |
 | Observable ingestion and reconciliation jobs | Pass | A reconciliation of the settled acceptance group completed with zero duplicate events; running/terminal records read back from ResilientDB. |
 | Full non-smoke provider research | Pass | The attested GDELT bytes were recovered from preserved ResilientDB state; the 5,184-row provider dataset completed all five folds and persisted 39 encrypted artifacts. |
@@ -182,7 +182,7 @@ returns, upside probabilities, intervals, and 60-day price history.
 | Eligible live recommendation | Pass | Current provider data through 2026-10-14 produced a promotion-linked 15-day snapshot; the normal dashboard rendered it after restart. |
 | Default and scenario capital | Pass | The browser journey used Finance-derived `$4,000.00`, reconciled allocations exactly, analyzed `$2,500.00`, and read Finance back unchanged. |
 | Invalid forecast inputs | Pass | Unit/integration coverage confirms stale, corrupted, synthetic, and unpromoted inputs fail closed. |
-| Complete repository suites | Pass | Ruff, mypy, 115 Python tests, 9 client tests, 5 ResVault tests, both builds, extension inspection, 5 dashboard browser tests, and the upgraded 3.0-minute live journey passed. |
+| Complete repository suites | Pass | Ruff, mypy, 115 Python tests, 9 client tests, 5 ResWallet tests, both builds, extension inspection, 5 dashboard browser tests, and the upgraded 3.0-minute live journey passed. |
 | Reproducible operator guide | Pass | See [Milestone 9 local operator guide](milestone9-local-operator-guide.md). |
 
 Milestone 9 is complete for its declared local scope. The promoted candidate is
@@ -200,7 +200,7 @@ The implementation handoff passed:
 .venv/bin/mypy                                      pass (97 files)
 .venv/bin/pytest                                    pass (115 tests)
 client: check, lint, format, unit tests, build       pass (9 tests)
-resvault: check, lint, format, tests, build, inspect pass (5 tests)
+reswallet: check, lint, format, tests, build, inspect pass (5 tests)
 client npm run test:e2e                             pass (5 Chromium tests)
 client npm run test:e2e:local                       pass (1 live journey, 3.0m)
 local reconciliation worker                         pass (0 duplicate events)

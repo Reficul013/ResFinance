@@ -9,7 +9,7 @@ on hold.
 - macOS on `arm64` with Docker Desktop running. The validated engine is
   29.8.2 with Compose 5.5.1.
 - Python 3.13.2 in `.venv`, Node 22.14.0, and npm dependencies installed with
-  `npm ci` in both `client/` and `resvault/`.
+  `npm ci` in both `client/` and `reswallet/`.
 - The source-pinned `resfinance/resilientdb:4de5cb4-m0` image described in the
   Milestone 0 documentation.
 - Chromium installed for Playwright when running browser acceptance.
@@ -35,7 +35,7 @@ first builds depend on Docker cache and host performance.
   -r requirements/requirements-ai.txt
 
 (cd client && npm ci && npx playwright install chromium)
-(cd resvault && npm ci)
+(cd reswallet && npm ci)
 ```
 
 Startup never downloads dependencies, model weights, or provider data.
@@ -60,7 +60,7 @@ Or verify and mount the pinned model read-only:
   --require-model start
 ```
 
-Open `http://127.0.0.1:5173`. Load `resvault/dist` as an unpacked Chromium
+Open `http://127.0.0.1:5173`. Load `reswallet/dist` as an unpacked Chromium
 extension if operating manually. Use a separate browser profile for each group
 participant; create each wallet inside that profile and never export its seed.
 
@@ -184,7 +184,7 @@ and snapshot remain research-only and do not execute trades.
 - Port 5173 ownership failure: stop the foreign process, then rerun `start`.
 - Health timeout: run `logs --tail 200`; Compose identifies unhealthy services
   and the client log is `.resfinance-local/client.log`.
-- ResVault does not respond: confirm `resvault/dist` is the loaded unpacked
+- ResWallet does not respond: confirm `reswallet/dist` is the loaded unpacked
   extension, use exactly `http://127.0.0.1:5173`, and unlock the wallet.
 - Contract action fails with a version conflict: wait for the current Group
   projection to render before retrying; never reuse the signed intent.

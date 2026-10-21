@@ -71,7 +71,7 @@ jobs:
         working-directory: client
         run: npm run test:e2e
 
-  resvault:
+  reswallet:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,24 +79,24 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-          cache-dependency-path: resvault/package-lock.json
-      - name: Install pinned ResVault dependencies
-        working-directory: resvault
+          cache-dependency-path: reswallet/package-lock.json
+      - name: Install pinned ResWallet dependencies
+        working-directory: reswallet
         run: npm ci
       - name: Type check
-        working-directory: resvault
+        working-directory: reswallet
         run: npm run check
       - name: Lint
-        working-directory: resvault
+        working-directory: reswallet
         run: npm run lint
       - name: Format check
-        working-directory: resvault
+        working-directory: reswallet
         run: npm run format:check
       - name: Test
-        working-directory: resvault
+        working-directory: reswallet
         run: npm test
       - name: Build and inspect security boundary
-        working-directory: resvault
+        working-directory: reswallet
         run: |
           npm run build
           npm run security:inspect

@@ -89,15 +89,6 @@ export function NotificationCenter({ accessToken }: { accessToken: string }) {
             <span>{item.message}</span>
           </Link>
         ))}
-        {notifications.length > 0 && (
-          <Link
-            className="notification-all"
-            to="/finance#smart-insights"
-            onClick={closeNotifications}
-          >
-            Open Smart Savings Insights
-          </Link>
-        )}
       </div>
     </details>
   );

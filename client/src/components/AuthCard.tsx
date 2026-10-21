@@ -27,59 +27,12 @@ export function AuthCard({
 }: AuthCardProps) {
   const authenticated = state === "authenticated" && actorAddress !== null;
   const busy =
-    state === "checking" || state === "locked" || state === "pending";
+    state === "checking" ||
+    state === "locked" ||
+    state === "pending" ||
+    state === "signing-in";
   return (
     <section className="auth-card" data-state={state} aria-live="polite">
-      {!authenticated && (
-        <div className="auth-help">
-          <button
-            className="auth-help-button"
-            type="button"
-            aria-label="How to connect ResVault"
-            aria-describedby="resvault-login-help"
-          >
-            <svg
-              className="auth-help-icon"
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              focusable="false"
-            >
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 11v5" />
-              <circle
-                cx="12"
-                cy="8"
-                r="0.85"
-                fill="currentColor"
-                stroke="none"
-              />
-            </svg>
-          </button>
-          <div
-            className="auth-help-popover"
-            id="resvault-login-help"
-            role="tooltip"
-          >
-            <strong>How to connect</strong>
-            <ol>
-              <li>
-                Install and enable the hardened ResVault extension for wallet
-                authentication.
-              </li>
-              <li>Open ResVault extension &amp; unlock your wallet.</li>
-              <li>
-                Return here, select <b>Connect wallet</b>, then choose{` `}
-                <b>Approve &amp; Login</b>.
-              </li>
-            </ol>
-          </div>
-        </div>
-      )}
       <div className="auth-session">
         <img
           className="auth-brand-logo auth-brand-logo-light"
@@ -106,7 +59,7 @@ export function AuthCard({
                 ResFinance
               </button>
             ) : (
-              "Connect ResVault"
+              "Connect ResWallet"
             )}
           </h2>
           <p className="auth-message">
@@ -158,14 +111,68 @@ export function AuthCard({
           </button>
         </div>
       ) : (
-        <button
-          className="auth-button"
-          type="button"
-          onClick={onConnect}
-          disabled={busy || walletAddress === null}
-        >
-          {state === "pending" ? "Waiting for approval…" : "Connect wallet"}
-        </button>
+        <div className="auth-connect-controls">
+          <button
+            className="auth-button"
+            type="button"
+            onClick={onConnect}
+            disabled={busy || walletAddress === null}
+          >
+            {state === "signing-in"
+              ? "Signing in…"
+              : state === "pending"
+                ? "Waiting for approval…"
+                : "Connect Wallet"}
+          </button>
+          <div className="auth-help">
+            <button
+              className="auth-help-button"
+              type="button"
+              aria-label="How to connect ResWallet"
+              aria-describedby="reswallet-login-help"
+            >
+              <svg
+                className="auth-help-icon"
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                focusable="false"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 11v5" />
+                <circle
+                  cx="12"
+                  cy="8"
+                  r="0.85"
+                  fill="currentColor"
+                  stroke="none"
+                />
+              </svg>
+            </button>
+            <div
+              className="auth-help-popover"
+              id="reswallet-login-help"
+              role="tooltip"
+            >
+              <strong>How to connect</strong>
+              <ol>
+                <li>
+                  Install and enable the ResWallet extension for wallet
+                  authentication.
+                </li>
+                <li>Open ResWallet extension &amp; unlock your wallet.</li>
+                <li>
+                  Return here, select <b>Connect Wallet</b>, then choose{` `}
+                  <b>Approve &amp; Login</b>.
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

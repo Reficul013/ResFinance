@@ -2,7 +2,7 @@ import type { components, paths } from "./generated/schema";
 import type {
   SignedIntent,
   WalletIdentity,
-} from "../../features/auth/resvault";
+} from "../../features/auth/reswallet";
 
 type HealthResponse =
   paths["/api/v1/health"]["get"]["responses"][200]["content"]["application/json"];

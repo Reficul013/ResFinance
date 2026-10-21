@@ -35,8 +35,8 @@
   --status-checking: #b27621;
   --status-ready: #197b68;
   --status-error: #b73b55;
-  --status-current: #9c6500;
-  --status-current-glow: rgb(255 193 7 / 42%);
+  --status-current: #5b4799;
+  --status-current-glow: rgb(91 71 153 / 30%);
   --panel-background: rgb(255 255 255 / 48%);
   --chart-grid: rgb(70 82 112 / 14%);
   --income: #187867;
@@ -372,13 +372,23 @@ code {
 
 .auth-card:not([data-state="authenticated"]) {
   overflow: visible;
-  gap: 1.5rem;
-  padding: 1.5rem 1.35rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2rem;
+  padding: 1.5rem;
+}
+
+.auth-connect-controls {
+  width: min(17rem, 100%);
+  justify-self: end;
+}
+
+.auth-connect-controls > .auth-button {
+  width: 100%;
 }
 
 @media (min-width: 32.01rem) {
-  .auth-card:not([data-state="authenticated"]) > .auth-button {
-    transform: translateX(0.45rem);
+  .auth-connect-controls > .auth-button {
+    transform: translateX(0.5rem);
   }
 }
 
@@ -386,11 +396,15 @@ code {
   position: relative;
 }
 
+.auth-card > .auth-connect-controls {
+  position: static;
+}
+
 .auth-help {
   position: absolute;
   z-index: 4;
-  top: 0.9rem;
-  right: 0.9rem;
+  top: 1rem;
+  right: 1rem;
 }
 
 .auth-help-button {
@@ -1496,7 +1510,6 @@ td.expense {
 }
 
 .notification-item span,
-.notification-all,
 .notification-empty {
   color: var(--page-muted);
   font-size: 0.76rem;
@@ -1508,11 +1521,6 @@ td.expense {
   padding: 0.75rem;
   border-radius: 0.65rem;
   background: var(--control-background);
-}
-
-.notification-all {
-  padding-top: 0.4rem;
-  text-align: center;
 }
 
 .insights-dashboard {
@@ -1977,6 +1985,11 @@ td.expense {
 
   .auth-button {
     width: 100%;
+  }
+
+  .auth-connect-controls {
+    width: 100%;
+    justify-self: stretch;
   }
 
   .welcome-actions .auth-button,

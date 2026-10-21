@@ -2,7 +2,7 @@
 
 ResFinance is a locally implemented wallet-authenticated finance platform that connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL portfolio analysis through one auditable financial record.
 
-> **Project status:** Milestones 0–9 are complete for local development and research. Milestone 9 provides the one-command lifecycle, explicit workers, operator guide, continuous real ResVault/full-stack browser proof, predeclared untouched-forward evaluation, immutable model promotion, and a provenance-complete current 15-day BTC/ETH/SOL snapshot. The normal Crypto dashboard now renders the promoted local recommendation. Milestone 10 cloud and production deployment remains on hold.
+> **Project status:** Milestones 0–9 are complete for local development and research. Milestone 9 provides the one-command lifecycle, explicit workers, operator guide, continuous real ResWallet/full-stack browser proof, predeclared untouched-forward evaluation, immutable model promotion, and a provenance-complete current 15-day BTC/ETH/SOL snapshot. The normal Crypto dashboard now renders the promoted local recommendation. Milestone 10 cloud and production deployment remains on hold.
 
 ## What the product will do
 
@@ -12,7 +12,7 @@ Most finance products separate budgeting, bill splitting, and investing. ResFina
 Earn → Spend → Split → Settle → Update Finance → Calculate Savings → Explore BTC/ETH/SOL → Forecast → Assess Risk → Build Portfolio
 ```
 
-A user will be able to connect a ResVault wallet, manage personal finances, split expenses with friends, approve settlements, and use the resulting savings calculation as the default amount for a risk-aware crypto portfolio analysis.
+A user will be able to connect ResWallet, manage personal finances, split expenses with friends, approve settlements, and use the resulting savings calculation as the default amount for a risk-aware crypto portfolio analysis.
 
 ## The three product areas
 
@@ -28,7 +28,7 @@ A user will be able to connect a ResVault wallet, manage personal finances, spli
 ### Friends & Groups
 
 - Create groups and shared expenses with equal or custom splits.
-- Ask each participant to approve or reject their obligation with ResVault.
+- Ask each participant to approve or reject their obligation with ResWallet.
 - Track who owes whom and whether an obligation is pending, open, partially settled, settled, rejected, or cancelled.
 - Settle with internal, non-redeemable credits and receive immutable receipts.
 - Reflect confirmed obligations and settlements back into Personal Finance.
@@ -45,7 +45,7 @@ A user will be able to connect a ResVault wallet, manage personal finances, spli
 
 ## Example user journey
 
-1. Alex connects ResVault, which becomes the wallet-backed signing identity.
+1. Alex connects ResWallet, which becomes the wallet-backed signing identity.
 2. Alex records income, expenses, budgets, and recurring costs.
 3. Alex pays a group expense and creates a split among friends.
 4. Participants explicitly approve their shares, and the contract records the obligations.
@@ -62,7 +62,7 @@ A user will be able to connect a ResVault wallet, manage personal finances, spli
 | React, TypeScript, and Vite | Shared user interface for Finance, Groups, and Crypto Investments |
 | FastAPI REST API | Authentication, validation, business rules, orchestration, and `/api/v1` endpoints |
 | Apache ResilientDB | The only persistent store for application events, market data, forecasts, model artifacts, and research records |
-| ResVault | Wallet identity, local key custody, challenge signing, and explicit approval of contract-affecting actions |
+| ResWallet | Wallet identity, local key custody, challenge signing, and explicit approval of contract-affecting actions |
 | ResContract | Authoritative obligation, settlement-credit, and receipt state transitions |
 | Ingestion and ML workers | Market-data collection, reproducible research runs, forecasts, and model evaluation |
 | Read-only AI assistant | Evidence-linked explanations of budgets, obligations, forecasts, uncertainty, and allocations |
@@ -82,12 +82,12 @@ Research uses five chronological expanding walk-forward folds for the original p
 - The platform does not execute trades, hold exchange assets, or provide custody.
 - Portfolio outputs are analytical scenarios, not guaranteed returns or financial advice.
 - The AI assistant is read-only: it cannot modify records, sign actions, settle obligations, or trade.
-- ResVault private keys and seeds must never leave the extension.
+- ResWallet private keys and seeds must never leave the extension.
 - Apache ResilientDB is the sole persistent application and research database.
 
 ## Current development status
 
-Milestone 0 is complete for the declared local, non-commercial research scope. The repository pins ResilientDB, ResContract, ResVault, the toolchain, and the initial local models; defines the REST, security, and research contracts; and provides a reproducible feasibility harness. A source-pinned, labeled ARM64 image and documented compatibility patch passed four-replica persistence/failure tests, a real 100 MiB round trip, persistent ResContract lifecycle tests, and the signed REST-to-contract-to-event slice. The official ResVault implementation failed its audit, while the disposable M0 signer proved the approval and non-disclosure boundary; Milestone 2 subsequently delivered the persistent hardened extension.
+Milestone 0 is complete for the declared local, non-commercial research scope. The repository pins ResilientDB, ResContract, the upstream ResVault audit reference, ResWallet dependencies, the toolchain, and the initial local models; defines the REST, security, and research contracts; and provides a reproducible feasibility harness. A source-pinned, labeled ARM64 image and documented compatibility patch passed four-replica persistence/failure tests, a real 100 MiB round trip, persistent ResContract lifecycle tests, and the signed REST-to-contract-to-event slice. The official ResVault implementation failed its audit, while the disposable M0 signer proved the approval and non-disclosure boundary; Milestone 2 subsequently delivered the persistent custom ResWallet extension.
 
 Coin Metrics daily prices cover BTC/ETH/SOL, while daily active-address and transaction counts cover BTC/ETH for the full fixed research period. DefiLlama SOL TVL and stablecoin-supply proxies reach the research boundary with their earlier and internal gaps explicitly masked. Bounded GDELT daily aggregates cover sentiment and were hash-verified through real ResilientDB. Provider terms are recorded for the declared research-only scope. See the [Milestone 0 feasibility status](docs/feasibility.md) and [provider terms review](docs/provider-terms-review.md).
 
@@ -95,11 +95,11 @@ Cloud and production deployment are intentionally deferred. Completing the local
 
 Milestone 1 adds the strict React/Vite and FastAPI foundations, checked OpenAPI-generated client types, RFC 9457 errors, typed provider ports, AES-256-GCM event/blob repositories, idempotency and projection rebuilds, and a four-replica private Compose topology with a separate ResilientDB client proxy. The real-stack acceptance test passed encrypted write, full restart, readback, rebuild, and deduplication without another database. See the [Milestone 1 platform foundation](docs/milestone1-platform-foundation.md).
 
-Milestone 2 adds the hardened Manifest V3 ResVault-compatible extension, branded with the dark ResFinance mark, Argon2id/AES-256-GCM encrypted seed custody, exact-origin approval/signing, challenge login, memory-only access tokens, ResilientDB refresh-session hashes, rotation, replay defense, and logout revocation. The wallet login now keeps the ResFinance mark beside its heading, labels the public address, provides inline setup guidance, opens approval from the toolbar over the same Chrome 127+ window, and updates locked or unlocked status without a page refresh through a reconnecting public-status bridge. The extension's unlock form supports Enter, highlights incorrect passwords, and shows a blinking locked-state indicator. The authentication state survived a full four-replica restart, and the rebuilt live FastAPI container passed the complete HTTP flow through its pinned native ResilientDB client. See the [Milestone 2 wallet and authentication evidence](docs/milestone2-wallet-authentication.md).
+Milestone 2 adds the custom hardened Manifest V3 ResWallet extension, branded with the dark ResFinance mark, Argon2id/AES-256-GCM encrypted seed custody, exact-origin approval/signing, challenge login, memory-only access tokens, ResilientDB refresh-session hashes, rotation, replay defense, and logout revocation. The wallet login now keeps the ResFinance mark beside its heading, labels the public address, provides inline setup guidance, opens approval from the toolbar over the same Chrome 127+ window, and updates locked or unlocked status without a page refresh through a reconnecting public-status bridge plus a focus-time status check. The extension's create and unlock forms support Enter, incorrect passwords are highlighted, and the locked state shows a blinking indicator. The authentication state survived a full four-replica restart, and the rebuilt live FastAPI container passed the complete HTTP flow through its pinned native ResilientDB client. See the [Milestone 2 wallet and authentication evidence](docs/milestone2-wallet-authentication.md).
 
 Milestone 3 adds the authenticated Personal Finance dashboard and encrypted append-only finance domain: deterministic income/expense categories, transactions, compensating voids, monthly budgets and alerts, recurring entries, read-only contract-backed receivable/payable projections, exact integer-cent summaries, and the versioned `finance-savings-v1` calculation. Active transactions and recurring items have compact orange `ArchiveX` action buttons with confirmation dialogs, giving users deletion-like correction controls while the backend appends a void or deactivation event and preserves the original record for audit. The dashboard turns the recorded ledger into category spending, six-month savings-versus-expense, and forward savings-outlook charts; it also houses Smart Savings Insights beneath the Finance record and commitment views. The fixed catalog is available to a new wallet immediately, so adding a finance record never requires a category-creation step. The projection rebuilt identically after a full four-replica restart, the live FastAPI container passed authenticated native-ResilientDB writes and reads, and Chromium Playwright reproduced balances, budget alerts, savings, provenance, and the record-correction workflow. The Data Freshness and Provenance panel is the only Finance location that exposes formula, calculation, event, and projection identifiers behind the displayed savings. See the [Milestone 3 Personal Finance evidence](docs/milestone3-personal-finance.md).
 
-Milestone 4 adds authenticated Groups, exact shared-expense splits, ResVault-signed participant decisions, obligation notifications, a deployed `ResFinanceSettlement.sol` state machine, non-redeemable internal credits, partial/full settlement, immutable receipts, and confirmed Finance propagation. A real-stack run recovered exactly one missing confirmation after an injected post-contract crash and a restart of every ResilientDB and ResContract process; Group and Finance balances then matched exactly. The Groups Data Freshness and Provenance footer is the only Groups location that shows its projection version, encrypted source-event count, and update time. See the [Milestone 4 Groups and contractual settlement evidence](docs/milestone4-groups-settlement.md).
+Milestone 4 adds authenticated Groups, exact shared-expense splits, ResWallet-signed participant decisions, obligation notifications, a deployed `ResFinanceSettlement.sol` state machine, non-redeemable internal credits, partial/full settlement, immutable receipts, and confirmed Finance propagation. A real-stack run recovered exactly one missing confirmation after an injected post-contract crash and a restart of every ResilientDB and ResContract process; Group and Finance balances then matched exactly. The Groups Data Freshness and Provenance footer is the only Groups location that shows its projection version, encrypted source-event count, and update time. See the [Milestone 4 Groups and contractual settlement evidence](docs/milestone4-groups-settlement.md).
 
 Milestone 5 adds Coin Metrics market and BTC/ETH on-chain adapters, CoinGecko current-quote fallback, DefiLlama SOL proxy ingestion with explicit missing observations, and a bounded GDELT aggregate CSV adapter. Immutable observations, provider revisions, availability times, retrieval times, response checksums, license dispositions, ingestion attempts, point-in-time features, masks, and dataset manifests persist only in ResilientDB. Live provider smoke checks passed, and the real-stack acceptance proved repeat-ingestion and feature idempotency, provider-failure isolation, no-lookahead selection, SOL masks, and rejection of a fourth asset. See the [Milestone 5 crypto ingestion and feature store evidence](docs/milestone5-crypto-ingestion-feature-store.md).
 
@@ -107,9 +107,9 @@ Milestone 6 adds deterministic smoke-data generation; naive, linear, and LSTM ba
 
 Milestone 7 adds the versioned risk questionnaire, constrained BTC/ETH/SOL optimization, Finance-linked default capital, exact-cent allocations, immutable forecast provenance, non-mutating amount scenarios, and the Crypto dashboard. Stale, synthetic, and unpromoted forecasts fail closed in normal runtime. Technical Finance calculation and forecast identifiers are confined to its Data Freshness and Provenance panel. See the [Milestone 7 risk, portfolio, and Crypto dashboard evidence](docs/milestone7-risk-portfolio-crypto-dashboard.md).
 
-Milestone 8 adds wallet-authorized fact bundles, the pinned local Qwen instruction model, evidence-ID validation, prompt-injection and prohibited-action refusals, deterministic template fallback, Smart Savings Insights, and a unified in-app notification center. Smart Savings Insights now lives at the bottom of Personal Finance rather than as a fourth tab; notification links lead there directly. Its question composer and evidence-bound response share an equal-width two-column workspace, with verified evidence condensed into readable bullet points. Completed questions receive explicit on-screen confirmation, while a stalled evidence request stops after 30 seconds with a retry message. The shared authenticated header presents theme-specific ResFinance branding, gives the three dashboard tabs the primary width, and groups a GitHub repository link, the theme slider, dismissible opaque notification surface, and icon-only logout at the right edge. Clicking the header brand or logging out securely ends the session and returns the browser to the root ResVault welcome screen; successful login opens Personal Finance. New browser sessions default to Dark Mode while an explicitly saved Light Mode preference remains preserved. One two-column Data Freshness and Provenance panel presents Finance projection details beside the Savings Insights fact bundle and model revision. The model ranks facts only; final claims are rendered from server-validated evidence. Real-stack acceptance recorded zero ResilientDB writes from the AI path. See the [Milestone 8 read-only AI and integration evidence](docs/milestone8-read-only-ai-integration.md).
+Milestone 8 adds wallet-authorized fact bundles, the pinned local Qwen instruction model, evidence-ID validation, prompt-injection and prohibited-action refusals, deterministic template fallback, Smart Savings Insights, and a unified in-app notification center. Smart Savings Insights now lives at the bottom of Personal Finance rather than as a fourth tab; notification items link only to their relevant Finance, Groups, or Crypto context. Its question composer and evidence-bound response share an equal-width two-column workspace, with verified evidence condensed into readable bullet points. Completed questions receive explicit on-screen confirmation, while a stalled evidence request stops after 30 seconds with a retry message. The shared authenticated header presents theme-specific ResFinance branding, gives the three dashboard tabs the primary width, and groups a GitHub repository link, the theme slider, dismissible opaque notification surface, and icon-only logout at the right edge. Clicking the header brand or logging out securely ends the session and returns the browser to the root ResWallet welcome screen; successful login opens Personal Finance. New browser sessions default to Dark Mode while an explicitly saved Light Mode preference remains preserved. One two-column Data Freshness and Provenance panel presents Finance projection details beside the Savings Insights fact bundle and model revision. The model ranks facts only; final claims are rendered from server-validated evidence. Real-stack acceptance recorded zero ResilientDB writes from the AI path. See the [Milestone 8 read-only AI and integration evidence](docs/milestone8-read-only-ai-integration.md).
 
-Milestone 9 Local Handoff adds a bounded preflight/start/status/restart/logs/stop/reset lifecycle, hash-verified optional local-model mounting, append-only ResilientDB worker status, provider-data research runners, and a continuous two-wallet Chromium journey using the real ResVault extension, FastAPI, four-replica ResilientDB, and ResContract. The original five-fold candidate remains correctly rejected. A separately predeclared forward candidate selected a recorded `0.0` reliability coefficient on validation, then tied naive MAE at `0.0529717654` and achieved `88.05%` interval coverage on 1,638 untouched holdout samples. `forecast-promotion-v1` promoted it without changing either threshold. Current provider data through 2026-10-14 produced a provenance-linked 15-day snapshot, and the real browser journey verified its dashboard recommendation, exact-cent allocations, Finance-derived default, non-mutating scenario, fail-closed invalid inputs, and restart persistence. This is a conservative abstaining forecast, not evidence of market outperformance or investment advice. See the [Milestone 9 Local Handoff evidence](docs/milestone9-local-handoff.md) and [operator guide](docs/milestone9-local-operator-guide.md).
+Milestone 9 Local Handoff adds a bounded preflight/start/status/restart/logs/stop/reset lifecycle, hash-verified optional local-model mounting, append-only ResilientDB worker status, provider-data research runners, and a continuous two-wallet Chromium journey using the real ResWallet extension, FastAPI, four-replica ResilientDB, and ResContract. The original five-fold candidate remains correctly rejected. A separately predeclared forward candidate selected a recorded `0.0` reliability coefficient on validation, then tied naive MAE at `0.0529717654` and achieved `88.05%` interval coverage on 1,638 untouched holdout samples. `forecast-promotion-v1` promoted it without changing either threshold. Current provider data through 2026-10-14 produced a provenance-linked 15-day snapshot, and the real browser journey verified its dashboard recommendation, exact-cent allocations, Finance-derived default, non-mutating scenario, fail-closed invalid inputs, and restart persistence. This is a conservative abstaining forecast, not evidence of market outperformance or investment advice. See the [Milestone 9 Local Handoff evidence](docs/milestone9-local-handoff.md) and [operator guide](docs/milestone9-local-operator-guide.md).
 
 ## Local verification
 
@@ -136,7 +136,7 @@ npm run build
 npx playwright install chromium
 npm run test:e2e
 
-cd ../resvault
+cd ../reswallet
 npm ci
 npm run check
 npm run lint
@@ -214,7 +214,7 @@ RESFINANCE_AI_MODEL_PATH=/private/tmp/resfinance-qwen2.5-1.5b \
 
 ```text
 client/       React and TypeScript application
-resvault/     Hardened ResVault-compatible browser extension
+reswallet/    ResWallet (Custom Hardened ResVault) browser extension
 server/       FastAPI API, domain services, adapters, and workers
 blockchain/   ResContract contracts, gateway adapter, wallet work, and tests
 ml/           Data, features, forecasting, evaluation, and portfolio optimization
@@ -243,7 +243,7 @@ docs/         Product, architecture, delivery, and development references
 - [Security contract](docs/security.md)
 - [Research protocol](docs/research-protocol.md)
 - [Provider coverage and terms review](docs/provider-terms-review.md)
-- [ResVault pinned-source audit](docs/audits/resvault-2026-10-12.md)
+- [Original ResVault pinned-source audit](docs/audits/resvault-2026-10-12.md)
 - [ResilientDB ecosystem development references](docs/development-references.md)
 - [Repository instructions for coding agents](AGENTS.md)
 

@@ -6,7 +6,7 @@
 .venv
 client/node_modules
 client/dist
-resvault/node_modules
-resvault/dist
+reswallet/node_modules
+reswallet/dist
 **/__pycache__
 *.pyc
