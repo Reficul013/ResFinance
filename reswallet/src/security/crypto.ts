@@ -38,7 +38,7 @@ export async function deriveIdentity(
   seed: Uint8Array,
 ): Promise<PublicIdentity> {
   if (seed.length !== 32)
-    throw new Error("ResVault seed must contain exactly 32 bytes");
+    throw new Error("ResWallet seed must contain exactly 32 bytes");
   const publicKey = ed25519.getPublicKey(seed);
   const digest = new Uint8Array(
     await crypto.subtle.digest("SHA-256", toArrayBuffer(publicKey)),
@@ -113,7 +113,7 @@ export async function decryptSeed(
     record.kdf.version !== 19 ||
     record.cipher.algorithm !== "AES-256-GCM"
   ) {
-    throw new Error("ResVault encrypted-seed format is not supported");
+    throw new Error("ResWallet encrypted-seed format is not supported");
   }
   const metadata = {
     version: record.version,
@@ -140,10 +140,10 @@ export async function decryptSeed(
     );
     const seed = new Uint8Array(plaintext);
     if (seed.length !== 32)
-      throw new Error("decrypted ResVault seed is invalid");
+      throw new Error("decrypted ResWallet seed is invalid");
     return seed;
   } catch {
-    throw new Error("password or encrypted ResVault seed is invalid");
+    throw new Error("password or encrypted ResWallet seed is invalid");
   } finally {
     keyBytes.fill(0);
   }
@@ -160,7 +160,7 @@ async function deriveKey(
   parameters: KdfParameters,
 ): Promise<Uint8Array> {
   if (password.length < 12)
-    throw new Error("ResVault password must be at least 12 characters");
+    throw new Error("ResWallet password must be at least 12 characters");
   const passwordBytes = new TextEncoder().encode(password);
   try {
     return await argon2idAsync(

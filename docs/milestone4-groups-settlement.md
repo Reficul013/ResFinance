@@ -5,7 +5,7 @@ Status: complete for local development. Cloud and production deployment remain o
 ## Delivered behavior
 
 - Authenticated group creation, membership, exact integer-cent expense splits, participant notifications, and rebuilt projections.
-- ResVault-signed payer, approval/rejection, credit-funding, and settlement commands with origin, audience, network, expiry, parameter-hash, nonce, actor, and resource verification.
+- ResWallet-signed payer, approval/rejection, credit-funding, and settlement commands with origin, audience, network, expiry, parameter-hash, nonce, actor, and resource verification.
 - `ResFinanceSettlement.sol` as the authoritative obligation and internal-credit state machine, including pending/open/partial/settled/rejected/cancelled states, replay protection, insufficient-credit checks, overpayment prevention, and receipts.
 - Internal credits that are explicitly non-redeemable, non-monetary, and have no cash value. No fiat, native cryptocurrency, token, trade, or custody operation exists.
 - Confirmed obligations and partial/full settlement propagation into both participants' encrypted Finance projections.

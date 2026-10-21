@@ -5,7 +5,7 @@ Status: Milestones 1 and 2 application encryption, wallet hardening, and authent
 ## Trust boundaries
 
 1. Web pages are untrusted, including the ResFinance page when compromised by XSS or a dependency.
-2. ResVault is the only boundary allowed to hold an unlocked seed or private key.
+2. ResWallet is the only boundary allowed to hold an unlocked seed or private key.
 3. FastAPI authenticates users, authorizes resources, verifies signed intents, and exposes `/api/v1`.
 4. ResContract and ResilientDB are private services reachable only by application services and controlled workers.
 5. External data/model providers are untrusted inputs and cannot initiate writes outside their ingestion commands.
@@ -47,8 +47,8 @@ Structured logs use allowlisted fields. The following are always redacted or omi
 
 Security tests must inspect the browser page, extension messaging, network capture, server logs, worker logs, error responses, and generated feasibility evidence for prohibited values.
 
-## Current ResVault disposition
+## Current ResWallet disposition
 
-The pinned official ResVault source fails this contract. ADR 0001 selected substantial hardening while preserving ResVault behavior. Milestone 2 implements the compatible redesign as a Manifest V3 extension with a versioned Argon2id/AES-256-GCM seed record, memory-only unlocked state, exact-origin messaging, extension-owned approvals, and background-only Ed25519 signing. Authentication refresh hashes, nonce use, and revocation markers persist in ResilientDB while access tokens remain memory-only.
+The pinned official ResVault source fails this contract. ADR 0001 therefore created ResWallet as the custom ResFinance wallet while preserving the useful browser-wallet role and explicit approval flow. Milestone 2 implements ResWallet as a Manifest V3 extension with a versioned Argon2id/AES-256-GCM seed record, memory-only unlocked state, exact-origin messaging, extension-owned approvals, and background-only Ed25519 signing. Authentication refresh hashes, nonce use, and revocation markers persist in ResilientDB while access tokens remain memory-only.
 
 Local acceptance and remaining non-production limits are recorded in [`milestone2-wallet-authentication.md`](milestone2-wallet-authentication.md). The original source findings remain in [`audits/resvault-2026-10-12.md`](audits/resvault-2026-10-12.md).

@@ -300,7 +300,7 @@ class InsightsService:
         if _ACTION.search(normalized):
             return self._refusal(
                 "I cannot write records, use the wallet, settle obligations, move money, or trade.",
-                "Use the appropriate dashboard and explicit ResVault approval "
+                "Use the appropriate dashboard and explicit ResWallet approval "
                 "for supported actions.",
             )
         topics = _topics(normalized)

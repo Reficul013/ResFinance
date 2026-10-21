@@ -32,7 +32,7 @@ export interface VaultOptions {
   argon2?: Argon2Policy;
 }
 
-export class ResVault {
+export class ResWallet {
   readonly #storage: VaultStorage;
   readonly #allowedOrigins: ReadonlySet<string>;
   readonly #idleTimeoutMs: number;
@@ -70,7 +70,7 @@ export class ResVault {
     importedSeed?: Uint8Array,
   ): Promise<PublicIdentity> {
     if (await this.exists())
-      throw new VaultRejected("ResVault is already initialized");
+      throw new VaultRejected("ResWallet is already initialized");
     const seed = importedSeed?.slice() ?? randomBytes(32);
     if (seed.length !== 32)
       throw new VaultRejected("imported seed must be 32 bytes");
@@ -87,7 +87,8 @@ export class ResVault {
 
   async unlock(password: string): Promise<PublicIdentity> {
     const record = await this.#storage.load();
-    if (record === null) throw new VaultRejected("ResVault is not initialized");
+    if (record === null)
+      throw new VaultRejected("ResWallet is not initialized");
     const seed = await decryptSeed(record, password);
     try {
       const identity = await deriveIdentity(seed);
@@ -118,7 +119,8 @@ export class ResVault {
     nextPassword: string,
   ): Promise<void> {
     const record = await this.#storage.load();
-    if (record === null) throw new VaultRejected("ResVault is not initialized");
+    if (record === null)
+      throw new VaultRejected("ResWallet is not initialized");
     const seed = await decryptSeed(record, currentPassword);
     try {
       await this.#storage.save(
@@ -146,7 +148,7 @@ export class ResVault {
   ): Promise<SignedIntent> {
     const { requestingOrigin, approved } = options;
     this.#lockIfTimedOut();
-    if (this.#seed === null) throw new VaultRejected("ResVault is locked");
+    if (this.#seed === null) throw new VaultRejected("ResWallet is locked");
     if (!approved)
       throw new VaultRejected("explicit wallet approval is required");
     if (

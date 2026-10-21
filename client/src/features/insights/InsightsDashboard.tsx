@@ -240,7 +240,7 @@ function CombinedProvenancePanel({
                 evidence.
               </p>
               <p>
-                This path has no write, ResVault, ResContract, trading, or
+                This path has no write, ResWallet, ResContract, trading, or
                 direct ResilientDB capability.
               </p>
             </>

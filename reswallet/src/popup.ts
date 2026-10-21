@@ -36,7 +36,7 @@ async function refresh(): Promise<void> {
     } else if (current.unlocked) {
       setStatus("Unlocked! Connect to Wallet for explicit approval.");
     } else {
-      setStatus("ResVault is Locked!", "locked");
+      setStatus("ResWallet is Locked!", "locked");
     }
   } catch (error) {
     setStatus(safeError(error), "error");
@@ -86,15 +86,15 @@ async function request<T = unknown>(message: object): Promise<T> {
       }
     | undefined;
   if (response === undefined)
-    throw new Error("ResVault background is unavailable");
+    throw new Error("ResWallet background is unavailable");
   if (!response.ok)
-    throw new Error(response.error ?? "ResVault request failed");
+    throw new Error(response.error ?? "ResWallet request failed");
   return response.result as T;
 }
 
 function element(id: string): HTMLElement {
   const value = document.getElementById(id);
-  if (value === null) throw new Error(`Missing ResVault element: ${id}`);
+  if (value === null) throw new Error(`Missing ResWallet element: ${id}`);
   return value;
 }
 
@@ -103,7 +103,7 @@ function input(id: string): HTMLInputElement {
 }
 
 function safeError(error: unknown): string {
-  return error instanceof Error ? error.message : "ResVault request failed";
+  return error instanceof Error ? error.message : "ResWallet request failed";
 }
 
 function setStatus(

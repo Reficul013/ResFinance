@@ -4,9 +4,9 @@ import {
   formatIntentTimestamp,
   hashParameters,
   parseWalletStatusNotice,
-} from "./resvault";
+} from "./reswallet";
 
-describe("ResVault page contract", () => {
+describe("ResWallet page contract", () => {
   it("hashes challenge parameters exactly like the extension and backend", async () => {
     await expect(
       hashParameters({
@@ -27,7 +27,7 @@ describe("ResVault page contract", () => {
   it("accepts only a complete public wallet-status notification", () => {
     expect(
       parseWalletStatusNotice({
-        source: "resvault",
+        source: "reswallet",
         version: 1,
         type: "STATUS_CHANGED",
         status: {
@@ -42,7 +42,7 @@ describe("ResVault page contract", () => {
     ).toMatchObject({ status: { exists: true, unlocked: true } });
     expect(
       parseWalletStatusNotice({
-        source: "resvault",
+        source: "reswallet",
         version: 1,
         type: "STATUS_CHANGED",
         status: { exists: true, unlocked: "yes", identity: null },

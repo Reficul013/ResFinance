@@ -6,19 +6,19 @@ describe("unlockErrorMessage", () => {
   it("uses a concise incorrect-password message for decryption failures", () => {
     expect(
       unlockErrorMessage(
-        new Error("password or encrypted ResVault seed is invalid"),
+        new Error("password or encrypted ResWallet seed is invalid"),
       ),
     ).toBe("Incorrect Password");
     expect(
       unlockErrorMessage(
-        new Error("ResVault password must be at least 12 characters"),
+        new Error("ResWallet password must be at least 12 characters"),
       ),
     ).toBe("Incorrect Password");
   });
 
   it("preserves operational errors", () => {
     expect(
-      unlockErrorMessage(new Error("ResVault background is unavailable")),
-    ).toBe("ResVault background is unavailable");
+      unlockErrorMessage(new Error("ResWallet background is unavailable")),
+    ).toBe("ResWallet background is unavailable");
   });
 });

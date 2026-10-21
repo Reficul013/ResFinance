@@ -15,7 +15,7 @@ import {
   subscribeWalletStatus,
   type WalletIdentity,
   type WalletStatus,
-} from "./resvault";
+} from "./reswallet";
 
 export type AuthenticationState =
   | "checking"
@@ -77,7 +77,7 @@ export function useAuthentication(): Authentication {
       setIdentity(null);
       setState("disconnected");
       setMessage(
-        "Install the ResVault extension to use wallet authentication.",
+        "Install the ResWallet extension to use wallet authentication.",
       );
     }
   }, [applyWalletStatus]);
@@ -114,11 +114,11 @@ export function useAuthentication(): Authentication {
     try {
       const status = await getWalletStatus();
       if (!status.exists || status.identity === null)
-        throw new Error("ResVault is not initialized.");
+        throw new Error("ResWallet is not initialized.");
       if (!status.unlocked) {
         setIdentity(status.identity);
         setState("locked");
-        setMessage("ResVault is Locked!");
+        setMessage("ResWallet is Locked!");
         return;
       }
       setIdentity(status.identity);
@@ -154,9 +154,9 @@ export function useAuthentication(): Authentication {
         error instanceof Error
           ? error.message
           : "Wallet authentication failed.";
-      if (errorMessage === "ResVault is locked") {
+      if (errorMessage === "ResWallet is locked") {
         setState("locked");
-        setMessage("ResVault is Locked!");
+        setMessage("ResWallet is Locked!");
       } else {
         setState("error");
         setMessage(errorMessage);
@@ -193,7 +193,7 @@ export function useAuthentication(): Authentication {
 
 function walletStatusMessage(status: WalletStatus): string {
   if (!status.exists || status.identity === null)
-    return "Initialize ResVault before connecting.";
-  if (!status.unlocked) return "ResVault is Locked!";
-  return "ResVault Unlocked! Connect to Wallet now.";
+    return "Initialize ResWallet before connecting.";
+  if (!status.unlocked) return "ResWallet is Locked!";
+  return "ResWallet Unlocked! Connect to Wallet now.";
 }

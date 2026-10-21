@@ -491,7 +491,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByRole("heading", { name: "ResFinance", level: 1 }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Connect ResVault" }),
+    page.getByRole("heading", { name: "Connect ResWallet" }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Your money, in one view." }),
@@ -507,7 +507,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByRole("heading", { name: "ResFinance", level: 1 }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Connect ResVault" }),
+    page.getByRole("heading", { name: "Connect ResWallet" }),
   ).toBeVisible();
   const loggedOutCard = page.locator(".auth-card");
   await expect(
@@ -714,7 +714,7 @@ test("voids transactions and deactivates recurring items through confirmed audit
   expect(deactivateRequest).toEqual({ expected_version: 9 });
 });
 
-test("updates the ResVault login guidance when the extension unlocks", async ({
+test("updates the ResWallet login guidance when the extension unlocks", async ({
   page,
 }) => {
   await page.route("**/api/v1/auth/refresh", async (route) => {
@@ -742,7 +742,7 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
       }
       window.postMessage(
         {
-          source: "resvault",
+          source: "reswallet",
           version: 1,
           request_id: request.request_id,
           ok: true,
@@ -756,7 +756,7 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
   await page.goto("/");
 
   const authCard = page.locator(".auth-card");
-  await expect(page.getByText("ResVault is Locked!")).toBeVisible();
+  await expect(page.getByText("ResWallet is Locked!")).toBeVisible();
   await expect(page.locator(".auth-status-bulb")).toBeVisible();
   await expect(authCard.locator(".auth-brand-logo-dark")).toBeVisible();
   await expect(
@@ -777,16 +777,16 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
   ).toBeDisabled();
 
   const helpButton = page.getByRole("button", {
-    name: "How to connect ResVault",
+    name: "How to connect ResWallet",
   });
   await helpButton.hover();
   await expect(page.getByRole("tooltip")).toContainText(
-    "Install and enable the hardened ResVault extension",
+    "Install and enable the hardened ResWallet extension",
   );
   await expect(page.getByRole("tooltip")).toContainText("Approve & Login");
   await page.waitForTimeout(200);
   await page.screenshot({
-    path: "test-results/resvault-login-help.png",
+    path: "test-results/reswallet-login-help.png",
     fullPage: false,
   });
 
@@ -805,7 +805,7 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
   await page.evaluate(() => {
     window.postMessage(
       {
-        source: "resvault",
+        source: "reswallet",
         version: 1,
         type: "STATUS_CHANGED",
         status: {
@@ -822,7 +822,7 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
   });
 
   await expect(
-    page.getByText("ResVault Unlocked! Connect to Wallet now."),
+    page.getByText("ResWallet Unlocked! Connect to Wallet now."),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Connect wallet" }),
@@ -830,7 +830,7 @@ test("updates the ResVault login guidance when the extension unlocks", async ({
   await page.mouse.move(0, 0);
   await expect(page.getByRole("tooltip")).not.toBeVisible();
   await page.screenshot({
-    path: "test-results/resvault-login-ready.png",
+    path: "test-results/reswallet-login-ready.png",
     fullPage: false,
   });
 });

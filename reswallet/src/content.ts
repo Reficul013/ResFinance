@@ -1,7 +1,7 @@
 import { ReconnectingPort } from "./reconnecting-port";
 
 const pageSource = "resfinance-page";
-const vaultSource = "resvault";
+const vaultSource = "reswallet";
 
 const port = new ReconnectingPort(
   () => {

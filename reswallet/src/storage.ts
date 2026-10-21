@@ -1,6 +1,6 @@
 import type { EncryptedSeedRecord, VaultStorage } from "./security/types";
 
-const STORAGE_KEY = "resvault.v1.encrypted_seed";
+const STORAGE_KEY = "reswallet.v1.encrypted_seed";
 
 export class ChromeVaultStorage implements VaultStorage {
   async load(): Promise<EncryptedSeedRecord | null> {

@@ -47,7 +47,7 @@ export interface SignIntentRequest {
 }
 
 interface VaultResponse<T> {
-  source: "resvault";
+  source: "reswallet";
   version: 1;
   request_id: string;
   ok: boolean;
@@ -56,7 +56,7 @@ interface VaultResponse<T> {
 }
 
 interface VaultStatusNotice {
-  source: "resvault";
+  source: "reswallet";
   version: 1;
   type: "STATUS_CHANGED";
   status: WalletStatus;
@@ -88,7 +88,7 @@ export function parseWalletStatusNotice(
 ): VaultStatusNotice | null {
   if (!isObject(value)) return null;
   if (
-    value.source !== "resvault" ||
+    value.source !== "reswallet" ||
     value.version !== 1 ||
     value.type !== "STATUS_CHANGED" ||
     !isWalletStatus(value.status)
@@ -134,7 +134,9 @@ function sendVaultRequest<T>(
     const timer = window.setTimeout(() => {
       window.removeEventListener("message", receive);
       reject(
-        new Error("ResVault did not respond. Install or unlock the extension."),
+        new Error(
+          "ResWallet did not respond. Install or unlock the extension.",
+        ),
       );
     }, timeoutMs);
     function receive(event: MessageEvent<unknown>): void {
@@ -142,7 +144,7 @@ function sendVaultRequest<T>(
         return;
       const response = event.data as Partial<VaultResponse<T>>;
       if (
-        response.source !== "resvault" ||
+        response.source !== "reswallet" ||
         response.version !== 1 ||
         response.request_id !== requestId
       ) {
@@ -151,7 +153,7 @@ function sendVaultRequest<T>(
       window.clearTimeout(timer);
       window.removeEventListener("message", receive);
       if (!response.ok) {
-        reject(new Error(response.error ?? "ResVault request failed"));
+        reject(new Error(response.error ?? "ResWallet request failed"));
         return;
       }
       resolve(response.result as T);

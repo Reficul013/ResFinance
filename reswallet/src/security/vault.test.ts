@@ -6,7 +6,7 @@ import type {
   SignIntentRequest,
   VaultStorage,
 } from "./types";
-import { ResVault } from "./vault";
+import { ResWallet } from "./vault";
 
 const ORIGIN = "https://app.resfinance.local";
 const PASSWORD = "correct horse battery staple";
@@ -53,11 +53,11 @@ async function request(
   };
 }
 
-describe("ResVault security core", () => {
+describe("ResWallet security core", () => {
   it("matches the backend RFC 8785 and Ed25519 compatibility vector", async () => {
     const now = Date.parse("2026-10-13T18:00:00Z");
     const storage = new MemoryStorage();
-    const vault = new ResVault(storage, {
+    const vault = new ResWallet(storage, {
       argon2: TEST_ARGON2,
       clock: () => now,
     });
@@ -95,7 +95,7 @@ describe("ResVault security core", () => {
   it("persists one Argon2id/AES-GCM record without password or plaintext seed", async () => {
     const storage = new MemoryStorage();
     const seed = Uint8Array.from({ length: 32 }, (_, index) => index + 1);
-    const vault = new ResVault(storage, { argon2: TEST_ARGON2 });
+    const vault = new ResWallet(storage, { argon2: TEST_ARGON2 });
 
     const identity = await vault.create(PASSWORD, seed);
     const encoded = JSON.stringify(storage.record);
@@ -120,9 +120,9 @@ describe("ResVault security core", () => {
 
   it("starts locked after restart and rejects signing until explicit unlock", async () => {
     const storage = new MemoryStorage();
-    const first = new ResVault(storage, { argon2: TEST_ARGON2 });
+    const first = new ResWallet(storage, { argon2: TEST_ARGON2 });
     await first.create(PASSWORD, new Uint8Array(32).fill(7));
-    const restarted = new ResVault(storage, { argon2: TEST_ARGON2 });
+    const restarted = new ResWallet(storage, { argon2: TEST_ARGON2 });
     const intent = await request(Date.now());
 
     await expect(
@@ -132,7 +132,7 @@ describe("ResVault security core", () => {
       }),
     ).rejects.toThrow("locked");
     await expect(restarted.unlock("incorrect password value")).rejects.toThrow(
-      "password or encrypted ResVault seed is invalid",
+      "password or encrypted ResWallet seed is invalid",
     );
     await restarted.unlock(PASSWORD);
     await expect(
@@ -150,7 +150,7 @@ describe("ResVault security core", () => {
   it("requires approval and rejects replay, tamper, origin, network, and expiry", async () => {
     let now = Date.parse("2026-10-13T18:00:00Z");
     const storage = new MemoryStorage();
-    const vault = new ResVault(storage, {
+    const vault = new ResWallet(storage, {
       argon2: TEST_ARGON2,
       clock: () => now,
       idleTimeoutMs: 30 * 60 * 1000,
@@ -216,7 +216,7 @@ describe("ResVault security core", () => {
   it("automatically locks after inactivity and clears on deletion", async () => {
     let now = 1_000_000;
     const storage = new MemoryStorage();
-    const vault = new ResVault(storage, {
+    const vault = new ResWallet(storage, {
       argon2: TEST_ARGON2,
       clock: () => now,
       idleTimeoutMs: 1_000,

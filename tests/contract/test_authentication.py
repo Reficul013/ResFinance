@@ -271,9 +271,9 @@ def test_unconfigured_application_fails_closed_for_authentication() -> None:
     assert response.status_code == 503
 
 
-def test_resvault_typescript_signature_matches_backend_rfc8785_verifier() -> None:
+def test_reswallet_typescript_signature_matches_backend_rfc8785_verifier() -> None:
     fixture_path = (
-        Path(__file__).parent / "fixtures" / "resvault-signed-intent.json"
+        Path(__file__).parent / "fixtures" / "reswallet-signed-intent.json"
     )
     fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
     intent_value = fixture["intent"]

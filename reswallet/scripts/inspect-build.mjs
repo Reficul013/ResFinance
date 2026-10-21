@@ -17,10 +17,10 @@ const expectedOrigins = [
   "http://127.0.0.1:5173/*",
 ];
 const expectedIcons = {
-  16: "icons/resvault-16.png",
-  32: "icons/resvault-32.png",
-  48: "icons/resvault-48.png",
-  128: "icons/resvault-128.png",
+  16: "icons/reswallet-16.png",
+  32: "icons/reswallet-32.png",
+  48: "icons/reswallet-48.png",
+  128: "icons/reswallet-128.png",
 };
 
 assert(
@@ -86,7 +86,7 @@ assert(
   "background bundle has no approval guard",
 );
 
-console.log("ResVault build inspection passed");
+console.log("ResWallet build inspection passed");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);

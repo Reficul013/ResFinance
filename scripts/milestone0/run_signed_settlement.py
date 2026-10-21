@@ -17,7 +17,7 @@ if str(REPOSITORY_ROOT) not in sys.path:
 from fastapi.testclient import TestClient  # noqa: E402
 
 from blockchain.adapter.rescontract_cli import DockerResContractGateway  # noqa: E402
-from blockchain.wallet.spike_signer import ResVaultSpikeSigner  # noqa: E402
+from blockchain.wallet.spike_signer import ResWalletSpikeSigner  # noqa: E402
 from server.app.api.settlement import create_app  # noqa: E402
 from server.app.application.settlement import (  # noqa: E402
     SettlementService,
@@ -61,7 +61,7 @@ def main() -> int:
     resource_id = f"group-m0-{uuid.uuid4().hex[:12]}"
     intent_id = f"intent-{uuid.uuid4().hex}"
     parameters = SettlementParameters(credit_units=125, expected_version=0)
-    intent = ResVaultSpikeSigner().sign_intent(
+    intent = ResWalletSpikeSigner().sign_intent(
         version=1,
         intent_id=intent_id,
         action="settlement.authorize",

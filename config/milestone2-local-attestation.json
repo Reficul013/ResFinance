@@ -3,7 +3,7 @@
   "completed_at_utc": "2026-10-14T06:18:03.403545+00:00",
   "scope": "local development only",
   "wallet": {
-    "implementation": "hardened ResVault-compatible Manifest V3 extension",
+    "implementation": "custom hardened ResWallet Manifest V3 extension",
     "upstream_reference_commit": "4de5cb43686276ace4307f44839a1de920ab524a",
     "encrypted_seed_format": "Argon2id plus AES-256-GCM",
     "private_material_returned_to_page": false,

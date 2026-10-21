@@ -1,8 +1,8 @@
-import { ResVault } from "./security/vault";
+import { ResWallet } from "./security/vault";
 import type { SignIntentRequest } from "./security/types";
 import { ChromeVaultStorage } from "./storage";
 
-const vault = new ResVault(new ChromeVaultStorage());
+const vault = new ResWallet(new ChromeVaultStorage());
 const pending = new Map<
   string,
   { request: SignIntentRequest; origin: string; port: chrome.runtime.Port }
@@ -14,7 +14,7 @@ chrome.runtime.onSuspend.addListener(() => {
   void broadcastVaultStatus();
 });
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === "resvault-auto-lock") {
+  if (alarm.name === "reswallet-auto-lock") {
     vault.lock();
     void broadcastVaultStatus();
   }
@@ -79,7 +79,7 @@ async function handlePageMessage(
     if (message.type === "GET_IDENTITY") {
       const identity = await vault.identity();
       port.postMessage({
-        source: "resvault",
+        source: "reswallet",
         version: 1,
         request_id: requestId,
         ok: true,
@@ -89,7 +89,7 @@ async function handlePageMessage(
     }
     if (message.type === "GET_STATUS") {
       port.postMessage({
-        source: "resvault",
+        source: "reswallet",
         version: 1,
         request_id: requestId,
         ok: true,
@@ -99,9 +99,9 @@ async function handlePageMessage(
     }
     if (message.type === "LOCK") {
       vault.lock();
-      await chrome.alarms.clear("resvault-auto-lock");
+      await chrome.alarms.clear("reswallet-auto-lock");
       port.postMessage({
-        source: "resvault",
+        source: "reswallet",
         version: 1,
         request_id: requestId,
         ok: true,
@@ -114,11 +114,11 @@ async function handlePageMessage(
       message.type !== "SIGN_INTENT" ||
       !isSignIntentRequest(message.intent)
     ) {
-      throw new Error("ResVault request is not supported");
+      throw new Error("ResWallet request is not supported");
     }
-    if (!vault.unlocked) throw new Error("ResVault is locked");
+    if (!vault.unlocked) throw new Error("ResWallet is locked");
     if (pending.has(requestId))
-      throw new Error("ResVault request ID is already pending");
+      throw new Error("ResWallet request ID is already pending");
     pending.set(requestId, { request: message.intent, origin, port });
     try {
       await openApprovalPopup(requestId, port.sender?.tab);
@@ -128,7 +128,7 @@ async function handlePageMessage(
     }
   } catch (error) {
     port.postMessage({
-      source: "resvault",
+      source: "reswallet",
       version: 1,
       request_id: requestId,
       ok: false,
@@ -139,7 +139,7 @@ async function handlePageMessage(
 
 async function handleExtensionMessage(message: unknown): Promise<unknown> {
   if (!isObject(message) || typeof message.type !== "string") {
-    throw new Error("ResVault extension request is invalid");
+    throw new Error("ResWallet extension request is invalid");
   }
   switch (message.type) {
     case "GET_STATUS":
@@ -177,12 +177,12 @@ async function handleExtensionMessage(message: unknown): Promise<unknown> {
     }
     case "LOCK":
       vault.lock();
-      await chrome.alarms.clear("resvault-auto-lock");
+      await chrome.alarms.clear("reswallet-auto-lock");
       await broadcastVaultStatus();
       return { locked: true };
     case "DELETE":
       await vault.delete();
-      await chrome.alarms.clear("resvault-auto-lock");
+      await chrome.alarms.clear("reswallet-auto-lock");
       await broadcastVaultStatus();
       return { deleted: true };
     case "APPROVAL_DETAILS": {
@@ -214,11 +214,11 @@ async function handleExtensionMessage(message: unknown): Promise<unknown> {
       if (!message.approved) {
         pending.delete(message.request_id);
         item.port.postMessage({
-          source: "resvault",
+          source: "reswallet",
           version: 1,
           request_id: message.request_id,
           ok: false,
-          error: "The signing request was rejected in ResVault.",
+          error: "The signing request was rejected in ResWallet.",
         });
         return { approved: false };
       }
@@ -229,7 +229,7 @@ async function handleExtensionMessage(message: unknown): Promise<unknown> {
         });
         await scheduleAutoLock();
         item.port.postMessage({
-          source: "resvault",
+          source: "reswallet",
           version: 1,
           request_id: message.request_id,
           ok: true,
@@ -237,7 +237,7 @@ async function handleExtensionMessage(message: unknown): Promise<unknown> {
         });
       } catch (error) {
         item.port.postMessage({
-          source: "resvault",
+          source: "reswallet",
           version: 1,
           request_id: message.request_id,
           ok: false,
@@ -250,7 +250,7 @@ async function handleExtensionMessage(message: unknown): Promise<unknown> {
       return { approved: true };
     }
     default:
-      throw new Error("ResVault extension request is not supported");
+      throw new Error("ResWallet extension request is not supported");
   }
 }
 
@@ -278,7 +278,7 @@ async function openApprovalPopup(
 async function walletStatus(): Promise<{
   exists: boolean;
   unlocked: boolean;
-  identity: Awaited<ReturnType<ResVault["identity"]>>;
+  identity: Awaited<ReturnType<ResWallet["identity"]>>;
 }> {
   return {
     exists: await vault.exists(),
@@ -290,7 +290,7 @@ async function walletStatus(): Promise<{
 async function postVaultStatus(port: chrome.runtime.Port): Promise<void> {
   try {
     port.postMessage({
-      source: "resvault",
+      source: "reswallet",
       version: 1,
       type: "STATUS_CHANGED",
       status: await walletStatus(),
@@ -305,7 +305,7 @@ async function broadcastVaultStatus(): Promise<void> {
 }
 
 async function scheduleAutoLock(): Promise<void> {
-  await chrome.alarms.create("resvault-auto-lock", { delayInMinutes: 5 });
+  await chrome.alarms.create("reswallet-auto-lock", { delayInMinutes: 5 });
 }
 
 function tabOrigin(url: string | undefined): string | null {
@@ -344,7 +344,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 function safeError(error: unknown): string {
-  return error instanceof Error ? error.message : "ResVault request failed";
+  return error instanceof Error ? error.message : "ResWallet request failed";
 }
 
 function hexToBytes(value: string): Uint8Array {

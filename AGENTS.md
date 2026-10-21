@@ -6,7 +6,7 @@ These instructions apply to the entire repository. Add a nested `AGENTS.md` only
 
 - Use `docs/architecture-implementation-plan.md` for architecture, security, data boundaries, milestone order, and acceptance criteria relevant to the current task.
 - Use `docs/project-spec.md` for product behavior and the end-to-end user journey.
-- When implementing or debugging ResilientDB, ResVault, or ResContract, consult `docs/development-references.md`, pin the exact upstream revision used, and validate documented behavior against the local stack.
+- When implementing or debugging ResilientDB, ResWallet, the upstream ResVault reference, or ResContract, consult `docs/development-references.md`, pin the exact upstream revision used, and validate documented behavior against the local stack.
 - Follow the dependency-ordered roadmap. Milestone 0 feasibility gates block dependent feature work when they fail; do not bypass a gate with a substitute technology.
 
 ## Product and architecture boundaries
@@ -15,7 +15,7 @@ These instructions apply to the entire repository. Add a nested `AGENTS.md` only
 - Crypto support is exactly `BTC | ETH | SOL` across domain types, APIs, providers, models, UI, fixtures, and tests.
 - USD is the only fiat denomination in V1. Store money as integer USD cents and crypto quantities/prices as validated decimal strings; never use binary floating point for monetary calculations.
 - Browser code communicates with application services only through generated REST clients under `/api/v1`. It must not contact ResilientDB, ResContract GraphQL, or contract CLI endpoints directly.
-- ResVault seeds and private keys never leave the extension. Contract-affecting actions require an explicitly approved, backend-verified signed intent.
+- ResWallet seeds and private keys never leave the extension. Contract-affecting actions require an explicitly approved, backend-verified signed intent.
 - ResContract is authoritative for obligations and settlement state. Finance changes only after confirmed contract state and receipts.
 - Group settlement uses internal, non-redeemable, non-monetary credits. V1 does not transfer fiat or native cryptocurrency, execute trades, or provide exchange custody.
 - Domain records are append-only, schema-versioned, idempotent, UTC-based, and reducer-rebuildable. Corrections append compensating events.

@@ -23,7 +23,7 @@ Non-negotiable boundaries:
 - No PostgreSQL, MongoDB, SQLite, DuckDB, Redis, Parquet-based persistence, or external object store.
 - Crypto support is hard-limited to `BTC | ETH | SOL` at API, ingestion, model, UI, and test boundaries.
 - Frontend-to-backend communication is REST under `/api/v1`.
-- ResVault performs authentication and signs contract-affecting actions.
+- ResWallet performs authentication and signs contract-affecting actions.
 - ResContract executes meaningful obligation and settlement-credit state transitions.
 - V1 does not transfer fiat or native cryptocurrency, execute trades, provide exchange custody, or claim that internal credits have monetary value.
 - The AI agent is read-only and cannot alter records, sign actions, settle obligations, or trade.
@@ -32,7 +32,7 @@ Non-negotiable boundaries:
 ## 2. Target Architecture
 
 ```text
-                         Reviewed ResVault extension
+                         Reviewed ResWallet extension
                       challenge + signed action intents
                                   │
 ┌─────────────────────────────────▼──────────────────────────────────┐
@@ -68,7 +68,7 @@ Non-negotiable boundaries:
 
 | Producer | Consumer | Contract |
 |---|---|---|
-| ResVault | All dashboards | Login challenge signing; explicit signatures for split approval, credit funding, and settlement |
+| ResWallet | All dashboards | Login challenge signing; explicit signatures for split approval, credit funding, and settlement |
 | Groups | Finance | Accepted obligations become receivables/payables; confirmed contract settlements update finance balances and savings |
 | Finance | Crypto | Versioned available-savings calculation provides the default investment amount |
 | Market/ML pipeline | Crypto | Immutable feature snapshots, forecasts, confidence intervals, and model provenance |
@@ -189,7 +189,7 @@ Milestone 0 will audit the pinned official ResVault implementation before choosi
 
 1. Use the pinned upstream implementation unchanged if it satisfies every key-isolation and signed-intent requirement.
 2. Maintain a minimal fork, documented by an architecture decision record, if narrowly scoped compatibility or security patches are required.
-3. Undertake a documented substantial hardening fork or ResVault-compatible redesign if the implementation cannot be made safe with a minimal patch. The larger effort must preserve the required ResVault behavior and pass the same security contract; complexity alone does not remove wallet-dependent functionality from scope.
+3. Build a documented custom ResWallet implementation if the upstream implementation cannot be made safe with a minimal patch. The larger effort must preserve the required wallet role and explicit approval behavior and pass the same security contract; complexity alone does not remove wallet-dependent functionality from scope.
 
 Whichever implementation is approved will:
 
@@ -282,7 +282,7 @@ AI agent:
 - Uses a pinned Hugging Face instruction model selected during the feasibility milestone from permissively licensed models small enough for the target VM.
 - May explain budgets, obligations, forecasts, gating, uncertainty, and portfolio allocations.
 - Returns structured `summary`, `evidence`, `caveats`, and `follow_up_questions`.
-- Cannot call mutation tools or access ResilientDB, ResContract, ResVault, or external trading systems directly.
+- Cannot call mutation tools or access ResilientDB, ResContract, ResWallet, or external trading systems directly.
 - Falls back to deterministic templates if evidence coverage or model confidence is insufficient.
 
 ## 3. ResilientDB Feasibility Conclusions
@@ -292,7 +292,7 @@ The integration is **conditionally feasible**, with mandatory validation before 
 - ResilientDB currently exposes KV, versioned history/range concepts, REST/GraphQL components, Python tooling, ResContract, and ResVault in the official Apache repository. However, the SDK/ORM surface is not mature enough to adopt directly as the domain persistence layer. ExpoLab needs a narrow, tested repository adapter. [Apache ResilientDB repository](https://github.com/apache/incubator-resilientdb/blob/master/README.md)
 - Some advertised or older “read all” behavior is not reliable in the current KV HTTP implementation. Queries must use known deterministic keys and prefix ranges. [Current KV service implementation](https://github.com/apache/incubator-resilientdb/blob/master/service/tools/kv/api_tools/kv_service_tools.cpp)
 - ResContract can create, compile, deploy, and execute Solidity contracts, but its service boundary does not provide the required wallet-signature verification. Self-hosting, network isolation, and the signed-intent gateway are therefore mandatory. [ResContract source](https://github.com/apache/incubator-resilientdb/tree/master/ecosystem/smart-contract/rescontract)
-- ResVault must pass the pinned-source key-isolation audit before its implementation is accepted. Upstream reuse is preferred when it passes; otherwise the project will implement the evidence-backed minimal patch or, when necessary, a documented substantial hardening fork or compatible redesign. Wallet-dependent functionality remains in scope under every outcome. [ResVault source](https://github.com/apache/incubator-resilientdb/tree/master/ecosystem/tools/resvault)
+- The upstream ResVault source must pass the pinned-source key-isolation audit before any code reuse is accepted. Because it failed, the project implements the evidence-backed custom ResWallet architecture. Wallet-dependent functionality remains in scope. [ResVault source](https://github.com/apache/incubator-resilientdb/tree/master/ecosystem/tools/resvault)
 - ResSQL is excluded because its implementation is DuckDB-based and conflicts with the sole-database constraint.
 - A four-replica local Docker setup is suitable for development but does not provide independent Byzantine fault domains. No cloud or production resilience claim will be made while deployment is on hold.
 - Large model artifacts remain feasible only if the chunked round-trip spike succeeds. No fallback database or object store is permitted.
@@ -304,7 +304,7 @@ Go/no-go validation must prove:
 1. Commit, get, prefix range, history/version, restart durability, and one-replica failure behavior.
 2. A 100 MB checkpoint can be persisted as 256 KiB logical chunks and reconstructed with identical SHA-256. A CLI-based spike may segment each logical chunk into transport-safe records (64 KiB was required by the local process argument limit); the production adapter must preserve the logical manifest and prove its selected binary or segmented transport.
 3. A Solidity contract can be compiled, deployed, executed, queried, and restarted on the pinned stack.
-4. A signed ResVault settlement travels through REST, passes backend verification, changes contract state, and produces a ResilientDB finance event.
+4. A signed ResWallet settlement travels through REST, passes backend verification, changes contract state, and produces a ResilientDB finance event.
 5. The browser page, network traffic, server, and logs never receive a private key or seed.
 6. BTC/ETH/SOL provider samples and the fixed research-period data can be acquired with recorded license/provenance.
 7. If any test fails, work stops at the adapter or upstream integration layer; another persistent database is not introduced.
@@ -316,8 +316,8 @@ Go/no-go validation must prove:
 Milestone 0 implementations are narrow, disposable feasibility spikes unless a later milestone explicitly adopts them. They must exercise the real pinned boundaries and preserve every security and storage invariant, but they do not need the complete product UI, domain breadth, or operational hardening assigned to later milestones. Passing a spike proves that the dependency can support the planned design; it does not replace the maintainable implementation or tests required by Milestones 1–9.
 
 - Populate the root `AGENTS.md` and add reviewed architecture, feasibility, REST-contract, security, and research-protocol documents.
-- Pin the ResilientDB, ResContract, ResVault, compiler, Python, Node, and model revisions.
-- Audit the pinned official ResVault implementation and record whether unchanged upstream use, a minimal fork, or a substantial documented hardening effort is warranted.
+- Pin the ResilientDB, ResContract, upstream ResVault reference, ResWallet dependencies, compiler, Python, Node, and model revisions.
+- Audit the pinned official ResVault implementation and record whether unchanged upstream use, a minimal fork, or a custom ResWallet implementation is warranted.
 - Build a reproducible local ResilientDB artifact from the pinned source and use it for the real-stack gates; an unattested public image is insufficient.
 - Implement only the minimum secure signing and REST-to-contract-to-event vertical slice needed to prove the signed-settlement boundary. No spike may expose a private key, bypass intent verification, or introduce substitute persistence.
 - Run all seven go/no-go tests above.
@@ -339,7 +339,7 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 
 **Status:** complete for local development; evidence is recorded in [`milestone2-wallet-authentication.md`](milestone2-wallet-authentication.md).
 
-- Implement the Milestone 0 ResVault audit decision: use the pinned upstream implementation unchanged when it passes, apply the approved minimal patches when sufficient, or complete the documented substantial hardening fork or compatible redesign when required.
+- Implement the Milestone 0 ResVault audit decision by completing the documented custom ResWallet extension required by the failed audit.
 - Implement challenge login, in-memory access tokens, refresh-session hashes in ResilientDB, logout/revocation, address derivation, and signed-intent verification.
 - Add replay, tamper, expiry, wrong-origin, wrong-network, and locked-wallet defenses.
 
@@ -409,7 +409,7 @@ Milestone 0 implementations are narrow, disposable feasibility spikes unless a l
 **Status:** complete for local development and research. The first provider-data candidate remains rejected; the later predeclared untouched-forward candidate passed the unchanged gate and its live recommendation passed the real-stack browser journey. Evidence is recorded in [`milestone9-local-handoff.md`](milestone9-local-handoff.md), with operating instructions in [`milestone9-local-operator-guide.md`](milestone9-local-operator-guide.md).
 
 - Package a one-command local startup with preflight checks, bounded health waits, status, clean shutdown, and an explicitly confirmed reset path.
-- Prove one continuous, non-mocked browser journey through the real ResVault extension, React client, FastAPI API, four-replica ResilientDB stack, ResContract, local workers, and read-only AI path.
+- Prove one continuous, non-mocked browser journey through the real ResWallet extension, React client, FastAPI API, four-replica ResilientDB stack, ResContract, local workers, and read-only AI path.
 - Provide isolated multi-wallet browser profiles and deterministic non-secret fixtures for Finance, Groups, settlement, Crypto, notifications, and Smart Insights.
 - Run approved full-scale BTC/ETH/SOL research and promote a forecast only if it passes the existing immutable evaluation criteria. Never weaken the gate merely to complete the milestone.
 - Produce an operator handoff covering prerequisites, resource requirements, model/data provisioning, troubleshooting, restart recovery, cleanup, known limitations, and acceptance evidence.
@@ -420,7 +420,7 @@ The approved completion iteration adds these five required work packages:
 2. Write the immutable `research.model-promoted` event only after that candidate passes the unchanged promotion gate. A rejected or incomplete run cannot be promoted.
 3. Ingest current BTC/ETH/SOL provider observations under `available_at` point-in-time rules, freeze the promoted final model, generate current 15-day returns, upside probabilities, and uncertainty intervals, and persist a forecast snapshot linked to the exact dataset, model artifact, research run, and promotion event.
 4. Prove the normal Crypto dashboard recommendation path, exact-cent allocation reconciliation, Finance-derived default savings, non-mutating `Analyze Another Amount`, and fail-closed behavior for stale, corrupted, or unpromoted forecasts.
-5. Repeat the complete Python, client, ResVault, build, lint, type-check, and real two-wallet/restart acceptance suites. Mark Milestone 9 complete only after the live recommendation succeeds through the real local stack.
+5. Repeat the complete Python, client, ResWallet, build, lint, type-check, and real two-wallet/restart acceptance suites. Mark Milestone 9 complete only after the live recommendation succeeds through the real local stack.
 
 **Acceptance:** after documented prerequisites, one command starts the complete local stack and reaches healthy state; the predeclared untouched-forward evaluation passes the unchanged promotion criteria; an immutable promotion and provenance-complete current-cutoff snapshot exist; and a real-browser test without API interception completes the wallet-authenticated Finance → Groups → settlement → Finance → Crypto recommendation → non-mutating scenario → Insights journey, including exact-cent allocation and controlled restart. Stale, corrupted, and unpromoted forecast inputs must fail closed. If any condition fails, the safe gated state remains correct but Milestone 9 remains incomplete.
 
@@ -472,7 +472,7 @@ It will establish these development conventions and non-negotiable rules:
 - Only BTC, ETH, and SOL may appear in crypto domain types, providers, models, UI, or fixtures.
 - Browser code communicates with application services only through generated REST clients.
 - No browser code may contact ResilientDB, ResContract GraphQL, or contract CLI endpoints.
-- ResVault seeds/private keys never leave the extension; contract-affecting commands require a verified signed intent.
+- ResWallet seeds/private keys never leave the extension; contract-affecting commands require a verified signed intent.
 - Contract state is authoritative for obligations and settlements; Finance changes only from confirmed receipts.
 - Sensitive values are encrypted before ResilientDB; secrets, private keys, raw passwords, and PII never enter logs.
 - Domain records are append-only, schema-versioned, idempotent, UTC-based, and reducer-rebuildable.
@@ -498,7 +498,7 @@ It will establish these development conventions and non-negotiable rules:
 - Group settlement uses internal, non-redeemable ledger credits; no fiat, native BTC/ETH/SOL, or token transfer occurs.
 - Free-first data adapters are the default, with provider variability accepted and recorded.
 - Research baseline dates are fixed; live inference uses the latest completed UTC day.
-- ResVault and ResContract are pinned and self-hosted. ResVault is used unchanged only if the Milestone 0 audit proves it meets the security contract; otherwise an explicitly documented minimal or substantial hardening implementation is maintained, according to the evidence.
+- ResWallet dependencies and ResContract are pinned and self-hosted. The upstream ResVault reference remains pinned for audit provenance; ResWallet is maintained as the custom ResFinance implementation selected by ADR 0001.
 - Cloud and production deployment are on hold. No cloud topology, provider, or operational service is currently approved.
 - If deployment is resumed, four ResilientDB replicas across independent failure domains remain a prerequisite, not a current implementation claim.
 - Any future operational logging service may contain operational logs only; all application audit records must remain in ResilientDB.

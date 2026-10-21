@@ -35,8 +35,8 @@ export function AuthCard({
           <button
             className="auth-help-button"
             type="button"
-            aria-label="How to connect ResVault"
-            aria-describedby="resvault-login-help"
+            aria-label="How to connect ResWallet"
+            aria-describedby="reswallet-login-help"
           >
             <svg
               className="auth-help-icon"
@@ -62,16 +62,16 @@ export function AuthCard({
           </button>
           <div
             className="auth-help-popover"
-            id="resvault-login-help"
+            id="reswallet-login-help"
             role="tooltip"
           >
             <strong>How to connect</strong>
             <ol>
               <li>
-                Install and enable the hardened ResVault extension for wallet
+                Install and enable the hardened ResWallet extension for wallet
                 authentication.
               </li>
-              <li>Open ResVault extension &amp; unlock your wallet.</li>
+              <li>Open ResWallet extension &amp; unlock your wallet.</li>
               <li>
                 Return here, select <b>Connect wallet</b>, then choose{` `}
                 <b>Approve &amp; Login</b>.
@@ -106,7 +106,7 @@ export function AuthCard({
                 ResFinance
               </button>
             ) : (
-              "Connect ResVault"
+              "Connect ResWallet"
             )}
           </h2>
           <p className="auth-message">
