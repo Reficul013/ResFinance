@@ -14,11 +14,11 @@ readiness.
 ## Cross-dashboard integration evidence
 
 - The authenticated shell exposes Personal Finance, Friends & Groups, and
-  Crypto Investments as the three primary dashboards. Smart Savings Insights is
-  embedded in Personal Finance instead of becoming a fourth dashboard.
+  Crypto Intelligence as the three primary dashboards. Smart Savings Insights
+  is embedded in Personal Finance instead of becoming a fourth dashboard.
 - Wallet-scoped notifications link budget alerts, Group updates, and Crypto
-  forecast status to the relevant dashboard without granting the notification
-  or AI path write authority.
+  Intelligence forecast status to the relevant dashboard without granting the
+  notification or AI path write authority.
 - The shared header presents ResFinance branding, primary dashboard navigation,
   repository access, theme control, notifications, and logout. Brand selection
   and logout revoke the session and return to the ResWallet welcome screen.
@@ -29,7 +29,8 @@ readiness.
   journey.
 - The connected journey preserves the domain direction: Groups updates Finance
   only after confirmed ResContract state; Finance supplies the default Crypto
-  amount; scenarios do not mutate Finance; Smart Insights remains read-only.
+  Intelligence amount; scenarios do not mutate Finance; Smart Insights remains
+  read-only.
 - Chromium coverage exercised navigation, notification links, responsive
   layout, theme/session behavior, provenance presentation, and the embedded
   Insights experience.
@@ -200,7 +201,7 @@ returns, upside probabilities, intervals, and 60-day price history.
 | Criterion | Result | Evidence |
 |---|---|---|
 | One-command bounded startup and lifecycle | Pass | Hash-verified model startup reached both health endpoints; lifecycle-owned status passed. |
-| Continuous real ResWallet/browser/full-stack journey | Pass | Two profiles exercised Finance, Groups, ResContract, the promoted Crypto recommendation and scenario, deterministic Insights fallback, tamper/replay defenses, restart, and logout without API interception. |
+| Continuous real ResWallet/browser/full-stack journey | Pass | Two profiles exercised Finance, Groups, ResContract, the promoted Crypto Intelligence recommendation and scenario, deterministic Insights fallback, tamper/replay defenses, restart, and logout without API interception. |
 | Restart persistence and projection rebuild | Pass | The settled obligation remained at `$0.00 outstanding` after the controlled stack restart. |
 | Observable ingestion and reconciliation jobs | Pass | A reconciliation of the settled acceptance group completed with zero duplicate events; running/terminal records read back from ResilientDB. |
 | Full non-smoke provider research | Pass | The attested GDELT bytes were recovered from preserved ResilientDB state; the 5,184-row provider dataset completed all five folds and persisted 39 encrypted artifacts. |
@@ -243,5 +244,5 @@ The final Milestone 7 work completed as follows:
 1. The validation-calibrated adaptive-gating candidate passed the untouched forward protocol frozen in [`research-protocol.md`](research-protocol.md), with MAE equal to naive and coverage above 70 percent.
 2. The immutable `research.model-promoted` event was appended only after that pass, with `forecast-promotion-v1` unchanged.
 3. Provider observations reached the current cutoff under `available_at` rules; the frozen checkpoint generated and persisted the linked 15-day snapshot.
-4. The normal Crypto UI rendered that snapshot; allocations reconciled to exact cents; Finance savings remained the default; `Analyze Another Amount` remained non-mutating; and stale, corrupted, and unpromoted inputs failed closed.
+4. The normal Crypto Intelligence UI rendered that snapshot; allocations reconciled to exact cents; Finance savings remained the default; `Analyze Another Amount` remained non-mutating; and stale, corrupted, and unpromoted inputs failed closed.
 5. The upgraded real two-wallet/restart acceptance passed. The complete suite rerun below is the final repository-level evidence.

@@ -1,6 +1,6 @@
 # REST API Contract
 
-Status: Milestones 2–7 authentication, Finance, Groups, contractual settlement, Crypto portfolio, read-only AI, and integration boundaries implemented for local development
+Status: Milestones 2–7 authentication, Finance, Groups, contractual settlement, Crypto Intelligence portfolio, read-only AI, and integration boundaries implemented for local development
 
 ## Boundary
 
@@ -118,7 +118,7 @@ weights, exact integer-cent allocations, and a no-trading warning.
 
 - `GET /api/v1/insights/overview?month=YYYY-MM` returns a wallet-authorized,
   content-addressed fact bundle, an initial Smart Savings Insight, and in-app
-  notifications linking to Finance, Groups, or Crypto.
+  notifications linking to Finance, Groups, or Crypto Intelligence.
 - `POST /api/v1/insights/query` accepts a month and a question of at most 500
   characters. The POST is computational only: it appends no event and changes
   no projection.

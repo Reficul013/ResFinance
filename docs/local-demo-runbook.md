@@ -37,8 +37,9 @@ Recommended presentation time: 15–20 minutes.
 - ResContract is authoritative for shared obligations, internal-credit
   funding, settlements, and receipts.
 - Confirmed group activity flows back into Personal Finance.
-- The Crypto dashboard accepts exactly BTC, ETH, and SOL, uses Finance savings
-  as its default capital, and reconciles allocations to exact USD cents.
+- The Crypto Intelligence dashboard accepts exactly BTC, ETH, and SOL, uses
+  Finance savings as its default capital, and reconciles allocations to exact
+  USD cents.
 - A forecast is visible only when an immutable promotion event and its dataset,
   run, model, and snapshot provenance all validate.
 - **Analyze Another Amount** changes only the on-screen scenario and never
@@ -50,8 +51,8 @@ Recommended presentation time: 15–20 minutes.
 
 The accepted Milestone 7 snapshot is valid through
 `2026-10-17T00:00:00Z`, which is October 16 at 5:00 PM Pacific. After expiry,
-the Crypto dashboard intentionally fails closed and stops producing a
-recommendation.
+the Crypto Intelligence dashboard intentionally fails closed and stops
+producing a recommendation.
 
 For a demo after that time, do not backdate the computer, weaken freshness
 checks, insert a synthetic forecast, or edit the attestation. A refresh-only
@@ -226,7 +227,7 @@ Show:
 
 Call out `finance-savings-v1` and the source-event count. Explain that money is
 stored as integer USD cents and that the displayed `$4,000.00` becomes the
-default Crypto capital later in the demo.
+default Crypto Intelligence capital later in the demo.
 
 ### Part C — Friends & Groups and ResContract
 
@@ -284,9 +285,9 @@ Return to the Owner's Finance view and point out the confirmed contractual
 receipt or obligation projection. Explain that Finance changes only after
 confirmed ResContract state.
 
-### Part D — Crypto forecast and exact-cent portfolio
+### Part D — Crypto Intelligence forecast and exact-cent portfolio
 
-In the Owner profile, open **Crypto**.
+In the Owner profile, open **Crypto Intelligence**.
 
 Complete the risk questionnaire using the default middle answer (`2`) for each
 question, then choose **Save risk profile**. This produces score `50`.
@@ -372,7 +373,8 @@ Show that:
 - the session can recover;
 - **Demo Dinner** remains settled at `$0.00 outstanding`;
 - Finance records remain present;
-- the promoted Crypto recommendation remains available while fresh; and
+- the promoted Crypto Intelligence recommendation remains available while
+  fresh; and
 - projections rebuild from persisted records.
 
 Use `restart`, not `reset`.
@@ -396,7 +398,7 @@ Close with this boundary:
 | 2 minutes | ResWallet authentication and security boundary   |
 | 3 minutes | Personal Finance                                |
 | 4 minutes | Group expense, approval, and settlement         |
-| 3 minutes | Crypto forecast, risk, allocation, and scenario |
+| 3 minutes | Crypto Intelligence forecast, risk, allocation, and scenario |
 | 2 minutes | Smart Insights, refusal, and closing boundaries |
 
 Run restart persistence as an additional 2–3 minute technical proof when time
@@ -415,7 +417,7 @@ Complete this checklist 30–60 minutes before presenting:
 - [ ] The Member public address is available in the presenter notes.
 - [ ] Finance totals match the planned demo amounts.
 - [ ] The forecast has not expired.
-- [ ] The Crypto dashboard displays the promoted 15-day forecast.
+- [ ] The Crypto Intelligence dashboard displays the promoted 15-day forecast.
 - [ ] The deterministic Smart Insights fallback responds quickly.
 - [ ] Notifications and approval popups are visible on the presentation screen.
 - [ ] Browser zoom is comfortable for the audience.
@@ -441,7 +443,7 @@ those commands over reinstalling dependencies or rebuilding images mid-demo.
 Wait for the current group projection to finish rendering, then submit a new
 action and approve the newly generated intent.
 
-### Crypto shows no recommendation
+### Crypto Intelligence shows no recommendation
 
 Check these in order:
 

@@ -71,6 +71,9 @@ test("shows the promotion gate and records a versioned risk profile", async ({
   await page.goto("/crypto");
 
   await expect(
+    page.getByRole("link", { name: "Crypto Intelligence", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
     page.getByRole("heading", { name: "Savings, translated into choices." }),
   ).toBeVisible();
   await expect(page.getByText("$2,700.00", { exact: true })).toBeVisible();

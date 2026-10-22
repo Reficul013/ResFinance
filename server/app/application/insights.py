@@ -499,7 +499,7 @@ class InsightsService:
                 InsightNotification(
                     notification_id="notice:crypto.forecast.gated",
                     severity="info",
-                    title="Crypto analysis is gated",
+                    title="Crypto Intelligence is gated",
                     message=gated.statement,
                     href="/crypto",
                     fact_ids=(gated.fact_id,),

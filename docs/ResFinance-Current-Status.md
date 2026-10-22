@@ -1,6 +1,6 @@
 # ResFinance Current Status
 
-Last updated: 2026-10-21
+Last updated: 2026-10-22
 
 ResFinance uses the eight-milestone convention in
 [`milestones/milestones.md`](milestones/milestones.md). Milestones 1–7 are complete for the
@@ -124,7 +124,7 @@ Evidence:
 Evidence:
 [`milestones/milestone5-crypto-intelligence-research.md`](milestones/milestone5-crypto-intelligence-research.md).
 
-## Milestone 6: Crypto Intelligence — Risk, Portfolio & Crypto Dashboard
+## Milestone 6: Crypto Intelligence — Risk & Portfolio Dashboard
 
 **Status:** Complete for local development.
 
@@ -134,8 +134,8 @@ Evidence:
   scenarios.
 - Implemented Ledoit-Wolf covariance, 15-day scaling, positive-semidefinite
   repair, CLARABEL/SCS solving, and a constrained minimum-variance fallback.
-- Delivered the Crypto dashboard and fail-closed handling for stale, synthetic,
-  corrupted, or unpromoted forecast inputs.
+- Delivered the Crypto Intelligence dashboard and fail-closed handling for
+  stale, synthetic, corrupted, or unpromoted forecast inputs.
 
 Evidence:
 [`milestones/milestone6-crypto-intelligence-dashboard.md`](milestones/milestone6-crypto-intelligence-dashboard.md).
@@ -146,12 +146,12 @@ Evidence:
 
 - Completed shared navigation, wallet-scoped notifications, theme and session
   behavior, provenance presentation, and the connected Finance → Groups →
-  Crypto → Smart Insights journey.
-- The authenticated header keeps Finance, Groups, and Crypto as the three
-  primary tabs; groups repository access, theme, notifications, and logout at
-  the right; defaults new sessions to Dark Mode; preserves an explicit Light
-  Mode preference; and returns to the ResWallet welcome screen after brand
-  selection or logout.
+  Crypto Intelligence → Smart Insights journey.
+- The authenticated header keeps Personal Finance, Friends & Groups, and
+  Crypto Intelligence as the three primary tabs; groups repository access,
+  theme, notifications, and logout at the right; defaults new sessions to Dark
+  Mode; preserves an explicit Light Mode preference; and returns to the
+  ResWallet welcome screen after brand selection or logout.
 - Added bounded preflight, start, status, restart, logs, stop, and confirmed
   reset operations; explicit ingestion and reconciliation workers; an operator
   guide; and a continuous real two-wallet Chromium journey over ResWallet,

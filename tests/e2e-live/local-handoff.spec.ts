@@ -63,7 +63,9 @@ test("real ResWallet and services preserve the local journey through restart", a
     );
 
     const cryptoProjection = waitForGet(ownerPage, /\/crypto\/overview\?/);
-    await ownerPage.getByRole("link", { name: "Crypto" }).click();
+    await ownerPage
+      .getByRole("link", { name: "Crypto Intelligence", exact: true })
+      .click();
     const crypto = (await (await cryptoProjection).json()) as {
       default_capital: { minor_units: number };
       savings_formula_version: string;
@@ -159,7 +161,9 @@ test("real ResWallet and services preserve the local journey through restart", a
     await selectGroup(ownerPage, groupName);
     await expect(ownerPage.getByText("$0.00 outstanding")).toBeVisible();
     await expect(ownerPage.getByText("settled", { exact: true })).toBeVisible();
-    await ownerPage.getByRole("link", { name: "Crypto" }).click();
+    await ownerPage
+      .getByRole("link", { name: "Crypto Intelligence", exact: true })
+      .click();
     await expect(
       ownerPage.getByRole("heading", { name: "Portfolio allocation" }),
     ).toBeVisible();

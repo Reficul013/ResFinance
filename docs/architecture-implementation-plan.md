@@ -2,7 +2,7 @@
 
 Status: Approved planning baseline for local implementation; cloud deployment is on hold
 
-Last reviewed: 2026-10-21
+Last reviewed: 2026-10-22
 
 Implementation status: Milestones 1–7 passed for local development and research under the canonical convention in [`milestones/milestones.md`](milestones/milestones.md). Milestone 7 includes cross-dashboard integration, the local lifecycle, explicit workers, operator guide, continuous real-service browser proof, the original provider-data research run, and the predeclared untouched-forward completion protocol. The validation-locked candidate abstained to the naive return forecast, tied its forward MAE, exceeded required interval coverage, passed the unchanged immutable gate, and published a provenance-complete current-cutoff snapshot. Milestone 8 production hardening and deployment remains on hold.
 
@@ -14,7 +14,7 @@ ResFinance is a wallet-authenticated finance platform with three interconnected 
 
 1. **Personal Finance** — income, expenses, budgets, savings, receivables, payables, and financial insights.
 2. **Friends & Groups** — shared expenses, participant approval, obligations, internal-credit settlements, and immutable receipts.
-3. **Crypto Investments** — BTC, ETH, and SOL market analysis, forecasts, risk profiling, portfolio allocation, scenarios, and AI explanations.
+3. **Crypto Intelligence** — BTC, ETH, and SOL market analysis, forecasts, risk profiling, portfolio allocation, scenarios, and AI explanations.
 4. **Smart Insights** — wallet-authorized, evidence-linked explanations and cross-dashboard notifications without write or wallet authority, embedded beneath Personal Finance rather than exposed as a fourth dashboard tab.
 
 Non-negotiable boundaries:
@@ -40,7 +40,7 @@ Non-negotiable boundaries:
 │ Shared shell                                                      │
 │ ├── Personal Finance                                              │
 │ ├── Friends & Groups                                              │
-│ └── Crypto Investments                                            │
+│ └── Crypto Intelligence                                         │
 │ REST client generated from OpenAPI; no direct database/GraphQL    │
 └───────────────────────────────┬────────────────────────────────────┘
                                 │ HTTPS REST /api/v1
@@ -70,15 +70,15 @@ Non-negotiable boundaries:
 |---|---|---|
 | ResWallet | All dashboards | Login challenge signing; explicit signatures for split approval, credit funding, and settlement |
 | Groups | Finance | Accepted obligations become receivables/payables; confirmed contract settlements update finance balances and savings |
-| Finance | Crypto | Versioned available-savings calculation provides the default investment amount |
-| Market/ML pipeline | Crypto | Immutable feature snapshots, forecasts, confidence intervals, and model provenance |
+| Finance | Crypto Intelligence | Versioned available-savings calculation provides the default investment amount |
+| Market/ML pipeline | Crypto Intelligence | Immutable feature snapshots, forecasts, confidence intervals, and model provenance |
 | Risk profile | Portfolio optimizer | Converts the user score into a versioned risk-aversion and allocation policy |
 | All three domains | AI agent | Read-only fact bundle with record IDs, timestamps, and provenance |
-| Crypto scenario | Finance | No mutation; an alternate amount only changes the scenario response |
+| Crypto Intelligence scenario | Finance | No mutation; an alternate amount only changes the scenario response |
 
 ### Frontend
 
-- Shared authenticated shell with `/finance`, `/groups`, and `/crypto`; settings are shared UI, not a fourth dashboard.
+- Shared authenticated shell with Personal Finance (`/finance`), Friends & Groups (`/groups`), and Crypto Intelligence (`/crypto`); settings are shared UI, not a fourth dashboard.
 - React Router, TanStack Query, generated OpenAPI TypeScript types, React Hook Form, and Zod.
 - Shadcn/UI and Tailwind for accessible, responsive components.
 - Recharts for budgets, cash flow, allocations, risk, and forecast evaluation.
@@ -356,7 +356,7 @@ Feasibility implementations are narrow, disposable spikes unless the platform fo
 
 - Implement income/expense events, the fixed direction-aware category catalog, budgets, recurring entries, summaries, savings calculation, and receivable/payable projections.
 - Build accessible charts, validation, empty/loading/error states, provenance views, and confirmed per-record correction actions that append void or deactivation events without deleting history.
-- Version the savings formula used by Crypto.
+- Version the savings formula used by Crypto Intelligence.
 - Benchmark and pin the local Hugging Face instruction model.
 - Implement wallet-authorized fact bundles, evidence-linked selection, refusal rules, deterministic template fallback, prompt-injection defenses, and embedded Smart Savings Insights.
 
@@ -390,7 +390,7 @@ Feasibility implementations are narrow, disposable spikes unless the platform fo
 
 **Research acceptance:** repeated CPU smoke runs have identical dataset/prediction hashes; full runs retain complete provenance; adaptive gating is reported against every required baseline without overstating statistical significance.
 
-### Milestone 6: Crypto Intelligence — Risk, Portfolio & Crypto Dashboard
+### Milestone 6: Crypto Intelligence — Risk & Portfolio Dashboard
 
 **Status:** complete for local development and synthetic acceptance; evidence is recorded in [`milestones/milestone6-crypto-intelligence-dashboard.md`](milestones/milestone6-crypto-intelligence-dashboard.md). No forecast is available to the normal runtime until a Milestone 5 model passes promotion.
 
@@ -405,13 +405,13 @@ Feasibility implementations are narrow, disposable spikes unless the platform fo
 
 - Complete cross-dashboard navigation and in-app notifications.
 
-**Cross-dashboard acceptance:** the authenticated shell connects Finance, Groups, Crypto, notifications, Smart Insights, session lifecycle, and provenance views without adding a fourth dashboard.
+**Cross-dashboard acceptance:** the authenticated shell connects Personal Finance, Friends & Groups, Crypto Intelligence, notifications, Smart Insights, session lifecycle, and provenance views without adding a fourth dashboard.
 
 #### Local Handoff work
 
 - Package a one-command local startup with preflight checks, bounded health waits, status, clean shutdown, and an explicitly confirmed reset path.
 - Prove one continuous, non-mocked browser journey through the real ResWallet extension, React client, FastAPI API, four-replica ResilientDB stack, ResContract, local workers, and read-only AI path.
-- Provide isolated multi-wallet browser profiles and deterministic non-secret fixtures for Finance, Groups, settlement, Crypto, notifications, and Smart Insights.
+- Provide isolated multi-wallet browser profiles and deterministic non-secret fixtures for Finance, Groups, settlement, Crypto Intelligence, notifications, and Smart Insights.
 - Run approved full-scale BTC/ETH/SOL research and promote a forecast only if it passes the existing immutable evaluation criteria. Never weaken the gate merely to complete the milestone.
 - Produce an operator handoff covering prerequisites, resource requirements, model/data provisioning, troubleshooting, restart recovery, cleanup, known limitations, and acceptance evidence.
 
@@ -420,10 +420,10 @@ The approved completion iteration adds these five required work packages:
 1. Develop a predeclared adaptive-gating candidate on a revised protocol with an untouched forward holdout. Its adaptive MAE must be no worse than naive and its interval coverage must be at least 70 percent. The already-observed five-fold test results may not be used for model or calibration selection.
 2. Write the immutable `research.model-promoted` event only after that candidate passes the unchanged promotion gate. A rejected or incomplete run cannot be promoted.
 3. Ingest current BTC/ETH/SOL provider observations under `available_at` point-in-time rules, freeze the promoted final model, generate current 15-day returns, upside probabilities, and uncertainty intervals, and persist a forecast snapshot linked to the exact dataset, model artifact, research run, and promotion event.
-4. Prove the normal Crypto dashboard recommendation path, exact-cent allocation reconciliation, Finance-derived default savings, non-mutating `Analyze Another Amount`, and fail-closed behavior for stale, corrupted, or unpromoted forecasts.
+4. Prove the normal Crypto Intelligence recommendation path, exact-cent allocation reconciliation, Finance-derived default savings, non-mutating `Analyze Another Amount`, and fail-closed behavior for stale, corrupted, or unpromoted forecasts.
 5. Repeat the complete Python, client, ResWallet, build, lint, type-check, and real two-wallet/restart acceptance suites. Mark Milestone 7 complete only after the live recommendation succeeds through the real local stack.
 
-**Local Handoff acceptance:** after documented prerequisites, one command starts the complete local stack and reaches healthy state; the predeclared untouched-forward evaluation passes the unchanged promotion criteria; an immutable promotion and provenance-complete current-cutoff snapshot exist; and a real-browser test without API interception completes the wallet-authenticated Finance → Groups → settlement → Finance → Crypto recommendation → non-mutating scenario → Insights journey, including exact-cent allocation and controlled restart. Stale, corrupted, and unpromoted forecast inputs must fail closed. If any condition fails, the safe gated state remains correct but Milestone 7 remains incomplete.
+**Local Handoff acceptance:** after documented prerequisites, one command starts the complete local stack and reaches healthy state; the predeclared untouched-forward evaluation passes the unchanged promotion criteria; an immutable promotion and provenance-complete current-cutoff snapshot exist; and a real-browser test without API interception completes the wallet-authenticated Finance → Groups → settlement → Finance → Crypto Intelligence recommendation → non-mutating scenario → Insights journey, including exact-cent allocation and controlled restart. Stale, corrupted, and unpromoted forecast inputs must fail closed. If any condition fails, the safe gated state remains correct but Milestone 7 remains incomplete.
 
 ### Milestone 8: Future Scope — Production Hardening & Deployment (On Hold)
 

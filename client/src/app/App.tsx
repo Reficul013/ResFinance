@@ -57,7 +57,7 @@ export function App() {
           <h1>ResFinance</h1>
           <p className="lede">
             Connect to the ResWallet extension to open your Encrypted Personal
-            Finance, Bill Split, and Crypto Analysis Dashboards. Your seed
+            Finance, Bill Split, and Crypto Intelligence dashboards. Your seed
             always stays inside the extension.
           </p>
         </>
@@ -80,7 +80,7 @@ export function App() {
             <nav className="dashboard-nav" aria-label="ResFinance dashboards">
               <NavLink to="/finance">Personal Finance</NavLink>
               <NavLink to="/groups">Friends &amp; Groups</NavLink>
-              <NavLink to="/crypto">Crypto</NavLink>
+              <NavLink to="/crypto">Crypto Intelligence</NavLink>
             </nav>
           </div>
         )}
@@ -114,7 +114,11 @@ export function App() {
             <Route
               path="/crypto"
               element={
-                <Suspense fallback={<RouteLoading text="Opening Crypto…" />}>
+                <Suspense
+                  fallback={
+                    <RouteLoading text="Opening Crypto Intelligence…" />
+                  }
+                >
                   <CryptoDashboard accessToken={authentication.accessToken!} />
                 </Suspense>
               }

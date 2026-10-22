@@ -41,7 +41,7 @@ Only user-entered active transactions and recurring entries expose these actions
 
 ### Versioned savings formula
 
-The Crypto dashboard will consume the Finance-owned formula version `finance-savings-v1`.
+The Crypto Intelligence dashboard will consume the Finance-owned formula version `finance-savings-v1`.
 
 ```text
 actual savings
@@ -115,7 +115,7 @@ docker compose --profile app up -d --build api
 ## Smart Insights (read-only AI) evidence
 
 Smart Savings Insights is embedded in Personal Finance. It explains authorized
-Finance, Groups, and Crypto facts without access to private keys, write
+Finance, Groups, and Crypto Intelligence facts without access to private keys, write
 commands, ResContract mutations, trading systems, direct ResilientDB
 operations, or the public internet.
 
@@ -185,7 +185,7 @@ capacity claim. Full evidence is in
   presented beside Finance projection details in one two-column panel as inspectable provenance tags;
   evidence bullets use plain-language verified-record counts.
 - The shared notification center surfaces budget alerts, wallet-scoped Group
-  updates, and the current Crypto forecast gate with links to the relevant
+  updates, and the current Crypto Intelligence forecast gate with links to the relevant
   dashboard.
 
 ### Acceptance evidence
@@ -197,7 +197,7 @@ It verified:
 - all returned citations belonged to the authenticated fact bundle;
 - prompt injection, prohibited actions, and unsupported questions were refused;
 - another wallet could not see the seeded wallet's savings;
-- budget and Crypto gate notifications were produced;
+- budget and Crypto Intelligence gate notifications were produced;
 - the actual pinned local model completed evidence selection; and
 - the AI path performed zero ResilientDB writes.
 
@@ -230,7 +230,7 @@ weights stay outside Git and are mounted read-only for local runtime.
 ### Historical acceptance boundary
 
 At the original integration acceptance, no forecasting model was promoted, so Insights
-correctly explained the Crypto gate rather than inventing a recommendation.
+correctly explained the Crypto Intelligence gate rather than inventing a recommendation.
 Milestone 7 Local Handoff later completed the local lifecycle and promoted a distinct
 predeclared forward candidate; that later evidence does not change Milestone
 3's read-only AI boundary. Milestone 8 remains explicitly on hold. This evidence

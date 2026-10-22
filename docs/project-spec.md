@@ -15,7 +15,7 @@ source_pdf: "/Users/haseebrahman/Downloads/ResFinance.pdf"
 
 | Pain point | Required technology | Why it is necessary |
 |---|---|---|
-| Fragmented Financial State | **ResilientDB** | Budgeting, expenses, shared balances, savings, and recommendations usually live in separate apps. ResilientDB becomes the shared source of truth, recording each meaningful event once and reflecting it across Personal Finance, Groups, and Crypto AI. |
+| Fragmented Financial State | **ResilientDB** | Budgeting, expenses, shared balances, savings, and recommendations usually live in separate apps. ResilientDB becomes the shared source of truth, recording each meaningful event once and reflecting it across Personal Finance, Friends & Groups, and Crypto Intelligence. |
 | Manual & Error-Prone Settlement | **Smart Contracts** | Bill splitting is more than arithmetic: participants, shares, receivables/payables, and settlement status must stay consistent. Smart contracts enforce the rules and `OPEN -> PARTIALLY SETTLED -> SETTLED` transitions, then update personal finance correctly. |
 | Weak User Ownership of Transactions | **ResWallet** | Payments and settlements should not be silently executed by a central backend. ResWallet provides wallet-linked identity and user-controlled signing, so each payment or contract action is explicitly approved and remains auditable. |
 | Disconnected Savings & Crypto Decisions | **Our ML Model** | Savings tools rarely turn real affordability into investment decisions. The model uses actual/projected savings, Smart Savings Insights, market + sentiment + on-chain signals, adaptive gating, and MSPCIFormer to produce a risk-aware BTC/ETH/SOL portfolio. |
@@ -32,7 +32,7 @@ source_pdf: "/Users/haseebrahman/Downloads/ResFinance.pdf"
 
 ```text
 React / TypeScript Frontend
-Personal Finance | Groups & Payments | Crypto AI
+Personal Finance | Friends & Groups | Crypto Intelligence
                        |
                        v
 FastAPI REST API
@@ -41,7 +41,7 @@ risk, portfolio, and scenario endpoints
                        |
                        v
 +------------------+  +------------------+  +------------------+
-| Finance Service  |  | Groups Service   |  | Crypto AI Service|
+| Finance Service  |  | Groups Service   |  | Crypto Service   |
 +------------------+  +------------------+  +------------------+
                        |
                        v
@@ -56,7 +56,7 @@ risk, portfolio, and scenario endpoints
 |---|---|
 | Finance Service | Income, expenses, budgets, savings, and receivables/payables. |
 | Groups Service | Splits, obligations, wallet approvals, and settlement state. |
-| Crypto AI Service | BTC/ETH/SOL data, forecasts, risk, and optimized portfolios. |
+| Crypto Service | BTC/ETH/SOL data, forecasts, risk, and optimized portfolios for the Crypto Intelligence dashboard. |
 
 ### Core infrastructure
 
@@ -102,7 +102,7 @@ Combine forecasted returns, uncertainty, realized risk/covariance, liquidity, an
 
 ### Final local delivery gate — Milestone 7: Deliverables — Cross-dashboard Integration & Local Handoff
 
-After the functional phases, package the complete local stack behind one documented startup lifecycle and prove one continuous, non-mocked browser journey through ResWallet, React, FastAPI, ResilientDB, ResContract, Crypto, and Smart Insights. The first provider-backed adaptive candidate remains rejected because its MAE was worse than naive. The approved completion iteration subsequently: (1) evaluated a validation-calibrated adaptive-gating candidate on the predeclared untouched forward period and passed the unchanged MAE and 70 percent coverage rules; (2) appended an immutable promotion only after that qualifying run; (3) ingested current point-in-time BTC/ETH/SOL data, froze the final model, and persisted a provenance-complete current 15-day forecast snapshot; (4) proved the normal live recommendation, exact-cent allocations, Finance-derived default savings, non-mutating scenario analysis, and fail-closed stale/corrupt/unpromoted behavior; and (5) repeated all local suites plus the real two-wallet restart journey. Milestone 7 is complete for the declared local scope. Production hardening and deployment remain a separate, deferred Milestone 8.
+After the functional phases, package the complete local stack behind one documented startup lifecycle and prove one continuous, non-mocked browser journey through ResWallet, React, FastAPI, ResilientDB, ResContract, Crypto Intelligence, and Smart Insights. The first provider-backed adaptive candidate remains rejected because its MAE was worse than naive. The approved completion iteration subsequently: (1) evaluated a validation-calibrated adaptive-gating candidate on the predeclared untouched forward period and passed the unchanged MAE and 70 percent coverage rules; (2) appended an immutable promotion only after that qualifying run; (3) ingested current point-in-time BTC/ETH/SOL data, froze the final model, and persisted a provenance-complete current 15-day forecast snapshot; (4) proved the normal live recommendation, exact-cent allocations, Finance-derived default savings, non-mutating scenario analysis, and fail-closed stale/corrupt/unpromoted behavior; and (5) repeated all local suites plus the real two-wallet restart journey. Milestone 7 is complete for the declared local scope. Production hardening and deployment remain a separate, deferred Milestone 8.
 
 ## 5. Forecasting research: 2 papers + 1 novelty
 
@@ -124,7 +124,7 @@ Dynamically weights market, sentiment, and on-chain information before forecasti
 
 **Model output:** Expected return, upside probability, and forecast interval. The model is evaluated with walk-forward tests and source/fusion ablations.
 
-## 6. Crypto AI behavior
+## 6. Crypto Intelligence behavior
 
 ### V1 scope: BTC + ETH + SOL only
 
@@ -148,7 +148,7 @@ Runs a separate what-if amount without changing Personal Finance or the saved fi
 2. **Track** - Income, expenses, and budgets create a live personal finance view.
 3. **Split** - Alex pays a group bill; shares become obligations and receivables.
 4. **Settle** - Friends sign payments; the contract updates group and ledger state.
-5. **Save** - Updated actual/projected savings flows to Crypto AI by default.
+5. **Save** - Updated actual/projected savings flows to Crypto Intelligence by default.
 6. **Improve** - Smart Savings Insights suggests practical ways to save more.
 7. **Explore** - Alex reviews BTC, ETH, and SOL data and three-source signals.
 8. **Forecast** - Adaptive gating + MSPCIFormer produces research-grade forecasts.

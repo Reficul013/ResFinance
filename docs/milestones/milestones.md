@@ -1,6 +1,6 @@
 # ResFinance Milestone Convention
 
-Effective: 2026-10-21
+Effective: 2026-10-22
 
 This is the canonical milestone naming convention for ResFinance. New planning,
 status updates, issues, commits, and handoffs must use these eight milestones.
@@ -10,7 +10,7 @@ status updates, issues, commits, and handoffs must use these eight milestones.
 3. **Milestone 3: Personal Finance — Dashboard & Smart Insights (Read-only AI)**
 4. **Milestone 4: Bill Split — Friends, Groups & Contractual Settlement**
 5. **Milestone 5: Crypto Intelligence — Crypto Ingestion, Feature Store & Reproducible ML Research**
-6. **Milestone 6: Crypto Intelligence — Risk, Portfolio & Crypto Dashboard**
+6. **Milestone 6: Crypto Intelligence — Risk & Portfolio Dashboard**
 7. **Milestone 7: Deliverables — Cross-dashboard Integration & Local Handoff**
 8. **Milestone 8: Future Scope — Production Hardening & Deployment (On Hold)**
 
@@ -23,7 +23,7 @@ status updates, issues, commits, and handoffs must use these eight milestones.
 | Milestone 3 | Earlier Milestone 3 plus the Smart Insights/read-only AI portion of earlier Milestone 8 | [`milestone3-personal-finance-smart-insights.md`](milestone3-personal-finance-smart-insights.md) |
 | Milestone 4 | Earlier Milestone 4: Friends, Groups, bill splitting, and contractual settlement | [`milestone4-bill-split-contractual-settlement.md`](milestone4-bill-split-contractual-settlement.md) |
 | Milestone 5 | Earlier Milestones 5 and 6: ingestion, feature store, and reproducible ML research | [`milestone5-crypto-intelligence-research.md`](milestone5-crypto-intelligence-research.md) |
-| Milestone 6 | Earlier Milestone 7: risk, portfolio optimization, and Crypto dashboard | [`milestone6-crypto-intelligence-dashboard.md`](milestone6-crypto-intelligence-dashboard.md) |
+| Milestone 6 | Earlier Milestone 7: risk, portfolio optimization, and the Crypto Intelligence dashboard | [`milestone6-crypto-intelligence-dashboard.md`](milestone6-crypto-intelligence-dashboard.md) |
 | Milestone 7 | Cross-dashboard integration from earlier Milestone 8 plus earlier Milestone 9 Local Handoff | [`milestone7-cross-dashboard-local-handoff.md`](milestone7-cross-dashboard-local-handoff.md) |
 | Milestone 8 | Earlier Milestone 10: production hardening and deployment, still on hold | [`milestone8-production-hardening-deployment.md`](milestone8-production-hardening-deployment.md) |
 

@@ -1,4 +1,4 @@
-# Milestone 6: Crypto Intelligence — Risk, Portfolio & Crypto Dashboard
+# Milestone 6: Crypto Intelligence — Risk & Portfolio Dashboard
 
 > Compatibility note: `scripts.milestone7` and `config/milestone7-*` remain
 > stable legacy implementation identifiers for this Milestone 6 evidence.
@@ -36,21 +36,22 @@ fiat or cryptocurrency, or change Finance from a scenario.
   only when their run, model, artifact, dataset, and promotion event agree.
 - Expired forecasts fail closed. Synthetic acceptance forecasts are hidden by
   the normal runtime and require an explicit acceptance-only service flag.
-- The generated `/api/v1` client powers a responsive Crypto dashboard with the
-  questionnaire, default capital, forecast status, constrained allocations, a
-  Data Freshness and Provenance panel, a non-mutating scenario control, and
-  TradingView Lightweight Charts price/P10/P50/P90 overlays. The Data Freshness
-  and Provenance panel is the sole dashboard location for technical Finance
-  formula/calculation IDs, source-event count, forecast snapshot ID, and
-  promotion event ID; the rest of the dashboard uses plain-language labels.
+- The generated `/api/v1` client powers the responsive Crypto Intelligence
+  dashboard with the questionnaire, default capital, forecast status,
+  constrained allocations, a Data Freshness and Provenance panel, a
+  non-mutating scenario control, and TradingView Lightweight Charts
+  price/P10/P50/P90 overlays. The Data Freshness and Provenance panel is the
+  sole dashboard location for technical Finance formula/calculation IDs,
+  source-event count, forecast snapshot ID, and promotion event ID; the rest of
+  the dashboard uses plain-language labels.
 
 ## Milestone 6 promotion state
 
 Milestone 5 promoted no model from its deterministic smoke candidate because it did not
 beat the declared naive-baseline MAE criterion. Milestone 6 does not bypass that
-decision. In the normal application, the Crypto dashboard displays a clear
-promotion-gate state and no recommendation until an eligible forecast snapshot
-references a valid immutable promotion event.
+decision. In the normal application, the Crypto Intelligence dashboard
+displays a clear promotion-gate state and no recommendation until an eligible
+forecast snapshot references a valid immutable promotion event.
 
 The Milestone 6 acceptance runner injects a deterministic forecast fixture only
 to test constraints. The fixture is labeled `local-synthetic-acceptance`, is not
@@ -88,7 +89,7 @@ Verified invariants include:
 - injected CLARABEL and SCS failures exercise the minimum-variance fallback;
 - browser acceptance displays the promotion gate, saves a risk profile, renders
   forecast overlays, and reconciles the displayed allocation;
-- the Crypto dashboard was visually inspected from its Playwright screenshot.
+- the Crypto Intelligence dashboard was visually inspected from its Playwright screenshot.
 
 Run the acceptance with:
 

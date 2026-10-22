@@ -256,6 +256,12 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     dashboardNavigation.getByRole("link", { name: "Personal Finance" }),
   ).toHaveAttribute("aria-current", "page");
+  await expect(
+    dashboardNavigation.getByRole("link", {
+      name: "Crypto Intelligence",
+      exact: true,
+    }),
+  ).toBeVisible();
   await expect(topBar.getByLabel("No in-app notifications")).toBeVisible();
   await expect(topBar.locator(".notification-bell")).toBeVisible();
   const githubLink = topBar.getByRole("link", {
