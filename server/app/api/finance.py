@@ -72,6 +72,12 @@ class BudgetCommand(BaseModel):
     expected_version: int = Field(ge=0)
 
 
+class DeactivateBudgetCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_version: int = Field(ge=0)
+
+
 class RecurringEntryCommand(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -127,6 +133,7 @@ class BudgetModel(BaseModel):
     category_id: str
     month: str
     limit: MoneyModel
+    active: bool
     source_event_id: str
 
 
@@ -350,6 +357,29 @@ def create_finance_router(
             )
         )
 
+    @router.post(
+        "/budgets/{budget_id}/deactivate",
+        response_model=EventResponse,
+        status_code=201,
+    )
+    def deactivate_budget(
+        budget_id: str,
+        request: DeactivateBudgetCommand,
+        idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+        authorization: Annotated[str | None, Header(alias="Authorization")] = None,
+        origin: Annotated[str | None, Header(alias="Origin")] = None,
+    ) -> EventResponse:
+        finance, _ = services()
+        actor = principal(authorization, origin)
+        return _run_command(
+            lambda: finance.deactivate_budget(
+                actor_address=actor.actor_address,
+                idempotency_key=idempotency_key,
+                expected_version=request.expected_version,
+                budget_id=budget_id,
+            )
+        )
+
     @router.post("/recurring", response_model=EventResponse, status_code=201)
     def create_recurring_entry(
         request: RecurringEntryCommand,
@@ -504,6 +534,7 @@ def _overview_response(value: FinanceOverview) -> FinanceOverviewModel:
                 category_id=item.category_id,
                 month=item.month,
                 limit=_money(item.limit_minor_units),
+                active=item.active,
                 source_event_id=item.source_event_id,
             )
             for item in sorted(

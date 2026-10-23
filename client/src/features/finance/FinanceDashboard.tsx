@@ -32,6 +32,11 @@ type RecordAction =
       kind: "deactivate-recurring";
       recordId: string;
       label: string;
+    }
+  | {
+      kind: "deactivate-budget";
+      recordId: string;
+      label: string;
     };
 
 export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
@@ -70,6 +75,7 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
   const overview = dashboard.overview.data;
   const openRecordAction = (action: RecordAction) => {
     dashboard.voidTransaction.reset();
+    dashboard.deactivateBudget.reset();
     dashboard.deactivateRecurring.reset();
     setRecordAction(action);
   };
@@ -86,8 +92,14 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
             expected_version: overview.provenance.projection_version,
           },
         });
-      } else {
+      } else if (recordAction.kind === "deactivate-recurring") {
         await dashboard.deactivateRecurring.mutateAsync({
+          recordId: recordAction.recordId,
+          idempotencyKey,
+          body: { expected_version: overview.provenance.projection_version },
+        });
+      } else {
+        await dashboard.deactivateBudget.mutateAsync({
           recordId: recordAction.recordId,
           idempotencyKey,
           body: { expected_version: overview.provenance.projection_version },
@@ -100,9 +112,12 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
   };
   const actionPending =
     dashboard.voidTransaction.isPending ||
+    dashboard.deactivateBudget.isPending ||
     dashboard.deactivateRecurring.isPending;
   const actionError =
-    dashboard.voidTransaction.error ?? dashboard.deactivateRecurring.error;
+    dashboard.voidTransaction.error ??
+    dashboard.deactivateBudget.error ??
+    dashboard.deactivateRecurring.error;
   return (
     <div className="finance-dashboard">
       <section className="dashboard-header" aria-labelledby="finance-title">
@@ -299,10 +314,22 @@ function PlanningPanel({
                 <li key={budget.budget_id} data-status={budget.status}>
                   <div className="budget-row">
                     <strong>{budget.category_name}</strong>
-                    <span>
-                      {formatUsd(budget.spent.minor_units)} /{" "}
-                      {formatUsd(budget.limit.minor_units)}
-                    </span>
+                    <div className="budget-actions">
+                      <span>
+                        {formatUsd(budget.spent.minor_units)} /{" "}
+                        {formatUsd(budget.limit.minor_units)}
+                      </span>
+                      <RecordActionButton
+                        accessibleLabel={`Remove budget ${budget.category_name}`}
+                        onAction={() =>
+                          onAction({
+                            kind: "deactivate-budget",
+                            recordId: budget.budget_id,
+                            label: budget.category_name,
+                          })
+                        }
+                      />
+                    </div>
                   </div>
                   <progress
                     max={10_000}
@@ -504,36 +531,49 @@ function DashboardGuideDialog({ onClose }: { onClose: () => void }) {
           <X size={20} aria-hidden="true" />
         </button>
       </div>
-      <p>
-        Record income and expenses, set monthly budgets, and add recurring
-        commitments. Use the reporting month to review balances, trends, and
-        evidence-linked insights for a specific month.
-      </p>
+      <ul className="dashboard-guide-points">
+        <li>
+          Record income and expenses, set monthly budgets, and add recurring
+          commitments.
+        </li>
+        <li>
+          Use the reporting month to review balances, trends, and
+          evidence-linked insights for a specific month.
+        </li>
+      </ul>
       <div className="savings-conventions">
         <article>
           <strong>Actual savings</strong>
-          <span>Recorded monthly income minus recorded monthly expenses.</span>
+          <ul>
+            <li>Recorded monthly income minus recorded monthly expenses.</li>
+          </ul>
         </article>
         <article>
           <strong>Projected savings</strong>
-          <span>
-            Actual savings adjusted for unmatched recurring items and open
-            receivables or payables due this month.
-          </span>
+          <ul>
+            <li>
+              Actual savings adjusted for unmatched recurring items and open
+              receivables or payables due this month.
+            </li>
+          </ul>
         </article>
         <article>
           <strong>Available savings</strong>
-          <span>
-            Projected savings floored at zero; this is the default amount sent
-            to future portfolio analysis.
-          </span>
+          <ul>
+            <li>
+              Projected savings floored at zero; this is the default amount sent
+              to future portfolio analysis.
+            </li>
+          </ul>
         </article>
       </div>
-      <p className="dashboard-guide-note">
-        Changes append auditable events. Smart Savings Insights explain verified
-        records and cannot edit your finances, sign wallet actions, settle
-        obligations, or trade.
-      </p>
+      <ul className="dashboard-guide-note">
+        <li>Changes append auditable events.</li>
+        <li>
+          Smart Savings Insights explain verified records and cannot edit your
+          finances, sign wallet actions, settle obligations, or trade.
+        </li>
+      </ul>
     </dialog>
   );
 }
@@ -574,6 +614,7 @@ function RecordActionDialog({
   const dialog = useRef<HTMLDialogElement>(null);
   const [reason, setReason] = useState("");
   const voiding = action.kind === "void-transaction";
+  const removingBudget = action.kind === "deactivate-budget";
 
   useEffect(() => {
     const element = dialog.current;
@@ -606,12 +647,16 @@ function RecordActionDialog({
         <h2 id="record-action-title">
           {voiding
             ? "Void this transaction?"
-            : "Deactivate this recurring item?"}
+            : removingBudget
+              ? "Remove this budget?"
+              : "Deactivate this recurring item?"}
         </h2>
         <p>
           {voiding
             ? `“${action.label}” will stop affecting your active financial calculations.`
-            : `“${action.label}” will stop affecting projected savings calculations.`}
+            : removingBudget
+              ? `The “${action.label}” budget will stop appearing in this month’s guardrails.`
+              : `“${action.label}” will stop affecting projected savings calculations.`}
         </p>
         <p className="audit-note">
           The original record remains in the append-only audit trail. This
@@ -654,7 +699,9 @@ function RecordActionDialog({
               ? "Saving…"
               : voiding
                 ? "Void Transaction"
-                : "Deactivate Recurring Item"}
+                : removingBudget
+                  ? "Remove Budget"
+                  : "Deactivate Recurring Item"}
           </button>
         </div>
       </form>

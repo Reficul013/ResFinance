@@ -7,12 +7,14 @@ import {
 
 import {
   createFinanceRecurringEntry,
+  deactivateFinanceBudget,
   deactivateFinanceRecurringEntry,
   getFinanceOverview,
   recordFinanceTransaction,
   setFinanceBudget,
   voidFinanceTransaction,
   type BudgetCommand,
+  type DeactivateBudgetCommand,
   type DeactivateRecurringCommand,
   type RecurringEntryCommand,
   type TransactionCommand,
@@ -67,6 +69,15 @@ export function useFinanceDashboard(accessToken: string, month: string) {
       setFinanceBudget(accessToken, idempotencyKey, body),
     onSuccess: refresh,
   });
+  const deactivateBudget = useMutation({
+    mutationFn: ({
+      recordId,
+      body,
+      idempotencyKey,
+    }: RecordCommand<DeactivateBudgetCommand>) =>
+      deactivateFinanceBudget(accessToken, recordId, idempotencyKey, body),
+    onSuccess: refresh,
+  });
   const recurring = useMutation({
     mutationFn: ({ body, idempotencyKey }: Command<RecurringEntryCommand>) =>
       createFinanceRecurringEntry(accessToken, idempotencyKey, body),
@@ -93,6 +104,7 @@ export function useFinanceDashboard(accessToken: string, month: string) {
     transaction,
     voidTransaction,
     budget,
+    deactivateBudget,
     recurring,
     deactivateRecurring,
   };

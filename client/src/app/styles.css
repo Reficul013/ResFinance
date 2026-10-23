@@ -1064,8 +1064,15 @@ code {
 .budget-row {
   display: flex;
   gap: 0.75rem;
+  align-items: center;
   justify-content: space-between;
   font-size: 0.88rem;
+}
+
+.budget-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
 }
 
 .budget-list progress {
@@ -1355,8 +1362,7 @@ td.expense {
   justify-content: space-between;
 }
 
-.dashboard-guide-heading h2,
-.dashboard-guide-dialog > p {
+.dashboard-guide-heading h2 {
   margin: 0;
 }
 
@@ -1378,10 +1384,17 @@ td.expense {
   cursor: pointer;
 }
 
-.dashboard-guide-dialog > p {
-  margin-top: 1rem;
+.dashboard-guide-points,
+.dashboard-guide-note,
+.savings-conventions ul {
+  margin-bottom: 0;
+  padding-left: 1.15rem;
   color: var(--page-muted);
   line-height: 1.55;
+}
+
+.dashboard-guide-points {
+  margin-top: 1rem;
 }
 
 .savings-conventions {
@@ -1409,14 +1422,18 @@ td.expense {
 }
 
 .savings-conventions article:nth-child(3) strong {
-  color: var(--page-accent);
+  color: var(--expense);
 }
 
-.savings-conventions span,
+.savings-conventions ul,
 .dashboard-guide-note {
   color: var(--page-muted);
   font-size: 0.82rem;
   line-height: 1.5;
+}
+
+.dashboard-guide-note {
+  margin-top: 1rem;
 }
 
 .record-action-dialog::backdrop {
@@ -1859,7 +1876,10 @@ td.expense {
 }
 
 .insight-composer .follow-up-row button {
+  display: flex;
   width: 100%;
+  gap: 0.45rem;
+  align-items: center;
   padding: 0.48rem 0.7rem;
   overflow: hidden;
   color: var(--page-muted);
@@ -1867,6 +1887,11 @@ td.expense {
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.insight-composer .suggestion-icon {
+  flex: 0 0 auto;
+  color: var(--warning);
 }
 
 .form-success {

@@ -143,6 +143,10 @@
       },
       "BudgetModel": {
         "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
           "budget_id": {
             "title": "Budget Id",
             "type": "string"
@@ -168,6 +172,7 @@
           "category_id",
           "month",
           "limit",
+          "active",
           "source_event_id"
         ],
         "title": "BudgetModel",
@@ -529,6 +534,21 @@
           "savings_source_event_ids"
         ],
         "title": "CryptoOverviewModel",
+        "type": "object"
+      },
+      "DeactivateBudgetCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_version": {
+            "minimum": 0.0,
+            "title": "Expected Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_version"
+        ],
+        "title": "DeactivateBudgetCommand",
         "type": "object"
       },
       "DeactivateRecurringCommand": {
@@ -3030,6 +3050,99 @@
           }
         },
         "summary": "Set Budget",
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/api/v1/finance/budgets/{budget_id}/deactivate": {
+      "post": {
+        "operationId": "deactivate_budget_api_v1_finance_budgets__budget_id__deactivate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "budget_id",
+            "required": true,
+            "schema": {
+              "title": "Budget Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateBudgetCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Deactivate Budget",
         "tags": [
           "finance"
         ]

@@ -1,3 +1,4 @@
+import { Lightbulb } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import type { FinanceOverview, InsightResponse } from "../../lib/api/client";
@@ -145,6 +146,11 @@ export function SmartSavingsInsights({
               >
                 {suggestedQuestions.map((item) => (
                   <button type="button" key={item} onClick={() => ask(item)}>
+                    <Lightbulb
+                      className="suggestion-icon"
+                      size={14}
+                      aria-hidden="true"
+                    />
                     {item}
                   </button>
                 ))}

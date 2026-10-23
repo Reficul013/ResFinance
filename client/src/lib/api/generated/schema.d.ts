@@ -140,6 +140,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/finance/budgets/{budget_id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivate Budget */
+        post: operations["deactivate_budget_api_v1_finance_budgets__budget_id__deactivate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/finance/categories": {
         parameters: {
             query?: never;
@@ -471,6 +488,8 @@ export interface components {
         };
         /** BudgetModel */
         BudgetModel: {
+            /** Active */
+            active: boolean;
             /** Budget Id */
             budget_id: string;
             /** Category Id */
@@ -606,6 +625,11 @@ export interface components {
             savings_formula_version: "finance-savings-v1";
             /** Savings Source Event Ids */
             savings_source_event_ids: string[];
+        };
+        /** DeactivateBudgetCommand */
+        DeactivateBudgetCommand: {
+            /** Expected Version */
+            expected_version: number;
         };
         /** DeactivateRecurringCommand */
         DeactivateRecurringCommand: {
@@ -1623,6 +1647,45 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["BudgetCommand"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deactivate_budget_api_v1_finance_budgets__budget_id__deactivate_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                Authorization?: string | null;
+                Origin?: string | null;
+            };
+            path: {
+                budget_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeactivateBudgetCommand"];
             };
         };
         responses: {

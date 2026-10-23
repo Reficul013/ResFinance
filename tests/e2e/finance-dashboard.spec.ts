@@ -84,6 +84,7 @@ const overview = {
       category_id: "groceries",
       month: "2026-10",
       limit: { currency: "USD", minor_units: 100000 },
+      active: true,
       source_event_id: "evt_budget",
     },
   ],
@@ -201,6 +202,12 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   ).toHaveCount(0);
   const entryAccordion = page.locator(".entry-accordion");
   await expect(entryAccordion).toHaveCount(1);
+  await expect(entryAccordion.locator("summary")).toContainText(
+    "Add a finance record",
+  );
+  await expect(
+    page.getByText("Add income, expenses, budgets, or recurring items"),
+  ).toHaveCount(0);
   await entryAccordion.locator("summary").click();
   const transactionForm = entryAccordion.locator(".transaction-form");
   await expect(
@@ -496,6 +503,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     .locator(".insight-composer")
     .getByRole("group", { name: "Suggested questions" });
   await expect(suggestedQuestions.getByRole("button")).toHaveCount(3);
+  await expect(suggestedQuestions.locator(".lucide-lightbulb")).toHaveCount(3);
   await expect(
     page.locator(".insight-result").getByRole("group", {
       name: "Suggested questions",
@@ -518,6 +526,10 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     dashboardGuide.getByText("Available savings", { exact: true }),
   ).toBeVisible();
+  await expect(dashboardGuide.locator("li")).toHaveCount(7);
+  await expect(
+    dashboardGuide.getByText("Available savings", { exact: true }),
+  ).toHaveCSS("color", "rgb(255, 140, 160)");
   await page.screenshot({
     path: "test-results/finance-dashboard-guide.png",
     fullPage: false,
@@ -623,7 +635,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   });
 });
 
-test("voids transactions and deactivates recurring items through confirmed audit events", async ({
+test("voids transactions and deactivates recurring items and budgets through confirmed audit events", async ({
   page,
 }) => {
   const currentOverview = structuredClone(overview);
@@ -696,6 +708,31 @@ test("voids transactions and deactivates recurring items through confirmed audit
           event_id: "evt_void_expense",
           projection_version: 9,
           occurred_at_utc: "2026-10-19T20:00:00Z",
+          deduplicated: false,
+          receipt_ids: [],
+        }),
+      });
+    },
+  );
+
+  let removeBudgetRequest: Record<string, unknown> | null = null;
+  await page.route(
+    "**/api/v1/finance/budgets/budget-groceries/deactivate",
+    async (route) => {
+      removeBudgetRequest = route.request().postDataJSON() as Record<
+        string,
+        unknown
+      >;
+      currentOverview.budgets[0].active = false;
+      currentOverview.summary.budget_statuses = [];
+      currentOverview.provenance.projection_version = 11;
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          event_id: "evt_deactivate_budget",
+          projection_version: 11,
+          occurred_at_utc: "2026-10-19T20:02:00Z",
           deduplicated: false,
           receipt_ids: [],
         }),
@@ -808,6 +845,26 @@ test("voids transactions and deactivates recurring items through confirmed audit
     page.getByText("Expected monthly groceries", { exact: true }),
   ).toHaveCount(0);
   expect(deactivateRequest).toEqual({ expected_version: 9 });
+
+  const removeBudgetButton = page.getByRole("button", {
+    name: "Remove budget Groceries",
+  });
+  await removeBudgetButton.click();
+  const removeBudgetDialog = page.getByRole("dialog", {
+    name: "Remove this budget?",
+  });
+  await expect(removeBudgetDialog).toBeVisible();
+  await expect(
+    removeBudgetDialog.getByText(/original record remains/i),
+  ).toBeVisible();
+  await removeBudgetDialog
+    .getByRole("button", { name: "Remove Budget" })
+    .click();
+
+  await expect(
+    page.getByRole("progressbar", { name: "Groceries budget utilization" }),
+  ).toHaveCount(0);
+  expect(removeBudgetRequest).toEqual({ expected_version: 10 });
 });
 
 test("separates the wallet controls before a wallet is created", async ({

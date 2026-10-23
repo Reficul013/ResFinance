@@ -63,9 +63,9 @@ Evidence:
 - Added the authenticated Personal Finance dashboard, ledger-driven analytics,
   accessible states and charts, correction workflows, and consolidated data
   freshness and provenance.
-- Added confirmed `ArchiveX` correction actions for active transactions and
-  recurring items. They append void/deactivation events and preserve the
-  original audit record instead of deleting persisted history.
+- Added confirmed `ArchiveX` correction actions for active transactions,
+  budgets, and recurring items. They append void/deactivation events and
+  preserve the original audit record instead of deleting persisted history.
 - Made the fixed direction-aware category catalog available immediately to new
   wallets and removed the category-creation step. Dashboard analytics cover
   category spending, status-colored budget utilization, and an exact six-month
@@ -78,11 +78,12 @@ Evidence:
   wallet signing, settlement, trading, or Finance mutation.
 - Refined the Personal Finance presentation with a single three-form accordion,
   a compact row for cash flow, transactions, budgets, and commitments, and a
-  dashboard guide that explains actual, projected, and available savings.
+  bulleted dashboard guide that color-codes and explains actual, projected, and
+  available savings.
 - Refined the embedded Insights workspace with a narrower question panel,
-  exactly three suggested-question actions, compact verified-evidence bullets,
-  explicit completion feedback, and a bounded 30-second request with retry
-  guidance.
+  exactly three suggested-question actions with lightbulb cues, compact
+  verified-evidence bullets, explicit completion feedback, and a bounded
+  30-second request with retry guidance.
 
 Evidence:
 [`milestones/milestone3-personal-finance-smart-insights.md`](milestones/milestone3-personal-finance-smart-insights.md).

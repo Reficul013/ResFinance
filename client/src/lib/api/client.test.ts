@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  deactivateFinanceBudget,
   deactivateFinanceRecurringEntry,
   queryInsights,
   voidFinanceTransaction,
@@ -42,7 +43,7 @@ describe("finance correction commands", () => {
     vi.restoreAllMocks();
   });
 
-  it("sends void and deactivation events through the generated API boundary", async () => {
+  it("sends correction events through the generated API boundary", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(
       async () =>
         new Response(
@@ -69,6 +70,12 @@ describe("finance correction commands", () => {
       "deactivate-command-1",
       { expected_version: 9 },
     );
+    await deactivateFinanceBudget(
+      "access-token",
+      "rent 2026-10",
+      "remove-budget-command-1",
+      { expected_version: 10 },
+    );
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -87,6 +94,14 @@ describe("finance correction commands", () => {
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({ expected_version: 9 }),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/v1/finance/budgets/rent%202026-10/deactivate",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ expected_version: 10 }),
       }),
     );
     const firstRequest = fetchMock.mock.calls[0]?.[1];

@@ -110,18 +110,13 @@ export function FinanceEntryForms({
   );
 
   return (
-    <section className="entry-panel" aria-labelledby="add-record-title">
-      <div className="section-heading">
-        <div>
-          <p className="section-kicker">Update your ledger</p>
-          <h2 id="add-record-title">Add a finance record</h2>
-        </div>
-        <p>Every saved change appends an encrypted, auditable event.</p>
-      </div>
+    <section className="entry-panel" aria-label="Add a finance record">
       <details className="entry-accordion">
         <summary>
-          <span>Add income, expenses, budgets, or recurring items</span>
-          <small>Open all three entry forms</small>
+          <span id="add-record-title">Add a finance record</span>
+          <small>
+            Every saved change appends an encrypted, auditable event.
+          </small>
         </summary>
         <div className="entry-grid">
           <section className="entry-form-card transaction-form">

@@ -277,13 +277,32 @@ def test_authenticated_finance_api_exposes_projection_and_provenance() -> None:
     assert duplicate.status_code == 201
     assert duplicate.json()["deduplicated"] is True
 
+    budget = client.post(
+        "/api/v1/finance/budgets",
+        headers={**headers, "Idempotency-Key": "api-budget-0002"},
+        json={
+            "budget_id": "rent-2026-10",
+            "category_id": "rent",
+            "month": "2026-10",
+            "limit": {"currency": "USD", "minor_units": 150_000},
+            "expected_version": 1,
+        },
+    )
+    removed = client.post(
+        "/api/v1/finance/budgets/rent-2026-10/deactivate",
+        headers={**headers, "Idempotency-Key": "api-budget-remove-0003"},
+        json={"expected_version": 2},
+    )
+    assert budget.status_code == 201
+    assert removed.status_code == 201
+
     overview = client.get(
         "/api/v1/finance/overview?month=2026-10",
         headers={"Origin": ORIGIN, "Authorization": f"Bearer {token}"},
     )
     assert overview.status_code == 200
     body = overview.json()
-    assert body["provenance"]["projection_version"] == 1
+    assert body["provenance"]["projection_version"] == 3
     assert {item["name"] for item in body["categories"]} >= {
         "Salary",
         "Liquid Funds Transfer",
@@ -297,7 +316,18 @@ def test_authenticated_finance_api_exposes_projection_and_provenance() -> None:
         "Miscellaneous",
     }
     assert body["summary"]["savings"]["formula_version"] == "finance-savings-v1"
-    assert len(body["provenance"]["source_event_ids"]) == 1
+    assert len(body["provenance"]["source_event_ids"]) == 3
+    assert body["budgets"] == [
+        {
+            "budget_id": "rent-2026-10",
+            "category_id": "rent",
+            "month": "2026-10",
+            "limit": {"currency": "USD", "minor_units": 150_000},
+            "active": False,
+            "source_event_id": budget.json()["event_id"],
+        }
+    ]
+    assert body["summary"]["budget_statuses"] == []
 
     unauthorized = client.get("/api/v1/finance/overview?month=2026-10")
     assert unauthorized.status_code == 401
@@ -354,11 +384,21 @@ def test_deterministic_categories_are_available_without_category_events() -> Non
     assert overview.summary.budget_statuses[0].category_name == "Rent"
     assert overview.summary.outstanding_recurring_income_minor_units == 500_000
 
+    service.deactivate_budget(
+        actor_address=ACTOR,
+        idempotency_key="deterministic-budget-remove-0004",
+        expected_version=3,
+        budget_id="rent-2026-10",
+    )
+    overview = service.overview(actor_address=ACTOR, month="2026-10")
+    assert not overview.projection.budgets["rent-2026-10"].active
+    assert overview.summary.budget_statuses == ()
+
     with pytest.raises(FinanceRejected, match="direction does not match category"):
         service.record_transaction(
             actor_address=ACTOR,
             idempotency_key="wrong-category-direction-0004",
-            expected_version=3,
+            expected_version=4,
             transaction_id="invalid-rent-income",
             direction=EntryDirection.INCOME,
             category_id="rent",
