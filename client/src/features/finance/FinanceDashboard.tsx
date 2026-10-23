@@ -1,9 +1,10 @@
-import { ArchiveX } from "lucide-react";
+import { ArchiveX, CircleHelp, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -35,6 +36,7 @@ type RecordAction =
 
 export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
   const [month, setMonth] = useState(currentMonth());
+  const [showDashboardGuide, setShowDashboardGuide] = useState(false);
   const [recordAction, setRecordAction] = useState<RecordAction | null>(null);
   const dashboard = useFinanceDashboard(accessToken, month);
 
@@ -104,8 +106,19 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
   return (
     <div className="finance-dashboard">
       <section className="dashboard-header" aria-labelledby="finance-title">
-        <div>
-          <p className="eyebrow">Personal Finance</p>
+        <div className="dashboard-hero-copy">
+          <div className="dashboard-eyebrow-row">
+            <p className="eyebrow">Personal Finance</p>
+            <button
+              className="dashboard-info-button"
+              type="button"
+              aria-label="How to use the Personal Finance dashboard"
+              title="How to use the Personal Finance dashboard"
+              onClick={() => setShowDashboardGuide(true)}
+            >
+              <CircleHelp size={20} aria-hidden="true" />
+            </button>
+          </div>
           <h1 id="finance-title">Your money, in one view.</h1>
           <p className="lede">
             Track cash flow, monthly limits, recurring commitments, and the
@@ -128,24 +141,24 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
         overview={overview}
         month={month}
       />
-      <div className="dashboard-columns">
+      <div className="finance-overview-row">
         <CashFlowChart overview={overview} />
-        <BudgetPanel overview={overview} />
+        <TransactionPanel overview={overview} onAction={openRecordAction} />
+        <PlanningPanel overview={overview} onAction={openRecordAction} />
       </div>
       <FinanceAnalytics
         overview={overview}
         historyMonths={dashboard.historyMonths}
         history={dashboard.history.map((item) => item.data)}
       />
-      <div className="dashboard-columns records-columns">
-        <TransactionPanel overview={overview} onAction={openRecordAction} />
-        <CommitmentsPanel overview={overview} onAction={openRecordAction} />
-      </div>
       <SmartSavingsInsights
         accessToken={accessToken}
         month={month}
         financeOverview={overview}
       />
+      {showDashboardGuide && (
+        <DashboardGuideDialog onClose={() => setShowDashboardGuide(false)} />
+      )}
       {recordAction === null ? null : (
         <RecordActionDialog
           action={recordAction}
@@ -162,9 +175,13 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
 export function SummaryCards({ overview }: { overview: FinanceOverview }) {
   const summary = overview.summary;
   const cards = [
-    ["Net balance", summary.balance.minor_units, "All recorded cash flow"],
-    ["Income", summary.income.minor_units, summary.month],
-    ["Expenses", summary.expense.minor_units, summary.month],
+    [
+      "Current balance",
+      summary.balance.minor_units,
+      "All recorded cash flow (all income minus expenses)",
+    ],
+    ["Income", summary.income.minor_units, "Total earned this month"],
+    ["Expenses", summary.expense.minor_units, "Total spent this month"],
     [
       "Available savings",
       summary.savings.available.minor_units,
@@ -187,15 +204,27 @@ export function SummaryCards({ overview }: { overview: FinanceOverview }) {
 function CashFlowChart({ overview }: { overview: FinanceOverview }) {
   const { summary } = overview;
   const data = [
-    { label: "Income", amount: summary.income.minor_units },
-    { label: "Expenses", amount: summary.expense.minor_units },
     {
-      label: "Estimated savings",
+      label: "Income",
+      amount: summary.income.minor_units,
+      color: "var(--income)",
+    },
+    {
+      label: "Expenses",
+      amount: summary.expense.minor_units,
+      color: "var(--expense)",
+    },
+    {
+      label: "Projected savings",
       amount: summary.savings.projected.minor_units,
+      color: "var(--warning)",
     },
   ];
   return (
-    <section className="panel chart-panel" aria-labelledby="cash-flow-title">
+    <section
+      className="panel chart-panel overview-panel"
+      aria-labelledby="cash-flow-title"
+    >
       <div className="section-heading compact">
         <div>
           <p className="section-kicker">Monthly shape</p>
@@ -205,7 +234,7 @@ function CashFlowChart({ overview }: { overview: FinanceOverview }) {
       <div
         className="chart-wrap"
         role="img"
-        aria-label={`Income ${formatUsd(summary.income.minor_units)}, expenses ${formatUsd(summary.expense.minor_units)}, estimated savings ${formatUsd(summary.savings.projected.minor_units)}`}
+        aria-label={`Income ${formatUsd(summary.income.minor_units)}, expenses ${formatUsd(summary.expense.minor_units)}, projected savings ${formatUsd(summary.savings.projected.minor_units)}`}
       >
         <ResponsiveContainer width="100%" height={240}>
           <BarChart
@@ -222,61 +251,92 @@ function CashFlowChart({ overview }: { overview: FinanceOverview }) {
               tickFormatter={(value: number) => formatUsd(value)}
             />
             <Tooltip formatter={(value) => formatUsd(Number(value))} />
-            <Bar
-              dataKey="amount"
-              fill="var(--page-accent)"
-              radius={[8, 8, 2, 2]}
-            />
+            <Bar dataKey="amount" radius={[8, 8, 2, 2]}>
+              {data.map((item) => (
+                <Cell key={item.label} fill={item.color} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
       <p className="panel-note">
-        Estimated savings includes unmatched monthly recurring entries and open
+        Projected savings includes unmatched monthly recurring entries and open
         obligations due this month.
       </p>
     </section>
   );
 }
 
-function BudgetPanel({ overview }: { overview: FinanceOverview }) {
+function PlanningPanel({
+  overview,
+  onAction,
+}: {
+  overview: FinanceOverview;
+  onAction: (action: RecordAction) => void;
+}) {
   const statuses = overview.summary.budget_statuses;
+  const recurring = overview.recurring_entries.filter((item) => item.active);
+  const openObligations = overview.obligations.filter((item) => !item.settled);
   return (
-    <section className="panel" aria-labelledby="budget-title">
+    <section
+      className="panel overview-panel planning-panel"
+      aria-labelledby="planning-title"
+    >
       <div className="section-heading compact">
         <div>
-          <p className="section-kicker">Guardrails</p>
-          <h2 id="budget-title">Budgets</h2>
+          <p className="section-kicker">Guardrails &amp; looking ahead</p>
+          <h2 id="planning-title">Budgets &amp; Commitments</h2>
         </div>
       </div>
-      {statuses.length === 0 ? (
-        <EmptyState text="No budgets for this month yet." />
-      ) : (
-        <ul className="budget-list">
-          {statuses.map((budget) => (
-            <li key={budget.budget_id} data-status={budget.status}>
-              <div className="budget-row">
-                <strong>{budget.category_name}</strong>
-                <span>
-                  {formatUsd(budget.spent.minor_units)} /{" "}
-                  {formatUsd(budget.limit.minor_units)}
-                </span>
-              </div>
-              <progress
-                max={10_000}
-                value={Math.min(budget.utilization_basis_points, 10_000)}
-                aria-label={`${budget.category_name} budget utilization`}
-              />
-              <small>
-                {budget.status === "over_budget"
-                  ? "Over budget"
-                  : budget.status === "near_limit"
-                    ? "Near the limit"
-                    : `${formatUsd(budget.remaining.minor_units)} remaining`}
-              </small>
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="planning-scroll">
+        <section className="planning-section" aria-labelledby="budget-title">
+          <h3 id="budget-title">Budgets</h3>
+          {statuses.length === 0 ? (
+            <EmptyState text="No budgets for this month yet." />
+          ) : (
+            <ul className="budget-list">
+              {statuses.map((budget) => (
+                <li key={budget.budget_id} data-status={budget.status}>
+                  <div className="budget-row">
+                    <strong>{budget.category_name}</strong>
+                    <span>
+                      {formatUsd(budget.spent.minor_units)} /{" "}
+                      {formatUsd(budget.limit.minor_units)}
+                    </span>
+                  </div>
+                  <progress
+                    max={10_000}
+                    value={Math.min(budget.utilization_basis_points, 10_000)}
+                    aria-label={`${budget.category_name} budget utilization`}
+                  />
+                  <small>
+                    {budget.status === "over_budget"
+                      ? "Over budget"
+                      : budget.status === "near_limit"
+                        ? "Near the limit"
+                        : `${formatUsd(budget.remaining.minor_units)} remaining`}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        <section
+          className="planning-section"
+          aria-labelledby="commitments-title"
+        >
+          <h3 id="commitments-title">Commitments</h3>
+          {recurring.length === 0 && openObligations.length === 0 ? (
+            <EmptyState text="No recurring entries or group obligations yet." />
+          ) : (
+            <CommitmentList
+              recurring={recurring}
+              obligations={openObligations}
+              onAction={onAction}
+            />
+          )}
+        </section>
+      </div>
     </section>
   );
 }
@@ -293,7 +353,10 @@ function TransactionPanel({
     overview.categories.map((item) => [item.category_id, item.name]),
   );
   return (
-    <section className="panel" aria-labelledby="transactions-title">
+    <section
+      className="panel overview-panel transactions-panel"
+      aria-labelledby="transactions-title"
+    >
       <div className="section-heading compact">
         <div>
           <p className="section-kicker">Event ledger</p>
@@ -348,74 +411,130 @@ function TransactionPanel({
   );
 }
 
-function CommitmentsPanel({
-  overview,
+function CommitmentList({
+  recurring,
+  obligations,
   onAction,
 }: {
-  overview: FinanceOverview;
+  recurring: FinanceOverview["recurring_entries"];
+  obligations: FinanceOverview["obligations"];
   onAction: (action: RecordAction) => void;
 }) {
-  const recurring = overview.recurring_entries.filter((item) => item.active);
-  const openObligations = overview.obligations.filter((item) => !item.settled);
   return (
-    <section className="panel" aria-labelledby="commitments-title">
-      <div className="section-heading compact">
+    <ul className="commitment-list">
+      {recurring.map((item) => (
+        <li key={item.recurring_entry_id}>
+          <span
+            className={`direction-icon ${item.direction}`}
+            aria-hidden="true"
+          >
+            {item.direction === "income" ? "+" : "−"}
+          </span>
+          <div>
+            <strong>{item.description}</strong>
+            <small>Monthly from {item.starts_on}</small>
+          </div>
+          <span>{formatUsd(item.amount.minor_units)}</span>
+          <RecordActionButton
+            accessibleLabel={`Deactivate recurring item ${item.description}`}
+            onAction={() =>
+              onAction({
+                kind: "deactivate-recurring",
+                recordId: item.recurring_entry_id,
+                label: item.description,
+              })
+            }
+          />
+        </li>
+      ))}
+      {obligations.map((item) => (
+        <li key={item.obligation_id}>
+          <span
+            className={`direction-icon ${item.direction}`}
+            aria-hidden="true"
+          >
+            {item.direction === "receivable" ? "+" : "−"}
+          </span>
+          <div>
+            <strong>
+              {item.direction === "receivable" ? "Receivable" : "Payable"}
+            </strong>
+            <small>
+              {item.due_on === null ? "No due date" : `Due ${item.due_on}`}
+            </small>
+          </div>
+          <span>{formatUsd(item.amount.minor_units)}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function DashboardGuideDialog({ onClose }: { onClose: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const element = dialog.current;
+    if (element !== null && !element.open) element.showModal();
+    return () => {
+      if (element?.open) element.close();
+    };
+  }, []);
+
+  return (
+    <dialog
+      ref={dialog}
+      className="dashboard-guide-dialog"
+      aria-labelledby="dashboard-guide-title"
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+    >
+      <div className="dashboard-guide-heading">
         <div>
-          <p className="section-kicker">Looking ahead</p>
-          <h2 id="commitments-title">Commitments</h2>
+          <p className="section-kicker">Personal Finance guide</p>
+          <h2 id="dashboard-guide-title">How to use this dashboard</h2>
         </div>
+        <button
+          type="button"
+          aria-label="Close dashboard guide"
+          onClick={onClose}
+        >
+          <X size={20} aria-hidden="true" />
+        </button>
       </div>
-      {recurring.length === 0 && openObligations.length === 0 ? (
-        <EmptyState text="No recurring entries or group obligations yet." />
-      ) : (
-        <ul className="commitment-list">
-          {recurring.map((item) => (
-            <li key={item.recurring_entry_id}>
-              <span
-                className={`direction-icon ${item.direction}`}
-                aria-hidden="true"
-              >
-                {item.direction === "income" ? "+" : "−"}
-              </span>
-              <div>
-                <strong>{item.description}</strong>
-                <small>Monthly from {item.starts_on}</small>
-              </div>
-              <span>{formatUsd(item.amount.minor_units)}</span>
-              <RecordActionButton
-                accessibleLabel={`Deactivate recurring item ${item.description}`}
-                onAction={() =>
-                  onAction({
-                    kind: "deactivate-recurring",
-                    recordId: item.recurring_entry_id,
-                    label: item.description,
-                  })
-                }
-              />
-            </li>
-          ))}
-          {openObligations.map((item) => (
-            <li key={item.obligation_id}>
-              <span
-                className={`direction-icon ${item.direction}`}
-                aria-hidden="true"
-              >
-                {item.direction === "receivable" ? "+" : "−"}
-              </span>
-              <div>
-                <strong>
-                  {item.direction === "receivable" ? "Receivable" : "Payable"}
-                </strong>
-                <small>
-                  {item.due_on === null ? "No due date" : `Due ${item.due_on}`}
-                </small>
-              </div>
-              <span>{formatUsd(item.amount.minor_units)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+      <p>
+        Record income and expenses, set monthly budgets, and add recurring
+        commitments. Use the reporting month to review balances, trends, and
+        evidence-linked insights for a specific month.
+      </p>
+      <div className="savings-conventions">
+        <article>
+          <strong>Actual savings</strong>
+          <span>Recorded monthly income minus recorded monthly expenses.</span>
+        </article>
+        <article>
+          <strong>Projected savings</strong>
+          <span>
+            Actual savings adjusted for unmatched recurring items and open
+            receivables or payables due this month.
+          </span>
+        </article>
+        <article>
+          <strong>Available savings</strong>
+          <span>
+            Projected savings floored at zero; this is the default amount sent
+            to future portfolio analysis.
+          </span>
+        </article>
+      </div>
+      <p className="dashboard-guide-note">
+        Changes append auditable events. Smart Savings Insights explain verified
+        records and cannot edit your finances, sign wallet actions, settle
+        obligations, or trade.
+      </p>
+    </dialog>
   );
 }
 

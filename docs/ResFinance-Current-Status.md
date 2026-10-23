@@ -68,17 +68,21 @@ Evidence:
   original audit record instead of deleting persisted history.
 - Made the fixed direction-aware category catalog available immediately to new
   wallets and removed the category-creation step. Dashboard analytics cover
-  category spending, six-month savings-versus-expense history, and the
-  ledger-derived savings outlook.
+  category spending, status-colored budget utilization, and an exact six-month
+  income, expense, and available-savings history.
 - Embedded Smart Savings Insights inside Personal Finance using
   wallet-authorized fact bundles, evidence-ID validation, deterministic
   fallback, bounded local-model selection, prompt-injection defenses, and
   prohibited-action refusals.
 - Verified that the AI path is read-only and performs no ResilientDB writes,
   wallet signing, settlement, trading, or Finance mutation.
-- Refined the embedded Insights workspace to equal-width question/answer
-  panels, compact verified-evidence bullets, explicit completion feedback, and
-  a bounded 30-second request with retry guidance.
+- Refined the Personal Finance presentation with a single three-form accordion,
+  a compact row for cash flow, transactions, budgets, and commitments, and a
+  dashboard guide that explains actual, projected, and available savings.
+- Refined the embedded Insights workspace with a narrower question panel,
+  exactly three suggested-question actions, compact verified-evidence bullets,
+  explicit completion feedback, and a bounded 30-second request with retry
+  guidance.
 
 Evidence:
 [`milestones/milestone3-personal-finance-smart-insights.md`](milestones/milestone3-personal-finance-smart-insights.md).

@@ -725,14 +725,52 @@ code {
 }
 
 .dashboard-header h1 {
-  max-width: 55rem;
-  font-size: clamp(2.8rem, 6.4vw, 5.8rem);
+  max-width: none;
+  font-size: clamp(2.8rem, 5.7vw, 5.4rem);
   line-height: 0.94;
+  white-space: nowrap;
 }
 
 .dashboard-header .lede {
-  max-width: 50rem;
+  max-width: none;
   margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.dashboard-hero-copy {
+  min-width: 0;
+}
+
+.dashboard-eyebrow-row {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.dashboard-eyebrow-row .eyebrow {
+  margin: 0;
+}
+
+.dashboard-info-button {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  color: var(--page-accent);
+  background: var(--control-background);
+  cursor: pointer;
+}
+
+.dashboard-info-button:hover {
+  background: var(--control-background-hover);
+}
+
+.dashboard-info-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--page-accent) 45%, transparent);
+  outline-offset: 2px;
 }
 
 .month-control {
@@ -817,8 +855,48 @@ code {
   gap: 1rem;
 }
 
-.records-columns {
-  grid-template-columns: minmax(0, 1.3fr) minmax(20rem, 0.7fr);
+.finance-overview-row {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.95fr) minmax(24rem, 1.25fr) minmax(
+      20rem,
+      0.9fr
+    );
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.finance-overview-row > .overview-panel {
+  height: 30rem;
+}
+
+.transactions-panel,
+.planning-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.transactions-panel .table-scroll,
+.planning-scroll {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.planning-scroll {
+  display: grid;
+  gap: 1.1rem;
+  padding-right: 0.35rem;
+}
+
+.planning-section + .planning-section {
+  padding-top: 1rem;
+  border-top: 1px solid var(--control-border);
+}
+
+.planning-section h3 {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
 }
 
 .finance-analytics,
@@ -854,6 +932,56 @@ code {
 
 .analytics-chart {
   min-height: 16.25rem;
+}
+
+.single-category-chart {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) minmax(7rem, auto);
+  min-height: 16.25rem;
+  gap: 1rem;
+  align-items: center;
+  justify-items: center;
+}
+
+.single-category-donut {
+  position: relative;
+  display: block;
+  width: 11rem;
+  max-width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.single-category-donut::after {
+  position: absolute;
+  inset: 27%;
+  border-radius: 50%;
+  background: var(--popover-background);
+  content: "";
+}
+
+.single-category-legend {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-self: start;
+}
+
+.single-category-legend > i {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: 0 0 auto;
+}
+
+.single-category-legend strong,
+.single-category-legend small {
+  display: block;
+}
+
+.single-category-legend small {
+  margin-top: 0.2rem;
+  color: var(--page-muted);
+  font-size: 0.75rem;
 }
 
 .analytics-empty {
@@ -979,29 +1107,101 @@ code {
   color: var(--page-muted);
 }
 
+.entry-accordion {
+  border: 1px solid var(--control-border);
+  border-radius: 0.95rem;
+  background: var(--control-background);
+}
+
+.entry-accordion > summary {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.95rem 1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.entry-accordion > summary::before {
+  content: "▸";
+  color: var(--page-accent);
+}
+
+.entry-accordion[open] > summary::before {
+  content: "▾";
+}
+
+.entry-accordion > summary > span {
+  margin-right: auto;
+}
+
+.entry-accordion > summary small {
+  color: var(--page-muted);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
 .entry-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
+  align-items: stretch;
+  padding: 0 0.75rem 0.75rem;
 }
 
-.entry-grid details {
-  align-self: start;
+.entry-form-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
   border: 1px solid var(--control-border);
   border-radius: 0.9rem;
   background: rgb(255 255 255 / 13%);
+  overflow: hidden;
 }
 
-.entry-grid summary {
-  padding: 0.9rem 1rem;
-  font-weight: 750;
-  cursor: pointer;
+.entry-form-card h3 {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-top: 0.3rem solid var(--page-accent);
+  font-size: 1rem;
+}
+
+.entry-form-card.transaction-form h3 {
+  border-top-color: var(--expense);
+}
+
+.entry-form-card.budget-form h3 {
+  border-top-color: var(--warning);
+}
+
+.entry-form-card.recurring-form h3 {
+  border-top-color: var(--income);
 }
 
 .entry-grid form {
   display: grid;
+  grid-template-rows: auto;
   gap: 0.85rem;
+  align-content: start;
   padding: 0 1rem 1rem;
+}
+
+.entry-grid form .form-action {
+  align-self: end;
+  margin-top: auto;
+}
+
+.form-action.transaction {
+  background: var(--expense);
+}
+
+.form-action.budget {
+  color: #281d08;
+  background: var(--warning);
+}
+
+.form-action.recurring {
+  background: var(--income);
 }
 
 .form-field {
@@ -1131,6 +1331,92 @@ td.expense {
   color: var(--page-text);
   background: var(--popover-background);
   box-shadow: 0 2rem 5rem rgb(15 20 35 / 38%);
+}
+
+.dashboard-guide-dialog {
+  width: min(46rem, calc(100% - 2rem));
+  padding: 1.35rem;
+  border: 1px solid var(--card-border);
+  border-radius: 1.2rem;
+  color: var(--page-text);
+  background: var(--popover-background);
+  box-shadow: 0 2rem 5rem rgb(15 20 35 / 38%);
+}
+
+.dashboard-guide-dialog::backdrop {
+  background: rgb(15 20 35 / 58%);
+  backdrop-filter: blur(0.3rem);
+}
+
+.dashboard-guide-heading {
+  display: flex;
+  gap: 1rem;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.dashboard-guide-heading h2,
+.dashboard-guide-dialog > p {
+  margin: 0;
+}
+
+.dashboard-guide-heading h2 {
+  font-size: 1.45rem;
+}
+
+.dashboard-guide-heading button {
+  display: grid;
+  width: 2.3rem;
+  height: 2.3rem;
+  flex: 0 0 auto;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  color: var(--page-text);
+  background: var(--control-background);
+  cursor: pointer;
+}
+
+.dashboard-guide-dialog > p {
+  margin-top: 1rem;
+  color: var(--page-muted);
+  line-height: 1.55;
+}
+
+.savings-conventions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.savings-conventions article {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.9rem;
+  border: 1px solid var(--control-border);
+  border-radius: 0.8rem;
+  background: var(--control-background);
+}
+
+.savings-conventions article:nth-child(1) strong {
+  color: var(--income);
+}
+
+.savings-conventions article:nth-child(2) strong {
+  color: var(--warning);
+}
+
+.savings-conventions article:nth-child(3) strong {
+  color: var(--page-accent);
+}
+
+.savings-conventions span,
+.dashboard-guide-note {
+  color: var(--page-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
 }
 
 .record-action-dialog::backdrop {
@@ -1271,7 +1557,7 @@ td.expense {
 }
 
 .provenance-panel summary {
-  color: var(--page-text);
+  color: var(--warning);
   font-weight: 750;
   cursor: pointer;
 }
@@ -1301,6 +1587,10 @@ td.expense {
   margin: 0 0 0.7rem;
   color: var(--page-text);
   font-size: 0.95rem;
+}
+
+.finance-dashboard .provenance-column h3 {
+  color: var(--expense);
 }
 
 .event-id-list {
@@ -1537,7 +1827,7 @@ td.expense {
 
 .insights-workspace {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(18rem, 0.72fr) minmax(0, 1.28fr);
   align-items: stretch;
   gap: 1rem;
 }
@@ -1560,6 +1850,23 @@ td.expense {
 
 .insight-composer .primary-button {
   margin-top: auto;
+}
+
+.insight-composer .follow-up-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin: 0;
+}
+
+.insight-composer .follow-up-row button {
+  width: 100%;
+  padding: 0.48rem 0.7rem;
+  overflow: hidden;
+  color: var(--page-muted);
+  font-size: 0.76rem;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .form-success {
@@ -1936,6 +2243,24 @@ td.expense {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .finance-overview-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .finance-overview-row > .overview-panel {
+    height: auto;
+    min-height: 28rem;
+  }
+
+  .planning-panel {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-header h1,
+  .dashboard-header .lede {
+    white-space: normal;
+  }
+
   .analytics-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1948,6 +2273,7 @@ td.expense {
 @media (max-width: 52rem) {
   .dashboard-header,
   .dashboard-columns,
+  .finance-overview-row,
   .analytics-grid,
   .insights-workspace,
   .provenance-columns,
@@ -1955,6 +2281,14 @@ td.expense {
   .group-actions-grid,
   .obligation-card {
     grid-template-columns: 1fr;
+  }
+
+  .planning-panel {
+    grid-column: auto;
+  }
+
+  .finance-overview-row > .overview-panel {
+    min-height: 0;
   }
 
   .group-overview {
@@ -2012,6 +2346,15 @@ td.expense {
   .compact-form form,
   .expense-form form,
   .group-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .entry-accordion > summary {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .savings-conventions {
     grid-template-columns: 1fr;
   }
 

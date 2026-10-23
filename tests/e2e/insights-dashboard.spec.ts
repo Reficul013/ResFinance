@@ -143,9 +143,18 @@ test("shows evidence-linked insights, notifications, and safe refusals", async (
   expect(composerBox).not.toBeNull();
   expect(resultBox).not.toBeNull();
   expect(resultBox!.x).toBeGreaterThan(composerBox!.x);
-  expect(Math.abs(resultBox!.width - composerBox!.width)).toBeLessThan(2);
+  expect(resultBox!.width).toBeGreaterThan(composerBox!.width);
   expect(Math.abs(resultBox!.y - composerBox!.y)).toBeLessThan(2);
   expect(Math.abs(resultBox!.height - composerBox!.height)).toBeLessThan(2);
+  const suggestedQuestions = page
+    .locator(".insight-composer")
+    .getByRole("group", { name: "Suggested questions" });
+  await expect(suggestedQuestions.getByRole("button")).toHaveCount(3);
+  await expect(
+    page.locator(".insight-result").getByRole("group", {
+      name: "Suggested questions",
+    }),
+  ).toHaveCount(0);
   await expect(
     page.locator(".finance-dashboard > .provenance-panel"),
   ).toHaveCount(1);

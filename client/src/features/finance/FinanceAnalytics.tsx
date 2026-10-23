@@ -39,6 +39,11 @@ export function FinanceAnalytics({
   history,
 }: FinanceAnalyticsProps) {
   const categoryData = categorySpending(overview);
+  const budgetData = overview.summary.budget_statuses.map((budget) => ({
+    name: budget.category_name,
+    utilization: Math.round(budget.utilization_basis_points / 100),
+    status: budget.status,
+  }));
   const monthlyData = historyMonths.flatMap((month, index) => {
     const item = history[index];
     return item === undefined
@@ -47,6 +52,7 @@ export function FinanceAnalytics({
           {
             month,
             label: shortMonth(month),
+            income: item.summary.income.minor_units,
             expenses: item.summary.expense.minor_units,
             savings: item.summary.savings.available.minor_units,
           },
@@ -66,8 +72,8 @@ export function FinanceAnalytics({
       </div>
       <div className="analytics-grid">
         <CategorySplitChart data={categoryData} />
-        <CategoryTotalsChart data={categoryData} />
-        <SavingsExpenseChart data={monthlyData} />
+        <BudgetUtilizationChart data={budgetData} />
+        <CashFlowTrendChart data={monthlyData} />
       </div>
     </section>
   );
@@ -84,70 +90,98 @@ function CategorySplitChart({ data }: { data: CategoryDatum[] }) {
           role="img"
           aria-label={`Category spending: ${data.map((item) => `${item.name} ${formatUsd(item.amount)}`).join(", ")}`}
         >
-          <ResponsiveContainer width="100%" height={260}>
-            <PieChart>
-              <Pie
-                data={data}
-                dataKey="amount"
-                nameKey="name"
-                cx="45%"
-                cy="50%"
-                innerRadius={46}
-                outerRadius={88}
-                paddingAngle={2}
-              >
-                {data.map((item, index) => (
-                  <Cell
-                    key={item.categoryId}
-                    fill={chartColors[index % chartColors.length]}
-                  />
-                ))}
-              </Pie>
-              <Legend layout="vertical" verticalAlign="middle" align="right" />
-              <Tooltip formatter={(value) => formatUsd(Number(value))} />
-            </PieChart>
-          </ResponsiveContainer>
+          {data.length === 1 ? (
+            <div className="single-category-chart">
+              <span
+                className="single-category-donut"
+                style={{
+                  background: `conic-gradient(${chartColors[0]} 0 100%)`,
+                }}
+                aria-hidden="true"
+              />
+              <span className="single-category-legend">
+                <i style={{ background: chartColors[0] }} aria-hidden="true" />
+                <span>
+                  <strong>{data[0]!.name}</strong>
+                  <small>{formatUsd(data[0]!.amount)} · 100%</small>
+                </span>
+              </span>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie
+                  data={data}
+                  dataKey="amount"
+                  nameKey="name"
+                  cx="45%"
+                  cy="50%"
+                  innerRadius={46}
+                  outerRadius={88}
+                  paddingAngle={2}
+                >
+                  {data.map((item, index) => (
+                    <Cell
+                      key={item.categoryId}
+                      fill={chartColors[index % chartColors.length]}
+                    />
+                  ))}
+                </Pie>
+                <Legend
+                  layout="vertical"
+                  verticalAlign="middle"
+                  align="right"
+                />
+                <Tooltip formatter={(value) => formatUsd(Number(value))} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </div>
       )}
     </ChartCard>
   );
 }
 
-function CategoryTotalsChart({ data }: { data: CategoryDatum[] }) {
+function BudgetUtilizationChart({ data }: { data: BudgetDatum[] }) {
   return (
-    <ChartCard title="Category totals" description="This reporting month">
+    <ChartCard title="Budget utilization" description="Percent used this month">
       {data.length === 0 ? (
-        <EmptyChart text="Record an expense to compare category totals." />
+        <EmptyChart text="Add a budget to compare monthly limits." />
       ) : (
         <div
           className="analytics-chart"
           role="img"
-          aria-label="Expense totals by category"
+          aria-label={`Budget utilization: ${data.map((item) => `${item.name} ${item.utilization}%`).join(", ")}`}
         >
           <ResponsiveContainer width="100%" height={260}>
             <BarChart
               data={data}
-              margin={{ top: 10, right: 8, left: 0, bottom: 28 }}
+              layout="vertical"
+              margin={{ top: 10, right: 18, left: 12, bottom: 0 }}
             >
-              <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
+              <CartesianGrid horizontal={false} stroke="var(--chart-grid)" />
               <XAxis
-                dataKey="name"
-                angle={-28}
-                textAnchor="end"
-                interval={0}
+                type="number"
+                domain={[0, 100]}
                 tick={{ fill: "var(--page-muted)", fontSize: 11 }}
+                tickFormatter={(value: number) => `${value}%`}
               />
               <YAxis
+                type="category"
+                dataKey="name"
+                width={90}
                 tick={{ fill: "var(--page-muted)", fontSize: 11 }}
-                tickFormatter={compactUsd}
               />
-              <Tooltip formatter={(value) => formatUsd(Number(value))} />
+              <Tooltip formatter={(value) => `${Number(value)}% used`} />
               <Bar
-                dataKey="amount"
-                name="Spending"
-                fill="var(--expense)"
-                radius={[7, 7, 2, 2]}
-              />
+                dataKey="utilization"
+                name="Budget used"
+                radius={[2, 7, 7, 2]}
+              >
+                {data.map((item) => (
+                  <Cell key={item.name} fill={budgetStatusColor(item.status)} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -156,16 +190,16 @@ function CategoryTotalsChart({ data }: { data: CategoryDatum[] }) {
   );
 }
 
-function SavingsExpenseChart({ data }: { data: MonthlyDatum[] }) {
+function CashFlowTrendChart({ data }: { data: MonthlyDatum[] }) {
   return (
     <ChartCard
-      title="Savings vs. expenses"
-      description="Last six reporting months"
+      title="Cash flow over time"
+      description="Exactly six reporting months"
     >
       <div
         className="analytics-chart"
         role="img"
-        aria-label="Six month savings and expenses comparison"
+        aria-label="Six month income, expenses, and available savings trend"
       >
         <ResponsiveContainer width="100%" height={260}>
           <LineChart
@@ -185,9 +219,19 @@ function SavingsExpenseChart({ data }: { data: MonthlyDatum[] }) {
             <Legend />
             <Line
               type="monotone"
+              dataKey="income"
+              name="Income"
+              stroke="var(--income)"
+              strokeWidth={3}
+              dot={{ r: 3 }}
+              activeDot={{ r: 5 }}
+              connectNulls
+            />
+            <Line
+              type="monotone"
               dataKey="savings"
-              name="Savings"
-              stroke="var(--page-accent)"
+              name="Available savings"
+              stroke="var(--warning)"
               strokeWidth={3}
               strokeDasharray="1 7"
               strokeLinecap="round"
@@ -293,6 +337,20 @@ interface CategoryDatum {
 interface MonthlyDatum {
   month: string;
   label: string;
+  income: number;
   expenses: number;
   savings: number;
+}
+
+interface BudgetDatum {
+  [key: string]: string | number;
+  name: string;
+  utilization: number;
+  status: string;
+}
+
+function budgetStatusColor(status: string): string {
+  if (status === "over_budget") return "var(--expense)";
+  if (status === "near_limit") return "var(--warning)";
+  return "var(--income)";
 }

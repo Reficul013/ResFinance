@@ -78,6 +78,9 @@ export function SmartSavingsInsights({
     );
   }
   const response = dashboard.query.data ?? dashboard.overview.data.insight;
+  const suggestedQuestions = buildSuggestedQuestions(
+    response.follow_up_questions,
+  );
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -135,6 +138,17 @@ export function SmartSavingsInsights({
                   onChange={(event) => setQuestion(event.target.value)}
                 />
               </label>
+              <div
+                className="follow-up-row"
+                role="group"
+                aria-label="Suggested questions"
+              >
+                {suggestedQuestions.map((item) => (
+                  <button type="button" key={item} onClick={() => ask(item)}>
+                    {item}
+                  </button>
+                ))}
+              </div>
               <button
                 className="primary-button"
                 disabled={
@@ -156,7 +170,7 @@ export function SmartSavingsInsights({
             )}
           </section>
 
-          <InsightResult response={response} onAsk={ask} />
+          <InsightResult response={response} />
         </div>
       </section>
 
@@ -251,13 +265,7 @@ function CombinedProvenancePanel({
   );
 }
 
-function InsightResult({
-  response,
-  onAsk,
-}: {
-  response: InsightResponse;
-  onAsk(question: string): void;
-}) {
+function InsightResult({ response }: { response: InsightResponse }) {
   return (
     <section
       className={`insight-result panel${response.refused ? " refusal" : ""}`}
@@ -289,17 +297,17 @@ function InsightResult({
           <li key={item}>{item}</li>
         ))}
       </ul>
-      {response.follow_up_questions.length > 0 && (
-        <div className="follow-up-row" aria-label="Suggested questions">
-          {response.follow_up_questions.map((item) => (
-            <button type="button" key={item} onClick={() => onAsk(item)}>
-              {item}
-            </button>
-          ))}
-        </div>
-      )}
     </section>
   );
+}
+
+function buildSuggestedQuestions(followUps: string[]): string[] {
+  const defaults = [
+    "Which recorded budgets need attention?",
+    "How do recurring items affect projected savings?",
+    "What is my available savings?",
+  ];
+  return [...new Set([...followUps, ...defaults])].slice(0, 3);
 }
 
 function DashboardState({
