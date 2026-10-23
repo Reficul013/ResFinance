@@ -88,7 +88,7 @@ export function AuthCard({
           <ThemeToggle />
           {actions}
           <button
-            className="auth-button secondary"
+            className="auth-button secondary logout-button"
             type="button"
             onClick={onLogout}
             aria-label="Log out"

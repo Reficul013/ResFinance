@@ -582,6 +582,10 @@ code {
   flex: 0 0 auto;
 }
 
+.logout-button .auth-action-icon {
+  color: var(--expense);
+}
+
 .auth-button.secondary {
   border: 1px solid var(--control-border);
   background: var(--control-background);
@@ -759,7 +763,7 @@ code {
   padding: 0;
   border: 1px solid var(--control-border);
   border-radius: 999px;
-  color: var(--page-accent);
+  color: var(--warning);
   background: var(--control-background);
   cursor: pointer;
 }
@@ -769,7 +773,7 @@ code {
 }
 
 .dashboard-info-button:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--page-accent) 45%, transparent);
+  outline: 3px solid color-mix(in srgb, var(--warning) 45%, transparent);
   outline-offset: 2px;
 }
 

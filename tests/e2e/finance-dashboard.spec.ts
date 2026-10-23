@@ -285,6 +285,11 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
       .getByRole("button", { name: "Log out" })
       .locator(".auth-action-icon"),
   ).toBeVisible();
+  await expect(
+    topBar
+      .getByRole("button", { name: "Log out" })
+      .locator(".auth-action-icon"),
+  ).toHaveCSS("color", "rgb(255, 140, 160)");
   await expect(topBar.locator(".theme-slider-track")).toBeVisible();
   await expect(topBar.getByText("Log out", { exact: true })).toHaveCount(0);
   await expect(topBar.getByText(/^(Light|Dark) Mode$/)).toHaveCount(0);
@@ -367,6 +372,12 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await page.getByRole("button", { name: "Switch to Dark Mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(topBar.locator(".auth-brand-logo-dark")).toBeVisible();
+
+  await expect(
+    page.getByRole("button", {
+      name: "How to use the Personal Finance dashboard",
+    }),
+  ).toHaveCSS("color", "rgb(242, 189, 90)");
 
   await page.setViewportSize({ width: 375, height: 812 });
   const compactSessionCardBox = await page.locator(".auth-card").boundingBox();
