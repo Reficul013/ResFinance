@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
  * Flips to true once the element enters the viewport so entrance animations
  * run when the user can actually see them (not while charts are still off-screen).
  */
-export function useAnimateWhenVisible<T extends HTMLElement = HTMLDivElement>(
-  options?: { rootMargin?: string; threshold?: number },
-) {
+export function useAnimateWhenVisible<
+  T extends HTMLElement = HTMLDivElement,
+>(options?: { rootMargin?: string; threshold?: number }) {
   const ref = useRef<T>(null);
   const [animated, setAnimated] = useState(false);
   const rootMargin = options?.rootMargin ?? "0px 0px -6% 0px";

@@ -296,8 +296,7 @@ function BalancePathChart({ data }: { data: BalancePathPoint[] }) {
                 itemStyle={chartTooltipItemStyle}
                 labelFormatter={(_label, payload) => {
                   const point = payload?.[0]?.payload as
-                    | BalancePathPoint
-                    | undefined;
+                    BalancePathPoint | undefined;
                   return point?.date ?? "";
                 }}
                 formatter={(value) => [
