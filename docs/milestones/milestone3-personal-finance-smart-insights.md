@@ -83,6 +83,8 @@ The 2026-10-19 dashboard update added Vitest request-boundary coverage and a Chr
 
 The 2026-10-23 follow-up extended the same generated-client and Playwright coverage to budget deactivation, including confirmation, optimistic versioning, projection refresh, and removal from active guardrails while preserving the source budget event.
 
+The dashboard presentation follow-up grouped finance entry and monthly review into one labelled activity section, placed explanatory copy directly beneath its section titles, simplified the entry accordion to one yellow boundary, applied the red/yellow/teal palette to budget progress, standardized guide typography, and aligned the shared notification bell with the yellow status color.
+
 ```bash
 .venv/bin/ruff check .
 .venv/bin/mypy

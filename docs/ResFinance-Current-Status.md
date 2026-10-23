@@ -80,6 +80,10 @@ Evidence:
   a compact row for cash flow, transactions, budgets, and commitments, and a
   bulleted dashboard guide that color-codes and explains actual, projected, and
   available savings.
+- Added consistent section hierarchy for financial activity, trends, and Smart
+  Savings Insights; simplified the entry accordion to one enlarged yellow
+  boundary; applied the red, yellow, and teal theme palette to budget bars; and
+  normalized the dashboard-guide body typography.
 - Refined the embedded Insights workspace with a narrower question panel,
   exactly three suggested-question actions with lightbulb cues, compact
   verified-evidence bullets, explicit completion feedback, and a bounded

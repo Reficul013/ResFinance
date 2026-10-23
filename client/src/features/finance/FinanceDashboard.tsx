@@ -151,16 +151,31 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
       </section>
 
       <SummaryCards overview={overview} />
-      <FinanceEntryForms
-        dashboard={dashboard}
-        overview={overview}
-        month={month}
-      />
-      <div className="finance-overview-row">
-        <CashFlowChart overview={overview} />
-        <TransactionPanel overview={overview} onAction={openRecordAction} />
-        <PlanningPanel overview={overview} onAction={openRecordAction} />
-      </div>
+      <section
+        className="finance-activity"
+        aria-labelledby="finance-activity-title"
+      >
+        <div className="insights-section-heading finance-activity-heading">
+          <div>
+            <p className="section-kicker">Monthly money management</p>
+            <h2 id="finance-activity-title">Your financial activity</h2>
+            <p>
+              Add records, then review cash flow, recent transactions, budgets,
+              and commitments for the selected month.
+            </p>
+          </div>
+        </div>
+        <FinanceEntryForms
+          dashboard={dashboard}
+          overview={overview}
+          month={month}
+        />
+        <div className="finance-overview-row">
+          <CashFlowChart overview={overview} />
+          <TransactionPanel overview={overview} onAction={openRecordAction} />
+          <PlanningPanel overview={overview} onAction={openRecordAction} />
+        </div>
+      </section>
       <FinanceAnalytics
         overview={overview}
         historyMonths={dashboard.historyMonths}
@@ -190,11 +205,7 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
 export function SummaryCards({ overview }: { overview: FinanceOverview }) {
   const summary = overview.summary;
   const cards = [
-    [
-      "Current balance",
-      summary.balance.minor_units,
-      "All Recorded Cash Flow",
-    ],
+    ["Current balance", summary.balance.minor_units, "All Recorded Cash Flow"],
     ["Income", summary.income.minor_units, "Total Earned This Month"],
     ["Expenses", summary.expense.minor_units, "Total Spent This Month"],
     [
@@ -310,8 +321,14 @@ function PlanningPanel({
             <EmptyState text="No budgets for this month yet." />
           ) : (
             <ul className="budget-list">
-              {statuses.map((budget) => (
-                <li key={budget.budget_id} data-status={budget.status}>
+              {statuses.map((budget, index) => (
+                <li
+                  key={budget.budget_id}
+                  data-status={budget.status}
+                  data-bar-color={
+                    (["red", "yellow", "teal"] as const)[index % 3]
+                  }
+                >
                   <div className="budget-row">
                     <strong>{budget.category_name}</strong>
                     <div className="budget-actions">

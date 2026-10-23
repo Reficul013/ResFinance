@@ -271,6 +271,10 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   ).toBeVisible();
   await expect(topBar.getByLabel("No in-app notifications")).toBeVisible();
   await expect(topBar.locator(".notification-bell")).toBeVisible();
+  await expect(topBar.locator(".notification-bell")).toHaveCSS(
+    "color",
+    "rgb(242, 189, 90)",
+  );
   const githubLink = topBar.getByRole("link", {
     name: "Open ResFinance repository on GitHub",
   });
@@ -413,9 +417,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     page.getByText("Current balance", { exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText("All Recorded Cash Flow"),
-  ).toBeVisible();
+  await expect(page.getByText("All Recorded Cash Flow")).toBeVisible();
   await expect(page.getByText("Total Earned This Month")).toBeVisible();
   await expect(page.getByText("Total Spent This Month")).toBeVisible();
   await expect(
@@ -426,11 +428,34 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByRole("progressbar", { name: "Groceries budget utilization" }),
   ).toHaveAttribute("value", "9000");
   await expect(
+    page.getByRole("progressbar", { name: "Groceries budget utilization" }),
+  ).toHaveCSS("accent-color", "rgb(255, 140, 160)");
+  await expect(
     page.getByRole("img", { name: /Income \$5,000.00/ }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Your financial trends" }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Your financial activity" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Monthly money management", { exact: true }),
+  ).toHaveCSS("color", "rgb(56, 209, 197)");
+  const trendsHeadingBox = await page
+    .getByRole("heading", { name: "Your financial trends" })
+    .boundingBox();
+  const trendsDescriptionBox = await page
+    .getByText(
+      "Charts use your recorded ledger and upcoming recurring commitments.",
+      { exact: true },
+    )
+    .boundingBox();
+  expect(trendsHeadingBox).not.toBeNull();
+  expect(trendsDescriptionBox).not.toBeNull();
+  expect(trendsDescriptionBox!.y).toBeGreaterThan(
+    trendsHeadingBox!.y + trendsHeadingBox!.height,
+  );
   await expect(
     page.getByRole("heading", { name: "Spending by category" }),
   ).toBeVisible();
@@ -467,6 +492,15 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     cards.map((card) => Math.round(card.getBoundingClientRect().height)),
   );
   expect(new Set(entryCardHeights).size).toBe(1);
+  await expect(page.locator(".finance-activity .entry-panel")).toHaveCSS(
+    "border-top-width",
+    "0px",
+  );
+  await expect(entryAccordion).toHaveCSS("border-top-width", "2px");
+  await expect(entryAccordion.locator("summary > span")).toHaveCSS(
+    "color",
+    "rgb(242, 189, 90)",
+  );
   await expect(
     entryAccordion.getByRole("button", { name: "Save transaction" }),
   ).toHaveCSS("background-color", "rgb(255, 140, 160)");
@@ -490,6 +524,9 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     page.getByRole("heading", { name: "Smart Savings Insights" }),
   ).toBeVisible();
+  await expect(
+    page.getByText("Evidence-linked guidance", { exact: true }).last(),
+  ).toHaveCSS("color", "rgb(56, 209, 197)");
   const entryFollowsSummary = await page
     .locator(".summary-grid")
     .evaluate((node) =>
@@ -538,6 +575,14 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     dashboardGuide.getByText("Available savings", { exact: true }),
   ).toBeVisible();
   await expect(dashboardGuide.locator("li")).toHaveCount(7);
+  const guideFontSizes = await dashboardGuide
+    .locator(
+      ".dashboard-guide-points, .savings-conventions ul, .dashboard-guide-note",
+    )
+    .evaluateAll((elements) =>
+      elements.map((element) => getComputedStyle(element).fontSize),
+    );
+  expect(new Set(guideFontSizes)).toEqual(new Set(["14.4px"]));
   await expect(
     dashboardGuide.getByText("Available savings", { exact: true }),
   ).toHaveCSS("color", "rgb(255, 140, 160)");
