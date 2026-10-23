@@ -1,5 +1,5 @@
 import { ArchiveX, CircleHelp, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   Bar,
   BarChart,
@@ -20,11 +20,14 @@ import {
   chartTooltipItemStyle,
   chartTooltipLabelStyle,
 } from "../../lib/chartTooltip";
+import { useAnimateWhenVisible } from "../../lib/useAnimateWhenVisible";
 import { FinanceEntryForms } from "./FinanceEntryForms";
 import { FinanceAnalytics } from "./FinanceAnalytics";
 import { currentMonth, formatUsd } from "./money";
 import { useFinanceDashboard } from "./useFinanceDashboard";
 import { SmartSavingsInsights } from "../insights/InsightsDashboard";
+
+const BAR_ANIMATION_MS = 850;
 
 interface FinanceDashboardProps {
   accessToken: string;
@@ -248,6 +251,7 @@ const SAVINGS_BREAKDOWN = [
 ] as const;
 
 function CashFlowChart({ overview }: { overview: FinanceOverview }) {
+  const { ref, animated } = useAnimateWhenVisible<HTMLDivElement>();
   const { summary } = overview;
   const data = [
     {
@@ -278,11 +282,17 @@ function CashFlowChart({ overview }: { overview: FinanceOverview }) {
         </div>
       </div>
       <div
+        ref={ref}
         className="chart-wrap"
+        data-animated={animated ? "true" : "false"}
         role="img"
         aria-label={`Income ${formatUsd(summary.income.minor_units)}, expenses ${formatUsd(summary.expense.minor_units)}, projected savings ${formatUsd(summary.savings.projected.minor_units)}`}
       >
-        <ResponsiveContainer width="100%" height={140}>
+        <ResponsiveContainer
+          key={animated ? "animated" : "idle"}
+          width="100%"
+          height={140}
+        >
           <BarChart
             data={data}
             margin={{ top: 8, right: 8, left: 4, bottom: 4 }}
@@ -304,7 +314,14 @@ function CashFlowChart({ overview }: { overview: FinanceOverview }) {
                 label === "Savings" ? "Projected savings" : String(label)
               }
             />
-            <Bar dataKey="amount" radius={[8, 8, 2, 2]}>
+            <Bar
+              dataKey="amount"
+              radius={[8, 8, 2, 2]}
+              isAnimationActive={animated}
+              animationBegin={0}
+              animationDuration={BAR_ANIMATION_MS}
+              animationEasing="ease-out"
+            >
               {data.map((item) => (
                 <Cell key={item.label} fill={item.color} />
               ))}
@@ -341,6 +358,8 @@ function PlanningPanel({
   overview: FinanceOverview;
   onAction: (action: RecordAction) => void;
 }) {
+  const { ref: budgetListRef, animated: budgetsAnimated } =
+    useAnimateWhenVisible<HTMLUListElement>();
   const statuses = overview.summary.budget_statuses;
   const recurring = overview.recurring_entries.filter((item) => item.active);
   const openObligations = overview.obligations.filter((item) => !item.settled);
@@ -361,13 +380,22 @@ function PlanningPanel({
           {statuses.length === 0 ? (
             <EmptyState text="No budgets for this month yet." />
           ) : (
-            <ul className="budget-list">
+            <ul
+              ref={budgetListRef}
+              className="budget-list"
+              data-animated={budgetsAnimated ? "true" : "false"}
+            >
               {statuses.map((budget, index) => (
                 <li
                   key={budget.budget_id}
                   data-status={budget.status}
                   data-bar-color={
                     (["red", "yellow", "teal"] as const)[index % 3]
+                  }
+                  style={
+                    {
+                      "--budget-fill-delay": `${index * 90}ms`,
+                    } as CSSProperties
                   }
                 >
                   <div className="budget-row">
@@ -581,7 +609,7 @@ function DashboardGuideDialog({ onClose }: { onClose: () => void }) {
       <div className="dashboard-guide-heading">
         <div>
           <p className="section-kicker">Personal Finance guide</p>
-          <h2 id="dashboard-guide-title">How to use this dashboard</h2>
+          <h2 id="dashboard-guide-title">How to use this dashboard?</h2>
         </div>
         <button
           type="button"
@@ -594,46 +622,44 @@ function DashboardGuideDialog({ onClose }: { onClose: () => void }) {
       <ul className="dashboard-guide-points">
         <li>
           Record income and expenses, set monthly budgets, and add recurring
-          commitments.
+          commitments under Monthly money management.
         </li>
         <li>
-          Use the reporting month to review balances, trends, and
-          evidence-linked insights for a specific month.
+          Use Reporting month to review summary balances, cash flow, recent
+          transactions, budgets &amp; commitments, analytics trends, and
+          evidence-linked insights for that month.
         </li>
-      </ul>
-      <div className="savings-conventions">
-        <article>
-          <strong>Actual savings</strong>
-          <ul>
-            <li>Recorded monthly income minus recorded monthly expenses.</li>
-          </ul>
-        </article>
-        <article>
-          <strong>Projected savings</strong>
-          <ul>
-            <li>
-              Actual savings adjusted for unmatched recurring items and open
-              receivables or payables due this month.
-            </li>
-          </ul>
-        </article>
-        <article>
-          <strong>Available savings</strong>
-          <ul>
-            <li>
-              Projected savings floored at zero; this is the default amount sent
-              to future portfolio analysis.
-            </li>
-          </ul>
-        </article>
-      </div>
-      <ul className="dashboard-guide-note">
-        <li>Changes append auditable events.</li>
+        <li>
+          Voiding a transaction or deactivating a budget or recurring item
+          appends an auditable compensating event. Records are never silently
+          rewritten.
+        </li>
         <li>
           Smart Savings Insights explain verified records and cannot edit your
           finances, sign wallet actions, settle obligations, or trade.
         </li>
       </ul>
+      <div className="savings-conventions">
+        <article>
+          <strong>Actual savings</strong>
+          <p>Recorded monthly income minus recorded monthly expenses.</p>
+        </article>
+        <article>
+          <strong>Projected savings</strong>
+          <p>
+            Actual savings adjusted for unmatched recurring items and confirmed
+            receivables or payables due this month. This is the Cash flow
+            chart&apos;s Savings bar.
+          </p>
+        </article>
+        <article>
+          <strong>Available savings</strong>
+          <p>
+            Projected savings floored at zero; shown in the summary and used as
+            the default amount for future portfolio analysis.
+          </p>
+        </article>
+      </div>
     </dialog>
   );
 }

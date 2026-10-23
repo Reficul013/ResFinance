@@ -1032,6 +1032,207 @@ code {
   min-height: 16.25rem;
 }
 
+/* Keep chart SVG in the DOM for tests, but hide until the entrance animation starts. */
+.analytics-chart[data-animated="false"] .recharts-wrapper,
+.chart-wrap[data-animated="false"] .recharts-wrapper {
+  opacity: 0;
+}
+
+.analytics-chart[data-animated="true"] .recharts-wrapper,
+.chart-wrap[data-animated="true"] .recharts-wrapper {
+  opacity: 1;
+}
+
+/* Idle motion after entrance: soft blink + flowing dashes / shimmer. */
+@keyframes chart-series-blink {
+  0%,
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.55;
+    filter: brightness(1.25);
+  }
+}
+
+@keyframes chart-line-flow {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+
+@keyframes chart-bar-shimmer {
+  0%,
+  100% {
+    opacity: 1;
+    filter: brightness(1) saturate(1) drop-shadow(0 0 0 transparent);
+  }
+  40% {
+    opacity: 0.7;
+    filter: brightness(1.22) saturate(1.15)
+      drop-shadow(0 0 5px color-mix(in srgb, white 30%, transparent));
+  }
+  70% {
+    opacity: 0.85;
+    filter: brightness(1.35) saturate(1.2)
+      drop-shadow(0 0 8px color-mix(in srgb, white 40%, transparent));
+  }
+}
+
+@keyframes chart-area-flow {
+  0%,
+  100% {
+    opacity: 0.28;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes chart-pie-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    filter: brightness(1) drop-shadow(0 0 0 transparent);
+  }
+  50% {
+    opacity: 0.62;
+    filter: brightness(1.22)
+      drop-shadow(0 0 6px color-mix(in srgb, white 35%, transparent));
+  }
+}
+
+@keyframes donut-spin-glow {
+  0%,
+  100% {
+    filter: brightness(1);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--income) 0%, transparent);
+  }
+  50% {
+    filter: brightness(1.22);
+    box-shadow: 0 0 22px 3px color-mix(in srgb, var(--income) 40%, transparent);
+  }
+}
+
+@keyframes budget-bar-flow {
+  0% {
+    background-position: 100% 0;
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.25);
+  }
+  100% {
+    background-position: -100% 0;
+    filter: brightness(1);
+  }
+}
+
+.chart-wrap[data-animated="true"] .recharts-bar-rectangle {
+  animation: chart-bar-shimmer 2.2s ease-in-out infinite;
+}
+
+.chart-wrap[data-animated="true"] .recharts-bar-rectangle:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.chart-wrap[data-animated="true"] .recharts-bar-rectangle:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+.analytics-chart[data-animated="true"] .recharts-area-area {
+  animation: chart-area-flow 2.6s ease-in-out infinite;
+}
+
+.analytics-chart[data-animated="true"] .recharts-area-curve {
+  animation: chart-series-blink 2.6s ease-in-out infinite;
+}
+
+/* Balance path: keep the step line flowing and the fill blinking clearly. */
+@keyframes balance-path-stroke-flow {
+  to {
+    stroke-dashoffset: -64;
+  }
+}
+
+@keyframes balance-path-fill-blink {
+  0%,
+  100% {
+    opacity: 0.35;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.45);
+  }
+}
+
+@keyframes balance-path-stroke-blink {
+  0%,
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  50% {
+    opacity: 0.55;
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--income) 70%, white));
+  }
+}
+
+.balance-path-chart[data-animated="true"] .recharts-area-curve {
+  stroke-dasharray: 12 10;
+  stroke-linecap: round;
+  animation:
+    balance-path-stroke-flow 1.35s linear infinite,
+    balance-path-stroke-blink 1.8s ease-in-out infinite;
+}
+
+.balance-path-chart[data-animated="true"] .recharts-area-area {
+  animation: balance-path-fill-blink 1.8s ease-in-out infinite;
+}
+
+.analytics-chart[data-animated="true"] .recharts-line-curve {
+  stroke-dasharray: 7 9;
+  animation:
+    chart-line-flow 1.5s linear infinite,
+    chart-series-blink 2.4s ease-in-out infinite;
+}
+
+.analytics-chart[data-animated="true"] .recharts-line-curve:nth-of-type(2) {
+  animation-delay: 0s, 0.2s;
+}
+
+.analytics-chart[data-animated="true"] .recharts-line-curve:nth-of-type(3) {
+  animation-delay: 0s, 0.4s;
+}
+
+.analytics-chart[data-animated="true"] .recharts-line-dots circle,
+.analytics-chart[data-animated="true"] .recharts-dot {
+  animation: chart-series-blink 2.4s ease-in-out infinite;
+}
+
+.analytics-chart[data-animated="true"] .recharts-pie-sector {
+  animation: chart-pie-pulse 2.3s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.analytics-chart[data-animated="true"] .recharts-pie-sector:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.analytics-chart[data-animated="true"] .recharts-pie-sector:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+.analytics-chart[data-animated="true"] .recharts-pie-sector:nth-child(4) {
+  animation-delay: 0.54s;
+}
+
+.analytics-chart[data-animated="true"] .recharts-pie-sector:nth-child(5) {
+  animation-delay: 0.72s;
+}
+
 /* Recharts SVG text defaults to a generic sans; keep dashboard Inter. */
 .recharts-wrapper,
 .recharts-legend-wrapper,
@@ -1058,6 +1259,17 @@ code {
   max-width: 100%;
   aspect-ratio: 1;
   border-radius: 50%;
+  transform: scale(0.72) rotate(-12deg);
+  opacity: 0;
+}
+
+.analytics-chart[data-animated="true"] .single-category-donut {
+  transform: scale(1) rotate(0deg);
+  opacity: 1;
+  transition:
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.45s ease-out;
+  animation: donut-spin-glow 2.4s ease-in-out 0.75s infinite;
 }
 
 .single-category-donut::after {
@@ -1289,6 +1501,30 @@ code {
 .budget-list progress::-webkit-progress-value {
   border-radius: 999px;
   background: var(--budget-bar-color, var(--income));
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.budget-list progress::-moz-progress-bar {
+  border-radius: 999px;
+  background: var(--budget-bar-color, var(--income));
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.budget-list[data-animated="true"] progress::-webkit-progress-value,
+.budget-list[data-animated="true"] progress::-moz-progress-bar {
+  transform: scaleX(1);
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--budget-fill-delay, 0ms);
+  background-image: linear-gradient(
+    100deg,
+    var(--budget-bar-color, var(--income)) 0%,
+    color-mix(in srgb, var(--budget-bar-color, var(--income)) 55%, white) 42%,
+    var(--budget-bar-color, var(--income)) 78%
+  );
+  background-size: 220% 100%;
+  animation: budget-bar-flow 1.7s linear var(--budget-fill-delay, 0ms) infinite;
 }
 
 .budget-list [data-bar-color="red"] {
@@ -1589,14 +1825,13 @@ td.expense {
   padding: 0;
   border: 1px solid var(--control-border);
   border-radius: 999px;
-  color: var(--page-text);
+  color: var(--expense);
   background: var(--control-background);
   cursor: pointer;
 }
 
-.dashboard-guide-points,
-.dashboard-guide-note,
-.savings-conventions ul {
+.dashboard-guide-points {
+  margin-top: 1rem;
   margin-bottom: 0;
   padding-left: 1.15rem;
   color: var(--page-muted);
@@ -1604,13 +1839,8 @@ td.expense {
   line-height: 1.55;
 }
 
-.dashboard-guide-points li + li,
-.dashboard-guide-note li + li {
+.dashboard-guide-points li + li {
   margin-top: 0.2rem;
-}
-
-.dashboard-guide-points {
-  margin-top: 1rem;
 }
 
 .savings-conventions {
@@ -1646,8 +1876,11 @@ td.expense {
   line-height: 1.3;
 }
 
-.dashboard-guide-note {
-  margin-top: 1rem;
+.savings-conventions p {
+  margin: 0;
+  color: var(--page-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
 }
 
 .record-action-dialog::backdrop {
@@ -2835,6 +3068,31 @@ td.expense {
   .auth-status-bulb,
   .loading-orb,
   .theme-slider-thumb {
+    animation: none;
+    transition: none;
+  }
+
+  .single-category-donut,
+  .analytics-chart[data-animated="true"] .single-category-donut,
+  .analytics-chart[data-animated="false"] .recharts-wrapper,
+  .chart-wrap[data-animated="false"] .recharts-wrapper,
+  .chart-wrap[data-animated="true"] .recharts-bar-rectangle,
+  .analytics-chart[data-animated="true"] .recharts-area-area,
+  .analytics-chart[data-animated="true"] .recharts-area-curve,
+  .balance-path-chart[data-animated="true"] .recharts-area-curve,
+  .balance-path-chart[data-animated="true"] .recharts-area-area,
+  .analytics-chart[data-animated="true"] .recharts-line-curve,
+  .analytics-chart[data-animated="true"] .recharts-line-dots circle,
+  .analytics-chart[data-animated="true"] .recharts-dot,
+  .analytics-chart[data-animated="true"] .recharts-pie-sector,
+  .budget-list progress::-webkit-progress-value,
+  .budget-list progress::-moz-progress-bar,
+  .budget-list[data-animated="true"] progress::-webkit-progress-value,
+  .budget-list[data-animated="true"] progress::-moz-progress-bar {
+    transform: none;
+    opacity: 1;
+    filter: none;
+    box-shadow: none;
     animation: none;
     transition: none;
   }

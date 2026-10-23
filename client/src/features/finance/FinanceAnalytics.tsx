@@ -23,8 +23,14 @@ import {
   chartTooltipItemStyle,
   chartTooltipLabelStyle,
 } from "../../lib/chartTooltip";
+import { useAnimateWhenVisible } from "../../lib/useAnimateWhenVisible";
 import { buildMonthBalancePath, type BalancePathPoint } from "./balancePath";
 import { formatUsd } from "./money";
+
+const CHART_HEIGHT = 260;
+const PIE_ANIMATION_MS = 900;
+const PATH_ANIMATION_MS = 1100;
+const LINE_ANIMATION_MS = 1200;
 
 /** High-contrast teal / gold / red-coral map — fixed per category so slices stay distinct. */
 const categoryColorByName: Record<string, string> = {
@@ -104,13 +110,16 @@ export function FinanceAnalytics({
 }
 
 function CategorySplitChart({ data }: { data: CategoryDatum[] }) {
+  const { ref, animated } = useAnimateWhenVisible<HTMLDivElement>();
   return (
     <ChartCard title="Spending By Category" description="This reporting month">
       {data.length === 0 ? (
         <EmptyChart text="Record an expense to see its category split." />
       ) : (
         <div
+          ref={ref}
           className="analytics-chart"
+          data-animated={animated ? "true" : "false"}
           role="img"
           aria-label={`Category spending: ${data.map((item) => `${item.name} ${formatUsd(item.amount)}`).join(", ")}`}
         >
@@ -137,7 +146,11 @@ function CategorySplitChart({ data }: { data: CategoryDatum[] }) {
               </span>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer
+              key={animated ? "animated" : "idle"}
+              width="100%"
+              height={CHART_HEIGHT}
+            >
               <PieChart>
                 <Pie
                   data={data}
@@ -150,6 +163,10 @@ function CategorySplitChart({ data }: { data: CategoryDatum[] }) {
                   paddingAngle={3}
                   stroke="var(--panel-background)"
                   strokeWidth={2}
+                  isAnimationActive={animated}
+                  animationBegin={0}
+                  animationDuration={PIE_ANIMATION_MS}
+                  animationEasing="ease-out"
                 >
                   {data.map((item, index) => (
                     <Cell
@@ -180,7 +197,16 @@ function CategorySplitChart({ data }: { data: CategoryDatum[] }) {
 }
 
 function BalancePathChart({ data }: { data: BalancePathPoint[] }) {
+  const { ref, animated } = useAnimateWhenVisible<HTMLDivElement>();
   const ending = data.at(-1)?.balance;
+  const balances = data.map((point) => point.balance);
+  const dataMax = Math.max(0, ...balances);
+  const dataMin = Math.min(0, ...balances);
+  const pad = Math.max((dataMax - dataMin) * 0.12, 50_000);
+  // Anchor the glow at the chart floor so fill sits under the whole step path,
+  // not only the positive segment down to $0.
+  const domainMin = dataMin - pad;
+  const domainMax = dataMax + pad;
   return (
     <ChartCard
       title="Balance Through The Month"
@@ -190,11 +216,17 @@ function BalancePathChart({ data }: { data: BalancePathPoint[] }) {
         <EmptyChart text="Record a transaction to see the month's balance path." />
       ) : (
         <div
-          className="analytics-chart"
+          ref={ref}
+          className="analytics-chart balance-path-chart"
+          data-animated={animated ? "true" : "false"}
           role="img"
           aria-label={`Balance Through The Month ending at ${formatUsd(ending ?? 0)}`}
         >
-          <ResponsiveContainer width="100%" height={260}>
+          <ResponsiveContainer
+            key={animated ? "animated" : "idle"}
+            width="100%"
+            height={CHART_HEIGHT}
+          >
             <AreaChart
               data={data}
               margin={{ top: 10, right: 8, left: 0, bottom: 0 }}
@@ -210,12 +242,35 @@ function BalancePathChart({ data }: { data: BalancePathPoint[] }) {
                   <stop
                     offset="0%"
                     stopColor="var(--income)"
-                    stopOpacity={0.35}
-                  />
+                    stopOpacity={0.42}
+                  >
+                    {animated ? (
+                      <animate
+                        attributeName="stop-opacity"
+                        values="0.2;0.65;0.2"
+                        dur="2s"
+                        repeatCount="indefinite"
+                      />
+                    ) : null}
+                  </stop>
+                  <stop
+                    offset="55%"
+                    stopColor="var(--income)"
+                    stopOpacity={0.16}
+                  >
+                    {animated ? (
+                      <animate
+                        attributeName="stop-opacity"
+                        values="0.05;0.34;0.05"
+                        dur="2s"
+                        repeatCount="indefinite"
+                      />
+                    ) : null}
+                  </stop>
                   <stop
                     offset="100%"
                     stopColor="var(--income)"
-                    stopOpacity={0.02}
+                    stopOpacity={0.03}
                   />
                 </linearGradient>
               </defs>
@@ -229,6 +284,7 @@ function BalancePathChart({ data }: { data: BalancePathPoint[] }) {
                 }
               />
               <YAxis
+                domain={[domainMin, domainMax]}
                 tick={chartTickStyle}
                 tickFormatter={compactUsd}
                 width={56}
@@ -240,7 +296,8 @@ function BalancePathChart({ data }: { data: BalancePathPoint[] }) {
                 itemStyle={chartTooltipItemStyle}
                 labelFormatter={(_label, payload) => {
                   const point = payload?.[0]?.payload as
-                    BalancePathPoint | undefined;
+                    | BalancePathPoint
+                    | undefined;
                   return point?.date ?? "";
                 }}
                 formatter={(value) => [
@@ -253,10 +310,15 @@ function BalancePathChart({ data }: { data: BalancePathPoint[] }) {
                 dataKey="balance"
                 name="Running balance"
                 stroke="var(--income)"
-                strokeWidth={2.5}
+                strokeWidth={2.75}
                 fill="url(#balancePathFill)"
+                baseValue={domainMin}
                 dot={false}
                 activeDot={{ r: 4 }}
+                isAnimationActive={animated}
+                animationBegin={0}
+                animationDuration={PATH_ANIMATION_MS}
+                animationEasing="ease-out"
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -267,17 +329,24 @@ function BalancePathChart({ data }: { data: BalancePathPoint[] }) {
 }
 
 function CashFlowTrendChart({ data }: { data: MonthlyDatum[] }) {
+  const { ref, animated } = useAnimateWhenVisible<HTMLDivElement>();
   return (
     <ChartCard
       title="Cash Flow Over Time"
       description="Exactly six reporting months"
     >
       <div
+        ref={ref}
         className="analytics-chart"
+        data-animated={animated ? "true" : "false"}
         role="img"
         aria-label="Six month income, expenses, and available savings trend"
       >
-        <ResponsiveContainer width="100%" height={260}>
+        <ResponsiveContainer
+          key={animated ? "animated" : "idle"}
+          width="100%"
+          height={CHART_HEIGHT}
+        >
           <LineChart
             data={data}
             margin={{ top: 10, right: 8, left: 0, bottom: 0 }}
@@ -310,6 +379,10 @@ function CashFlowTrendChart({ data }: { data: MonthlyDatum[] }) {
               dot={{ r: 3 }}
               activeDot={{ r: 5 }}
               connectNulls
+              isAnimationActive={animated}
+              animationBegin={0}
+              animationDuration={LINE_ANIMATION_MS}
+              animationEasing="ease-out"
             />
             <Line
               type="monotone"
@@ -322,6 +395,10 @@ function CashFlowTrendChart({ data }: { data: MonthlyDatum[] }) {
               dot={{ r: 4 }}
               activeDot={{ r: 6 }}
               connectNulls
+              isAnimationActive={animated}
+              animationBegin={80}
+              animationDuration={LINE_ANIMATION_MS}
+              animationEasing="ease-out"
             />
             <Line
               type="monotone"
@@ -334,6 +411,10 @@ function CashFlowTrendChart({ data }: { data: MonthlyDatum[] }) {
               dot={{ r: 4 }}
               activeDot={{ r: 6 }}
               connectNulls
+              isAnimationActive={animated}
+              animationBegin={160}
+              animationDuration={LINE_ANIMATION_MS}
+              animationEasing="ease-out"
             />
           </LineChart>
         </ResponsiveContainer>

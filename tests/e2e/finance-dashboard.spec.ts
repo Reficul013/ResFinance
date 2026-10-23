@@ -681,7 +681,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     .getByRole("button", { name: "How to use the Personal Finance dashboard" })
     .click();
   const dashboardGuide = page.getByRole("dialog", {
-    name: "How to use this dashboard",
+    name: "How to use this dashboard?",
   });
   await expect(dashboardGuide).toBeVisible();
   await expect(
@@ -693,11 +693,9 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     dashboardGuide.getByText("Available savings", { exact: true }),
   ).toBeVisible();
-  await expect(dashboardGuide.locator("li")).toHaveCount(7);
+  await expect(dashboardGuide.locator("li")).toHaveCount(4);
   const guideFontSizes = await dashboardGuide
-    .locator(
-      ".dashboard-guide-points, .savings-conventions ul, .dashboard-guide-note",
-    )
+    .locator(".dashboard-guide-points, .savings-conventions p")
     .evaluateAll((elements) =>
       elements.map((element) => getComputedStyle(element).fontSize),
     );
