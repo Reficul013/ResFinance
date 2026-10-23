@@ -442,6 +442,49 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     page.getByText("Monthly money management", { exact: true }),
   ).toHaveCSS("color", "rgb(56, 209, 197)");
+  const dashboardSectionHeadings = page.locator(".dashboard-section-heading");
+  await expect(dashboardSectionHeadings).toHaveCount(3);
+  const sectionTitleStyles = await dashboardSectionHeadings
+    .locator("h2")
+    .evaluateAll((titles) =>
+      titles.map((title) => {
+        const style = getComputedStyle(title);
+        return {
+          fontSize: style.fontSize,
+          letterSpacing: style.letterSpacing,
+          marginBottom: style.marginBottom,
+          marginTop: style.marginTop,
+        };
+      }),
+    );
+  expect(new Set(sectionTitleStyles.map(JSON.stringify)).size).toBe(1);
+  const sectionKickerStyles = await dashboardSectionHeadings
+    .locator(".section-kicker")
+    .evaluateAll((kickers) =>
+      kickers.map((kicker) => {
+        const style = getComputedStyle(kicker);
+        return {
+          fontSize: style.fontSize,
+          fontWeight: style.fontWeight,
+          letterSpacing: style.letterSpacing,
+          marginBottom: style.marginBottom,
+        };
+      }),
+    );
+  expect(new Set(sectionKickerStyles.map(JSON.stringify)).size).toBe(1);
+  const sectionDescriptionStyles = await dashboardSectionHeadings
+    .locator("p:not(.section-kicker)")
+    .evaluateAll((descriptions) =>
+      descriptions.map((description) => {
+        const style = getComputedStyle(description);
+        return {
+          fontSize: style.fontSize,
+          lineHeight: style.lineHeight,
+          marginTop: style.marginTop,
+        };
+      }),
+    );
+  expect(new Set(sectionDescriptionStyles.map(JSON.stringify)).size).toBe(1);
   const trendsHeadingBox = await page
     .getByRole("heading", { name: "Your financial trends" })
     .boundingBox();

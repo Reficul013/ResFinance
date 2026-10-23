@@ -155,7 +155,7 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
         className="finance-activity"
         aria-labelledby="finance-activity-title"
       >
-        <div className="insights-section-heading finance-activity-heading">
+        <div className="dashboard-section-heading finance-activity-heading">
           <div>
             <p className="section-kicker">Monthly money management</p>
             <h2 id="finance-activity-title">Your financial activity</h2>

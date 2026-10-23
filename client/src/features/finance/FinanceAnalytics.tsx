@@ -61,7 +61,7 @@ export function FinanceAnalytics({
 
   return (
     <section className="finance-analytics" aria-labelledby="analytics-title">
-      <div className="section-heading">
+      <div className="dashboard-section-heading">
         <div>
           <p className="section-kicker">Spending patterns</p>
           <h2 id="analytics-title">Your financial trends</h2>

@@ -104,7 +104,7 @@ export function SmartSavingsInsights({
         className="smart-savings-insights"
         aria-labelledby="smart-insights-title"
       >
-        <div className="insights-section-heading">
+        <div className="dashboard-section-heading">
           <div>
             <p className="section-kicker">Evidence-linked guidance</p>
             <h2 id="smart-insights-title">Smart Savings Insights</h2>

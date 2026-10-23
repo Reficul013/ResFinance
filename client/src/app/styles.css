@@ -910,16 +910,31 @@ code {
   gap: 1rem;
 }
 
-.finance-activity > .insights-section-heading h2,
-.smart-savings-insights > .insights-section-heading h2 {
+.dashboard-section-heading {
+  display: flex;
+  gap: 1.5rem;
+  align-items: start;
+  justify-content: space-between;
+  margin: 0;
+}
+
+.dashboard-section-heading h2 {
   margin: 0;
   font-size: 1.2rem;
   letter-spacing: -0.02em;
 }
 
 .finance-activity-heading .section-kicker,
-.smart-savings-insights .insights-section-heading .section-kicker {
+.smart-savings-insights .dashboard-section-heading .section-kicker {
   color: var(--page-accent);
+}
+
+.dashboard-section-heading > div > p:not(.section-kicker) {
+  max-width: 52rem;
+  margin: 0.25rem 0 0;
+  color: var(--page-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
 .analytics-grid {
@@ -938,8 +953,7 @@ code {
   letter-spacing: -0.02em;
 }
 
-.analytics-card .section-heading p,
-.insights-section-heading p {
+.analytics-card .section-heading p {
   margin: 0.25rem 0 0;
   color: var(--page-muted);
   font-size: 0.82rem;
@@ -1039,11 +1053,6 @@ code {
   color: var(--page-muted);
   font-size: 0.88rem;
   line-height: 1.5;
-}
-
-.finance-analytics > .section-heading .section-description {
-  margin-top: 0.25rem;
-  font-size: 0.82rem;
 }
 
 .section-kicker {
