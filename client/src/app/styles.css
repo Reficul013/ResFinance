@@ -1887,13 +1887,14 @@ td.expense {
 
 .insights-workspace {
   display: grid;
-  grid-template-columns: minmax(18rem, 0.72fr) minmax(0, 1.28fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
   gap: 1rem;
 }
 
 .insights-workspace > .panel {
   height: 100%;
+  padding: 1.1rem 1.2rem;
 }
 
 .insight-composer {
@@ -1905,7 +1906,7 @@ td.expense {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.65rem;
 }
 
 .insight-composer .primary-button {
@@ -1914,8 +1915,12 @@ td.expense {
 
 .insight-composer .follow-up-row {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin: 0;
+}
+
+.insight-composer .follow-up-row button:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
 }
 
 .insight-composer .follow-up-row button {
@@ -1954,6 +1959,12 @@ td.expense {
   font-weight: 800;
 }
 
+.generation-pill.template-fallback {
+  border-color: color-mix(in srgb, var(--warning) 48%, var(--control-border));
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 7%, var(--control-background));
+}
+
 .generation-pill.refusal {
   color: var(--warning);
 }
@@ -1970,19 +1981,24 @@ td.expense {
 
 .evidence-list {
   display: grid;
-  gap: 0.65rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
   margin: 0;
   padding-left: 1.2rem;
 }
 
 .evidence-list li {
-  padding: 0 0 0.65rem 0.2rem;
-  border-bottom: 1px solid var(--control-border);
+  padding: 0 0.85rem 0 0.2rem;
+  border-right: 1px solid var(--control-border);
+}
+
+.evidence-list li + li {
+  margin-left: 0.85rem;
 }
 
 .evidence-list li:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
+  padding-right: 0;
+  border-right: 0;
 }
 
 .evidence-list p {
@@ -1996,6 +2012,10 @@ td.expense {
 }
 
 .caveat-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.2rem 1.25rem;
+  margin: 0.8rem 0 0;
   padding-left: 1.2rem;
   font-size: 0.78rem;
   line-height: 1.5;
@@ -2336,6 +2356,20 @@ td.expense {
   .summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .evidence-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem 0;
+  }
+
+  .evidence-list li:nth-child(2n) {
+    padding-right: 0;
+    border-right: 0;
+  }
+
+  .evidence-list li:nth-child(2n + 1) {
+    margin-left: 0;
+  }
 }
 
 @media (max-width: 52rem) {
@@ -2374,6 +2408,23 @@ td.expense {
   .section-heading {
     display: grid;
     gap: 0.5rem;
+  }
+
+  .evidence-list,
+  .caveat-list {
+    grid-template-columns: 1fr;
+  }
+
+  .evidence-list li {
+    padding: 0 0 0.65rem 0.2rem;
+    margin-left: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--control-border);
+  }
+
+  .evidence-list li:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
   }
 
   .provenance-column + .provenance-column {

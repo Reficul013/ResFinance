@@ -84,10 +84,11 @@ Evidence:
   Savings Insights; simplified the entry accordion to one enlarged yellow
   boundary; applied the red, yellow, and teal theme palette to budget bars; and
   normalized the dashboard-guide body typography.
-- Refined the embedded Insights workspace with a narrower question panel,
-  exactly three suggested-question actions with lightbulb cues, compact
-  verified-evidence bullets, explicit completion feedback, and a bounded
-  30-second request with retry guidance.
+- Refined the embedded Insights workspace with balanced question and answer
+  panels, exactly three suggested-question actions with lightbulb cues,
+  width-efficient evidence and caveat grids, a yellow verified-fallback badge,
+  explicit completion feedback, and a bounded 30-second request with retry
+  guidance.
 
 Evidence:
 [`milestones/milestone3-personal-finance-smart-insights.md`](milestones/milestone3-personal-finance-smart-insights.md).

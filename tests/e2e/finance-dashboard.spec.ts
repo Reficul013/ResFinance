@@ -179,7 +179,34 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
         fact_bundle_id: "facts_finance_e2e",
         insight: {
           summary: "Your recorded budget is on track for this month.",
-          evidence: [],
+          evidence: [
+            {
+              fact_id: "savings.available-2026-10",
+              topic: "savings",
+              statement: "Available savings for 2026-10 are $2,700.00.",
+              source_kind: "finance-savings",
+              source_ids: ["evt_income", "evt_expense"],
+              as_of_utc: "2026-10-14T08:00:00Z",
+            },
+            {
+              fact_id: "savings.actual-2026-10",
+              topic: "savings",
+              statement:
+                "Recorded income minus recorded expenses for 2026-10 is $4,100.00.",
+              source_kind: "finance-savings",
+              source_ids: ["evt_income", "evt_expense"],
+              as_of_utc: "2026-10-14T08:00:00Z",
+            },
+            {
+              fact_id: "savings.projected-2026-10",
+              topic: "savings",
+              statement:
+                "Projected savings after recurring items and due obligations are $2,700.00.",
+              source_kind: "finance-savings",
+              source_ids: ["evt_recurring", "evt_payable"],
+              as_of_utc: "2026-10-14T08:00:00Z",
+            },
+          ],
           caveats: ["This is a read-only explanation of recorded data."],
           follow_up_questions: ["How can I improve my savings?"],
           mode: "template-fallback",
@@ -595,6 +622,31 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     .getByRole("group", { name: "Suggested questions" });
   await expect(suggestedQuestions.getByRole("button")).toHaveCount(3);
   await expect(suggestedQuestions.locator(".lucide-lightbulb")).toHaveCount(3);
+  await expect(
+    page.getByText("Verified template fallback", { exact: true }),
+  ).toHaveCSS("color", "rgb(242, 189, 90)");
+  const suggestionBoxes = await suggestedQuestions
+    .getByRole("button")
+    .evaluateAll((buttons) =>
+      buttons.map((button) => {
+        const box = button.getBoundingClientRect();
+        return { x: Math.round(box.x), y: Math.round(box.y) };
+      }),
+    );
+  expect(suggestionBoxes[0]!.y).toBe(suggestionBoxes[1]!.y);
+  expect(suggestionBoxes[1]!.x).toBeGreaterThan(suggestionBoxes[0]!.x);
+  expect(suggestionBoxes[2]!.y).toBeGreaterThan(suggestionBoxes[0]!.y);
+  const evidenceItems = page.locator(".evidence-list > li");
+  await expect(evidenceItems).toHaveCount(3);
+  const evidenceItemTopEdges = await evidenceItems.evaluateAll((items) =>
+    items.map((item) => Math.round(item.getBoundingClientRect().top)),
+  );
+  expect(new Set(evidenceItemTopEdges).size).toBe(1);
+  const insightsWorkspaceBox = await page
+    .locator(".insights-workspace")
+    .boundingBox();
+  expect(insightsWorkspaceBox).not.toBeNull();
+  expect(insightsWorkspaceBox!.height).toBeLessThan(420);
   await expect(
     page.locator(".insight-result").getByRole("group", {
       name: "Suggested questions",

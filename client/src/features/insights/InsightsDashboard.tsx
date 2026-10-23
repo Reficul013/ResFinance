@@ -134,7 +134,7 @@ export function SmartSavingsInsights({
                 <textarea
                   value={question}
                   maxLength={500}
-                  rows={3}
+                  rows={2}
                   required
                   onChange={(event) => setQuestion(event.target.value)}
                 />
