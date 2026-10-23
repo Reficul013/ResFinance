@@ -134,7 +134,7 @@ export function FinanceDashboard({ accessToken }: FinanceDashboardProps) {
               <CircleHelp size={20} aria-hidden="true" />
             </button>
           </div>
-          <h1 id="finance-title">Your money, in one view.</h1>
+          <h1 id="finance-title">Your money, in one view!</h1>
           <p className="lede">
             Track cash flow, monthly limits, recurring commitments, and the
             exact savings amount that will feed future portfolio analysis.
@@ -193,14 +193,14 @@ export function SummaryCards({ overview }: { overview: FinanceOverview }) {
     [
       "Current balance",
       summary.balance.minor_units,
-      "All recorded cash flow (all income minus expenses)",
+      "All Recorded Cash Flow",
     ],
-    ["Income", summary.income.minor_units, "Total earned this month"],
-    ["Expenses", summary.expense.minor_units, "Total spent this month"],
+    ["Income", summary.income.minor_units, "Total Earned This Month"],
+    ["Expenses", summary.expense.minor_units, "Total Spent This Month"],
     [
       "Available savings",
       summary.savings.available.minor_units,
-      "After recurring entries and obligations",
+      "After Recurring Entries & Obligations",
     ],
   ] as const;
   return (

@@ -195,7 +195,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await page.goto("/finance");
 
   await expect(
-    page.getByRole("heading", { name: "Your money, in one view." }),
+    page.getByRole("heading", { name: "Your money, in one view!" }),
   ).toBeVisible();
   await expect(
     page.locator("summary").filter({ hasText: /^Category$/ }),
@@ -203,7 +203,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   const entryAccordion = page.locator(".entry-accordion");
   await expect(entryAccordion).toHaveCount(1);
   await expect(entryAccordion.locator("summary")).toContainText(
-    "Add a finance record",
+    "Add A Finance Record (Update Your Ledger)",
   );
   await expect(
     page.getByText("Add income, expenses, budgets, or recurring items"),
@@ -414,10 +414,10 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByText("Current balance", { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("All recorded cash flow (all income minus expenses)"),
+    page.getByText("All Recorded Cash Flow"),
   ).toBeVisible();
-  await expect(page.getByText("Total earned this month")).toBeVisible();
-  await expect(page.getByText("Total spent this month")).toBeVisible();
+  await expect(page.getByText("Total Earned This Month")).toBeVisible();
+  await expect(page.getByText("Total Spent This Month")).toBeVisible();
   await expect(
     page.getByText("Projected savings", { exact: true }),
   ).toBeVisible();
@@ -611,12 +611,12 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByRole("heading", { name: "Connect ResWallet" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Your money, in one view." }),
+    page.getByRole("heading", { name: "Your money, in one view!" }),
   ).toHaveCount(0);
 
   await page.goto("/finance");
   await expect(
-    page.getByRole("heading", { name: "Your money, in one view." }),
+    page.getByRole("heading", { name: "Your money, in one view!" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL("http://127.0.0.1:4173/");

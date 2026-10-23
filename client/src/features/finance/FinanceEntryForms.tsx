@@ -110,10 +110,10 @@ export function FinanceEntryForms({
   );
 
   return (
-    <section className="entry-panel" aria-label="Add a finance record">
+    <section className="entry-panel" aria-label="Add A Finance Record (Update Your Ledger)">
       <details className="entry-accordion">
         <summary>
-          <span id="add-record-title">Add a finance record</span>
+          <span id="add-record-title">Add A Finance Record (Update Your Ledger)</span>
           <small>
             Every saved change appends an encrypted, auditable event.
           </small>

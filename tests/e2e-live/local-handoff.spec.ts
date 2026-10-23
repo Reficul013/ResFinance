@@ -376,7 +376,7 @@ async function expectWalletLocked(context: BrowserContext) {
 }
 
 async function seedFinance(page: Page) {
-  await expect(page.getByRole("heading", { name: "Your money, in one view." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your money, in one view!" })).toBeVisible();
   await expect(
     page.locator("summary").filter({ hasText: /^Category$/ }),
   ).toHaveCount(0);
