@@ -1,6 +1,6 @@
 import {
-  Bar,
-  BarChart,
+  Area,
+  AreaChart,
   CartesianGrid,
   Cell,
   Legend,
@@ -15,17 +15,45 @@ import {
 } from "recharts";
 
 import type { FinanceOverview } from "../../lib/api/client";
+import {
+  chartLegendWrapperStyle,
+  chartTickStyle,
+  chartTooltipContentStyle,
+  chartTooltipCursor,
+  chartTooltipItemStyle,
+  chartTooltipLabelStyle,
+} from "../../lib/chartTooltip";
+import { buildMonthBalancePath, type BalancePathPoint } from "./balancePath";
 import { formatUsd } from "./money";
 
-const chartColors = [
-  "#4cc9f0",
-  "#4361ee",
-  "#7209b7",
-  "#f72585",
-  "#f77f00",
-  "#43aa8b",
-  "#f9c74f",
+/** High-contrast teal / gold / red-coral map — fixed per category so slices stay distinct. */
+const categoryColorByName: Record<string, string> = {
+  "Food & Groceries": "#38d1c5",
+  Utilities: "#f2bd5a",
+  Entertainment: "#ff5c6c",
+  "Medical Bills": "#e76f51",
+  Rent: "#2bbbad",
+  Shopping: "#ffb703",
+  Miscellaneous: "#e63946",
+};
+
+const chartColorFallback = [
+  "#38d1c5",
+  "#f2bd5a",
+  "#ff5c6c",
+  "#e76f51",
+  "#2bbbad",
+  "#ffb703",
+  "#e63946",
+  "#8ecae6",
 ];
+
+function categoryChartColor(name: string, index: number): string {
+  return (
+    categoryColorByName[name] ??
+    chartColorFallback[index % chartColorFallback.length]!
+  );
+}
 
 interface FinanceAnalyticsProps {
   overview: FinanceOverview;
@@ -39,6 +67,7 @@ export function FinanceAnalytics({
   history,
 }: FinanceAnalyticsProps) {
   const categoryData = categorySpending(overview);
+  const balancePath = buildMonthBalancePath(overview);
   const monthlyData = historyMonths.flatMap((month, index) => {
     const item = history[index];
     return item === undefined
@@ -47,6 +76,7 @@ export function FinanceAnalytics({
           {
             month,
             label: shortMonth(month),
+            income: item.summary.income.minor_units,
             expenses: item.summary.expense.minor_units,
             savings: item.summary.savings.available.minor_units,
           },
@@ -55,19 +85,19 @@ export function FinanceAnalytics({
 
   return (
     <section className="finance-analytics" aria-labelledby="analytics-title">
-      <div className="section-heading">
+      <div className="dashboard-section-heading">
         <div>
           <p className="section-kicker">Spending patterns</p>
-          <h2 id="analytics-title">Your financial trends</h2>
+          <h2 id="analytics-title">Your Financial Trends</h2>
+          <p className="section-description">
+            Charts use your recorded ledger and upcoming recurring commitments.
+          </p>
         </div>
-        <p>
-          Charts use your recorded ledger and upcoming recurring commitments.
-        </p>
       </div>
       <div className="analytics-grid">
         <CategorySplitChart data={categoryData} />
-        <CategoryTotalsChart data={categoryData} />
-        <SavingsExpenseChart data={monthlyData} />
+        <BalancePathChart data={balancePath} />
+        <CashFlowTrendChart data={monthlyData} />
       </div>
     </section>
   );
@@ -75,7 +105,7 @@ export function FinanceAnalytics({
 
 function CategorySplitChart({ data }: { data: CategoryDatum[] }) {
   return (
-    <ChartCard title="Spending by category" description="This reporting month">
+    <ChartCard title="Spending By Category" description="This reporting month">
       {data.length === 0 ? (
         <EmptyChart text="Record an expense to see its category split." />
       ) : (
@@ -84,71 +114,151 @@ function CategorySplitChart({ data }: { data: CategoryDatum[] }) {
           role="img"
           aria-label={`Category spending: ${data.map((item) => `${item.name} ${formatUsd(item.amount)}`).join(", ")}`}
         >
-          <ResponsiveContainer width="100%" height={260}>
-            <PieChart>
-              <Pie
-                data={data}
-                dataKey="amount"
-                nameKey="name"
-                cx="45%"
-                cy="50%"
-                innerRadius={46}
-                outerRadius={88}
-                paddingAngle={2}
-              >
-                {data.map((item, index) => (
-                  <Cell
-                    key={item.categoryId}
-                    fill={chartColors[index % chartColors.length]}
-                  />
-                ))}
-              </Pie>
-              <Legend layout="vertical" verticalAlign="middle" align="right" />
-              <Tooltip formatter={(value) => formatUsd(Number(value))} />
-            </PieChart>
-          </ResponsiveContainer>
+          {data.length === 1 ? (
+            <div className="single-category-chart">
+              <span
+                className="single-category-donut"
+                style={{
+                  background: `conic-gradient(${categoryChartColor(data[0]!.name, 0)} 0 100%)`,
+                }}
+                aria-hidden="true"
+              />
+              <span className="single-category-legend">
+                <i
+                  style={{
+                    background: categoryChartColor(data[0]!.name, 0),
+                  }}
+                  aria-hidden="true"
+                />
+                <span>
+                  <strong>{data[0]!.name}</strong>
+                  <small>{formatUsd(data[0]!.amount)} · 100%</small>
+                </span>
+              </span>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie
+                  data={data}
+                  dataKey="amount"
+                  nameKey="name"
+                  cx="45%"
+                  cy="50%"
+                  innerRadius={46}
+                  outerRadius={88}
+                  paddingAngle={3}
+                  stroke="var(--panel-background)"
+                  strokeWidth={2}
+                >
+                  {data.map((item, index) => (
+                    <Cell
+                      key={item.categoryId}
+                      fill={categoryChartColor(item.name, index)}
+                    />
+                  ))}
+                </Pie>
+                <Legend
+                  layout="vertical"
+                  verticalAlign="middle"
+                  align="right"
+                  wrapperStyle={chartLegendWrapperStyle}
+                />
+                <Tooltip
+                  contentStyle={chartTooltipContentStyle}
+                  labelStyle={chartTooltipLabelStyle}
+                  itemStyle={chartTooltipItemStyle}
+                  formatter={(value) => formatUsd(Number(value))}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </div>
       )}
     </ChartCard>
   );
 }
 
-function CategoryTotalsChart({ data }: { data: CategoryDatum[] }) {
+function BalancePathChart({ data }: { data: BalancePathPoint[] }) {
+  const ending = data.at(-1)?.balance;
   return (
-    <ChartCard title="Category totals" description="This reporting month">
+    <ChartCard
+      title="Balance Through The Month"
+      description="Running ledger balance by day"
+    >
       {data.length === 0 ? (
-        <EmptyChart text="Record an expense to compare category totals." />
+        <EmptyChart text="Record a transaction to see the month's balance path." />
       ) : (
         <div
           className="analytics-chart"
           role="img"
-          aria-label="Expense totals by category"
+          aria-label={`Balance Through The Month ending at ${formatUsd(ending ?? 0)}`}
         >
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart
+            <AreaChart
               data={data}
-              margin={{ top: 10, right: 8, left: 0, bottom: 28 }}
+              margin={{ top: 10, right: 8, left: 0, bottom: 0 }}
             >
+              <defs>
+                <linearGradient
+                  id="balancePathFill"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop
+                    offset="0%"
+                    stopColor="var(--income)"
+                    stopOpacity={0.35}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--income)"
+                    stopOpacity={0.02}
+                  />
+                </linearGradient>
+              </defs>
               <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
               <XAxis
-                dataKey="name"
-                angle={-28}
-                textAnchor="end"
-                interval={0}
-                tick={{ fill: "var(--page-muted)", fontSize: 11 }}
+                dataKey="label"
+                tick={chartTickStyle}
+                interval="preserveStartEnd"
+                tickFormatter={(value: string) =>
+                  Number(value) === 1 || Number(value) % 5 === 0 ? value : ""
+                }
               />
               <YAxis
-                tick={{ fill: "var(--page-muted)", fontSize: 11 }}
+                tick={chartTickStyle}
                 tickFormatter={compactUsd}
+                width={56}
               />
-              <Tooltip formatter={(value) => formatUsd(Number(value))} />
-              <Bar
-                dataKey="amount"
-                name="Spending"
-                fill="var(--expense)"
-                radius={[7, 7, 2, 2]}
+              <Tooltip
+                cursor={chartTooltipCursor}
+                contentStyle={chartTooltipContentStyle}
+                labelStyle={chartTooltipLabelStyle}
+                itemStyle={chartTooltipItemStyle}
+                labelFormatter={(_label, payload) => {
+                  const point = payload?.[0]?.payload as
+                    BalancePathPoint | undefined;
+                  return point?.date ?? "";
+                }}
+                formatter={(value) => [
+                  formatUsd(Number(value)),
+                  "Running balance",
+                ]}
               />
-            </BarChart>
+              <Area
+                type="stepAfter"
+                dataKey="balance"
+                name="Running balance"
+                stroke="var(--income)"
+                strokeWidth={2.5}
+                fill="url(#balancePathFill)"
+                dot={false}
+                activeDot={{ r: 4 }}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       )}
@@ -156,16 +266,16 @@ function CategoryTotalsChart({ data }: { data: CategoryDatum[] }) {
   );
 }
 
-function SavingsExpenseChart({ data }: { data: MonthlyDatum[] }) {
+function CashFlowTrendChart({ data }: { data: MonthlyDatum[] }) {
   return (
     <ChartCard
-      title="Savings vs. expenses"
-      description="Last six reporting months"
+      title="Cash Flow Over Time"
+      description="Exactly six reporting months"
     >
       <div
         className="analytics-chart"
         role="img"
-        aria-label="Six month savings and expenses comparison"
+        aria-label="Six month income, expenses, and available savings trend"
       >
         <ResponsiveContainer width="100%" height={260}>
           <LineChart
@@ -173,21 +283,39 @@ function SavingsExpenseChart({ data }: { data: MonthlyDatum[] }) {
             margin={{ top: 10, right: 8, left: 0, bottom: 0 }}
           >
             <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
-            <XAxis
-              dataKey="label"
-              tick={{ fill: "var(--page-muted)", fontSize: 11 }}
+            <XAxis dataKey="label" tick={chartTickStyle} />
+            <YAxis tick={chartTickStyle} tickFormatter={compactUsd} />
+            <Tooltip
+              contentStyle={chartTooltipContentStyle}
+              labelStyle={chartTooltipLabelStyle}
+              itemStyle={chartTooltipItemStyle}
+              formatter={(value) => formatUsd(Number(value))}
             />
-            <YAxis
-              tick={{ fill: "var(--page-muted)", fontSize: 11 }}
-              tickFormatter={compactUsd}
+            <Legend
+              wrapperStyle={chartLegendWrapperStyle}
+              itemSorter={(item) =>
+                item.dataKey === "income"
+                  ? 0
+                  : item.dataKey === "expenses"
+                    ? 1
+                    : 2
+              }
             />
-            <Tooltip formatter={(value) => formatUsd(Number(value))} />
-            <Legend />
             <Line
               type="monotone"
-              dataKey="savings"
-              name="Savings"
-              stroke="var(--page-accent)"
+              dataKey="income"
+              name="Income"
+              stroke="var(--income)"
+              strokeWidth={3}
+              dot={{ r: 3 }}
+              activeDot={{ r: 5 }}
+              connectNulls
+            />
+            <Line
+              type="monotone"
+              dataKey="expenses"
+              name="Expenses"
+              stroke="var(--expense)"
               strokeWidth={3}
               strokeDasharray="1 7"
               strokeLinecap="round"
@@ -197,9 +325,9 @@ function SavingsExpenseChart({ data }: { data: MonthlyDatum[] }) {
             />
             <Line
               type="monotone"
-              dataKey="expenses"
-              name="Expenses"
-              stroke="var(--expense)"
+              dataKey="savings"
+              name="Available savings"
+              stroke="var(--warning)"
               strokeWidth={3}
               strokeDasharray="1 7"
               strokeLinecap="round"
@@ -293,6 +421,7 @@ interface CategoryDatum {
 interface MonthlyDatum {
   month: string;
   label: string;
+  income: number;
   expenses: number;
   savings: number;
 }

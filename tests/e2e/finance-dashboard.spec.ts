@@ -84,6 +84,7 @@ const overview = {
       category_id: "groceries",
       month: "2026-10",
       limit: { currency: "USD", minor_units: 100000 },
+      active: true,
       source_event_id: "evt_budget",
     },
   ],
@@ -178,7 +179,34 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
         fact_bundle_id: "facts_finance_e2e",
         insight: {
           summary: "Your recorded budget is on track for this month.",
-          evidence: [],
+          evidence: [
+            {
+              fact_id: "savings.available-2026-10",
+              topic: "savings",
+              statement: "Available savings for 2026-10 are $2,700.00.",
+              source_kind: "finance-savings",
+              source_ids: ["evt_income", "evt_expense"],
+              as_of_utc: "2026-10-14T08:00:00Z",
+            },
+            {
+              fact_id: "savings.actual-2026-10",
+              topic: "savings",
+              statement:
+                "Recorded income minus recorded expenses for 2026-10 is $4,100.00.",
+              source_kind: "finance-savings",
+              source_ids: ["evt_income", "evt_expense"],
+              as_of_utc: "2026-10-14T08:00:00Z",
+            },
+            {
+              fact_id: "savings.projected-2026-10",
+              topic: "savings",
+              statement:
+                "Projected savings after recurring items and due obligations are $2,700.00.",
+              source_kind: "finance-savings",
+              source_ids: ["evt_recurring", "evt_payable"],
+              as_of_utc: "2026-10-14T08:00:00Z",
+            },
+          ],
           caveats: ["This is a read-only explanation of recorded data."],
           follow_up_questions: ["How can I improve my savings?"],
           mode: "template-fallback",
@@ -194,15 +222,21 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await page.goto("/finance");
 
   await expect(
-    page.getByRole("heading", { name: "Your money, in one view." }),
+    page.getByRole("heading", { name: "Your money, in one view!" }),
   ).toBeVisible();
   await expect(
     page.locator("summary").filter({ hasText: /^Category$/ }),
   ).toHaveCount(0);
-  const transactionForm = page.locator("details").filter({
-    has: page.locator("summary").filter({ hasText: /^Income or expense$/ }),
-  });
-  await transactionForm.locator("summary").click();
+  const entryAccordion = page.locator(".entry-accordion");
+  await expect(entryAccordion).toHaveCount(1);
+  await expect(entryAccordion.locator("summary")).toContainText(
+    "Add A Finance Record (Update Your Ledger)",
+  );
+  await expect(
+    page.getByText("Add income, expenses, budgets, or recurring items"),
+  ).toHaveCount(0);
+  await entryAccordion.locator("summary").click();
+  const transactionForm = entryAccordion.locator(".transaction-form");
   await expect(
     transactionForm.getByLabel("Category").locator("option"),
   ).toHaveText([
@@ -264,6 +298,10 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   ).toBeVisible();
   await expect(topBar.getByLabel("No in-app notifications")).toBeVisible();
   await expect(topBar.locator(".notification-bell")).toBeVisible();
+  await expect(topBar.locator(".notification-bell")).toHaveCSS(
+    "color",
+    "rgb(242, 189, 90)",
+  );
   const githubLink = topBar.getByRole("link", {
     name: "Open ResFinance repository on GitHub",
   });
@@ -278,6 +316,11 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
       .getByRole("button", { name: "Log out" })
       .locator(".auth-action-icon"),
   ).toBeVisible();
+  await expect(
+    topBar
+      .getByRole("button", { name: "Log out" })
+      .locator(".auth-action-icon"),
+  ).toHaveCSS("color", "rgb(255, 140, 160)");
   await expect(topBar.locator(".theme-slider-track")).toBeVisible();
   await expect(topBar.getByText("Log out", { exact: true })).toHaveCount(0);
   await expect(topBar.getByText(/^(Light|Dark) Mode$/)).toHaveCount(0);
@@ -361,6 +404,12 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(topBar.locator(".auth-brand-logo-dark")).toBeVisible();
 
+  await expect(
+    page.getByRole("button", {
+      name: "How to use the Personal Finance dashboard",
+    }),
+  ).toHaveCSS("color", "rgb(242, 189, 90)");
+
   await page.setViewportSize({ width: 375, height: 812 });
   const compactSessionCardBox = await page.locator(".auth-card").boundingBox();
   const compactThemeToggleBox = await page
@@ -392,25 +441,105 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByText("$900.00", { exact: true }).first(),
   ).toBeVisible();
   await expect(page.getByText("$2,700.00", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Current balance", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("All Recorded Cash Flow")).toBeVisible();
+  await expect(page.getByText("Total Earned This Month")).toBeVisible();
+  await expect(page.getByText("Total Spent This Month")).toBeVisible();
+  await expect(page.getByLabel("Projected savings calculation")).toBeVisible();
+  await expect(page.getByText("Here Savings (Projected) is defined as:")).toBeVisible();
   await expect(page.getByText("Near the limit")).toBeVisible();
   await expect(
     page.getByRole("progressbar", { name: "Groceries budget utilization" }),
   ).toHaveAttribute("value", "9000");
   await expect(
+    page.getByRole("progressbar", { name: "Groceries budget utilization" }),
+  ).toHaveCSS("accent-color", "rgb(255, 140, 160)");
+  await expect(
     page.getByRole("img", { name: /Income \$5,000.00/ }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Your financial trends" }),
+    page.getByRole("heading", { name: "Your Financial Trends" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Spending by category" }),
+    page.getByRole("heading", { name: "Your Financial Activity" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Category totals" }),
+    page.getByText("Monthly money management", { exact: true }),
+  ).toHaveCSS("color", "rgb(56, 209, 197)");
+  const dashboardSectionHeadings = page.locator(".dashboard-section-heading");
+  await expect(dashboardSectionHeadings).toHaveCount(3);
+  const sectionTitleStyles = await dashboardSectionHeadings
+    .locator("h2")
+    .evaluateAll((titles) =>
+      titles.map((title) => {
+        const style = getComputedStyle(title);
+        return {
+          fontSize: style.fontSize,
+          letterSpacing: style.letterSpacing,
+          marginBottom: style.marginBottom,
+          marginTop: style.marginTop,
+        };
+      }),
+    );
+  expect(new Set(sectionTitleStyles.map(JSON.stringify)).size).toBe(1);
+  const sectionKickerStyles = await dashboardSectionHeadings
+    .locator(".section-kicker")
+    .evaluateAll((kickers) =>
+      kickers.map((kicker) => {
+        const style = getComputedStyle(kicker);
+        return {
+          fontSize: style.fontSize,
+          fontWeight: style.fontWeight,
+          letterSpacing: style.letterSpacing,
+          marginBottom: style.marginBottom,
+        };
+      }),
+    );
+  expect(new Set(sectionKickerStyles.map(JSON.stringify)).size).toBe(1);
+  const sectionDescriptionStyles = await dashboardSectionHeadings
+    .locator("p:not(.section-kicker)")
+    .evaluateAll((descriptions) =>
+      descriptions.map((description) => {
+        const style = getComputedStyle(description);
+        return {
+          fontSize: style.fontSize,
+          lineHeight: style.lineHeight,
+          marginTop: style.marginTop,
+        };
+      }),
+    );
+  expect(new Set(sectionDescriptionStyles.map(JSON.stringify)).size).toBe(1);
+  const trendsHeadingBox = await page
+    .getByRole("heading", { name: "Your Financial Trends" })
+    .boundingBox();
+  const trendsDescriptionBox = await page
+    .getByText(
+      "Charts use your recorded ledger and upcoming recurring commitments.",
+      { exact: true },
+    )
+    .boundingBox();
+  expect(trendsHeadingBox).not.toBeNull();
+  expect(trendsDescriptionBox).not.toBeNull();
+  expect(trendsDescriptionBox!.y).toBeGreaterThan(
+    trendsHeadingBox!.y + trendsHeadingBox!.height,
+  );
+  await expect(
+    page.getByRole("heading", { name: "Spending By Category" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Savings vs. expenses" }),
+    page.getByRole("heading", { name: "Balance Through The Month" }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Cash Flow Over Time" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Savings breakdown" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Budget utilization" }),
+  ).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Savings outlook" }),
   ).toHaveCount(0);
@@ -420,14 +549,68 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     cards.map((card) => Math.round(card.getBoundingClientRect().top)),
   );
   expect(new Set(analyticsCardTopEdges).size).toBe(1);
-  const savingsExpenseCard = page.locator(".analytics-card", {
-    has: page.getByRole("heading", { name: "Savings vs. expenses" }),
+  const balancePathCard = page.locator(".analytics-card", {
+    has: page.getByRole("heading", { name: "Balance Through The Month" }),
   });
-  await expect(savingsExpenseCard.locator(".recharts-line")).toHaveCount(2);
-  await expect(savingsExpenseCard.locator(".recharts-bar")).toHaveCount(0);
+  await expect(
+    balancePathCard.getByText("Running ledger balance by day"),
+  ).toBeVisible();
+  await expect(balancePathCard.locator(".recharts-area")).toHaveCount(1);
+  await expect(balancePathCard.locator(".recharts-bar")).toHaveCount(0);
+  await expect(
+    balancePathCard.getByRole("img", {
+      name: /Balance Through The Month ending at \$4,100\.00/,
+    }),
+  ).toBeVisible();
+  const cashFlowTrendCard = page.locator(".analytics-card", {
+    has: page.getByRole("heading", { name: "Cash Flow Over Time" }),
+  });
+  await expect(cashFlowTrendCard.locator(".recharts-line")).toHaveCount(3);
+  await expect(cashFlowTrendCard.locator(".recharts-bar")).toHaveCount(0);
+  await expect(
+    cashFlowTrendCard.getByText("Exactly six reporting months"),
+  ).toBeVisible();
+  const entryCards = entryAccordion.locator(".entry-form-card");
+  await expect(entryCards).toHaveCount(3);
+  const entryCardHeights = await entryCards.evaluateAll((cards) =>
+    cards.map((card) => Math.round(card.getBoundingClientRect().height)),
+  );
+  expect(new Set(entryCardHeights).size).toBe(1);
+  await expect(page.locator(".finance-activity .entry-panel")).toHaveCSS(
+    "border-top-width",
+    "0px",
+  );
+  await expect(entryAccordion).toHaveCSS("border-top-width", "2px");
+  await expect(entryAccordion.locator("summary > span")).toHaveCSS(
+    "color",
+    "rgb(242, 189, 90)",
+  );
+  await expect(
+    entryAccordion.getByRole("button", { name: "Save transaction" }),
+  ).toHaveCSS("background-color", "rgb(255, 140, 160)");
+  await expect(
+    entryAccordion.getByRole("button", { name: "Save budget" }),
+  ).toHaveCSS("background-color", "rgb(242, 189, 90)");
+  await expect(
+    entryAccordion.getByRole("button", { name: "Save recurring item" }),
+  ).toHaveCSS("background-color", "rgb(70, 214, 189)");
+  const overviewPanels = page.locator(
+    ".finance-overview-row > .overview-panel",
+  );
+  await expect(overviewPanels).toHaveCount(3);
+  const overviewPanelTopEdges = await overviewPanels.evaluateAll((panels) =>
+    panels.map((panel) => Math.round(panel.getBoundingClientRect().top)),
+  );
+  expect(new Set(overviewPanelTopEdges).size).toBe(1);
+  await expect(
+    page.getByRole("heading", { name: "Budgets & Commitments" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Smart Savings Insights" }),
   ).toBeVisible();
+  await expect(
+    page.getByText("Evidence-linked guidance", { exact: true }).last(),
+  ).toHaveCSS("color", "rgb(56, 209, 197)");
   const entryFollowsSummary = await page
     .locator(".summary-grid")
     .evaluate((node) =>
@@ -443,11 +626,93 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     .evaluate((node) =>
       Boolean(
         node.compareDocumentPosition(
-          document.querySelector(".dashboard-columns") as Node,
+          document.querySelector(".finance-overview-row") as Node,
         ) & Node.DOCUMENT_POSITION_FOLLOWING,
       ),
     );
   expect(chartsFollowEntry).toBe(true);
+  const suggestedQuestions = page
+    .locator(".insight-composer")
+    .getByRole("group", { name: "Suggested questions" });
+  await expect(suggestedQuestions.getByRole("button")).toHaveCount(4);
+  await expect(suggestedQuestions.locator(".lucide-lightbulb")).toHaveCount(4);
+  await expect(
+    page.getByRole("button", {
+      name: "What are my biggest expenses this month?",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Verified template fallback", { exact: true }),
+  ).toHaveCSS("color", "rgb(242, 189, 90)");
+  const suggestionBoxes = await suggestedQuestions
+    .getByRole("button")
+    .evaluateAll((buttons) =>
+      buttons.map((button) => {
+        const box = button.getBoundingClientRect();
+        return { x: Math.round(box.x), y: Math.round(box.y) };
+      }),
+    );
+  expect(suggestionBoxes[0]!.y).toBe(suggestionBoxes[1]!.y);
+  expect(suggestionBoxes[1]!.x).toBeGreaterThan(suggestionBoxes[0]!.x);
+  expect(suggestionBoxes[2]!.y).toBeGreaterThan(suggestionBoxes[0]!.y);
+  expect(suggestionBoxes[2]!.y).toBe(suggestionBoxes[3]!.y);
+  expect(suggestionBoxes[3]!.x).toBeGreaterThan(suggestionBoxes[2]!.x);
+  const evidenceItems = page.locator(".evidence-list > li");
+  await expect(evidenceItems).toHaveCount(4);
+  await expect(
+    page.locator(".evidence-list > li.evidence-card-empty"),
+  ).toHaveCount(1);
+  const evidenceItemTopEdges = await evidenceItems.evaluateAll((items) =>
+    items.map((item) => Math.round(item.getBoundingClientRect().top)),
+  );
+  expect(new Set(evidenceItemTopEdges).size).toBe(2);
+  const insightsWorkspaceBox = await page
+    .locator(".insights-workspace")
+    .boundingBox();
+  expect(insightsWorkspaceBox).not.toBeNull();
+  expect(insightsWorkspaceBox!.height).toBeLessThan(520);
+  await expect(
+    page.locator(".insight-result").getByRole("group", {
+      name: "Suggested questions",
+    }),
+  ).toHaveCount(0);
+
+  await page
+    .getByRole("button", { name: "How to use the Personal Finance dashboard" })
+    .click();
+  const dashboardGuide = page.getByRole("dialog", {
+    name: "How to use this dashboard",
+  });
+  await expect(dashboardGuide).toBeVisible();
+  await expect(
+    dashboardGuide.getByText("Actual savings", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    dashboardGuide.getByText("Projected savings", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    dashboardGuide.getByText("Available savings", { exact: true }),
+  ).toBeVisible();
+  await expect(dashboardGuide.locator("li")).toHaveCount(7);
+  const guideFontSizes = await dashboardGuide
+    .locator(
+      ".dashboard-guide-points, .savings-conventions ul, .dashboard-guide-note",
+    )
+    .evaluateAll((elements) =>
+      elements.map((element) => getComputedStyle(element).fontSize),
+    );
+  expect(new Set(guideFontSizes)).toEqual(new Set(["14.4px"]));
+  await expect(
+    dashboardGuide.getByText("Available savings", { exact: true }),
+  ).toHaveCSS("color", "rgb(255, 140, 160)");
+  await page.screenshot({
+    path: "test-results/finance-dashboard-guide.png",
+    fullPage: false,
+  });
+  await dashboardGuide
+    .getByRole("button", { name: "Close dashboard guide" })
+    .click();
+  await expect(dashboardGuide).not.toBeVisible();
   await expect(
     page.locator(".chart-panel").getByText("Projection v8", { exact: true }),
   ).toHaveCount(0);
@@ -460,13 +725,23 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(
     page.locator(".finance-dashboard > .provenance-panel"),
   ).toHaveCount(1);
-  await page.locator(".finance-dashboard > .provenance-panel summary").click();
+  const provenanceSummary = page.locator(
+    ".finance-dashboard > .provenance-panel summary",
+  );
+  await expect(provenanceSummary).toHaveCSS("color", "rgb(242, 189, 90)");
+  await provenanceSummary.click();
   await expect(
     page.getByRole("heading", { name: "Finance Insights" }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Savings Insights", exact: true }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Finance Insights" }),
+  ).toHaveCSS("color", "rgb(255, 140, 160)");
+  await expect(
+    page.getByRole("heading", { name: "Savings Insights", exact: true }),
+  ).toHaveCSS("color", "rgb(255, 140, 160)");
   const financeProvenanceBox = await page
     .getByRole("heading", { name: "Finance Insights" })
     .boundingBox();
@@ -500,12 +775,12 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     page.getByRole("heading", { name: "Connect ResWallet" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Your money, in one view." }),
+    page.getByRole("heading", { name: "Your money, in one view!" }),
   ).toHaveCount(0);
 
   await page.goto("/finance");
   await expect(
-    page.getByRole("heading", { name: "Your money, in one view." }),
+    page.getByRole("heading", { name: "Your money, in one view!" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL("http://127.0.0.1:4173/");
@@ -535,7 +810,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   });
 });
 
-test("voids transactions and deactivates recurring items through confirmed audit events", async ({
+test("voids transactions and deactivates recurring items and budgets through confirmed audit events", async ({
   page,
 }) => {
   const currentOverview = structuredClone(overview);
@@ -608,6 +883,31 @@ test("voids transactions and deactivates recurring items through confirmed audit
           event_id: "evt_void_expense",
           projection_version: 9,
           occurred_at_utc: "2026-10-19T20:00:00Z",
+          deduplicated: false,
+          receipt_ids: [],
+        }),
+      });
+    },
+  );
+
+  let removeBudgetRequest: Record<string, unknown> | null = null;
+  await page.route(
+    "**/api/v1/finance/budgets/budget-groceries/deactivate",
+    async (route) => {
+      removeBudgetRequest = route.request().postDataJSON() as Record<
+        string,
+        unknown
+      >;
+      currentOverview.budgets[0].active = false;
+      currentOverview.summary.budget_statuses = [];
+      currentOverview.provenance.projection_version = 11;
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          event_id: "evt_deactivate_budget",
+          projection_version: 11,
+          occurred_at_utc: "2026-10-19T20:02:00Z",
           deduplicated: false,
           receipt_ids: [],
         }),
@@ -691,7 +991,9 @@ test("voids transactions and deactivates recurring items through confirmed audit
     expected_version: 8,
   });
   await expect(
-    page.locator(".metric-card").filter({ hasText: "Expenses" }),
+    page.locator(".metric-card").filter({
+      has: page.getByText("Expenses", { exact: true }),
+    }),
   ).toContainText("$0.00");
 
   const deactivateButton = page.getByRole("button", {
@@ -718,6 +1020,26 @@ test("voids transactions and deactivates recurring items through confirmed audit
     page.getByText("Expected monthly groceries", { exact: true }),
   ).toHaveCount(0);
   expect(deactivateRequest).toEqual({ expected_version: 9 });
+
+  const removeBudgetButton = page.getByRole("button", {
+    name: "Remove budget Groceries",
+  });
+  await removeBudgetButton.click();
+  const removeBudgetDialog = page.getByRole("dialog", {
+    name: "Remove this budget?",
+  });
+  await expect(removeBudgetDialog).toBeVisible();
+  await expect(
+    removeBudgetDialog.getByText(/original record remains/i),
+  ).toBeVisible();
+  await removeBudgetDialog
+    .getByRole("button", { name: "Remove Budget" })
+    .click();
+
+  await expect(
+    page.getByRole("progressbar", { name: "Groceries budget utilization" }),
+  ).toHaveCount(0);
+  expect(removeBudgetRequest).toEqual({ expected_version: 10 });
 });
 
 test("separates the wallet controls before a wallet is created", async ({
@@ -1034,11 +1356,11 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
     );
   });
 
-  await expect(
-    page.getByText("Approval Received! Signing you in to ResFinance…"),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Signing in…" }),
-  ).toBeDisabled();
+  await Promise.all([
+    expect(
+      page.getByText("Approval Received! Signing you in to ResFinance…"),
+    ).toBeVisible(),
+    expect(page.getByRole("button", { name: "Signing in…" })).toBeDisabled(),
+  ]);
   await expect(page.getByRole("button", { name: "ResFinance" })).toBeVisible();
 });

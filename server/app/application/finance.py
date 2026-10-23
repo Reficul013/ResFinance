@@ -211,7 +211,8 @@ class FinanceService:
                 (
                     budget
                     for budget in projection.budgets.values()
-                    if budget.category_id == category_id
+                    if budget.active
+                    and budget.category_id == category_id
                     and budget.month == month
                     and budget.budget_id != budget_id
                 ),
@@ -221,6 +222,35 @@ class FinanceService:
                 raise FinanceRejected(
                     "a budget already exists for this category and month"
                 )
+            return self._repository.append(command)
+
+    def deactivate_budget(
+        self,
+        *,
+        actor_address: str,
+        idempotency_key: str,
+        expected_version: int,
+        budget_id: str,
+    ) -> AppendResult:
+        budget_id = _identifier("budget_id", budget_id)
+        with self._lock:
+            projection = self._projection(actor_address)
+            budget = projection.budgets.get(budget_id)
+            if budget is None:
+                raise FinanceRejected("budget cannot be deactivated")
+            command = self._command(
+                actor_address=actor_address,
+                idempotency_key=idempotency_key,
+                expected_version=expected_version,
+                command_type="finance.deactivate-budget",
+                event_type="finance.budget-deactivated",
+                payload={"budget_id": budget_id},
+                source_references=(budget.source_event_id,),
+            )
+            if (existing := self._repository.find_idempotent(command)) is not None:
+                return existing
+            if not budget.active:
+                raise FinanceRejected("budget cannot be deactivated")
             return self._repository.append(command)
 
     def create_recurring_entry(

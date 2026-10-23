@@ -63,22 +63,33 @@ Evidence:
 - Added the authenticated Personal Finance dashboard, ledger-driven analytics,
   accessible states and charts, correction workflows, and consolidated data
   freshness and provenance.
-- Added confirmed `ArchiveX` correction actions for active transactions and
-  recurring items. They append void/deactivation events and preserve the
-  original audit record instead of deleting persisted history.
+- Added confirmed `ArchiveX` correction actions for active transactions,
+  budgets, and recurring items. They append void/deactivation events and
+  preserve the original audit record instead of deleting persisted history.
 - Made the fixed direction-aware category catalog available immediately to new
   wallets and removed the category-creation step. Dashboard analytics cover
-  category spending, six-month savings-versus-expense history, and the
-  ledger-derived savings outlook.
+  category spending, a step-area running balance path by day within the month,
+  and an exact six-month income, expense, and available-savings history.
+  Budget utilization stays on the planning progress bars.
 - Embedded Smart Savings Insights inside Personal Finance using
   wallet-authorized fact bundles, evidence-ID validation, deterministic
   fallback, bounded local-model selection, prompt-injection defenses, and
   prohibited-action refusals.
 - Verified that the AI path is read-only and performs no ResilientDB writes,
   wallet signing, settlement, trading, or Finance mutation.
-- Refined the embedded Insights workspace to equal-width question/answer
-  panels, compact verified-evidence bullets, explicit completion feedback, and
-  a bounded 30-second request with retry guidance.
+- Refined the Personal Finance presentation with a single three-form accordion,
+  a compact row for cash flow, transactions, budgets, and commitments, and a
+  bulleted dashboard guide that color-codes and explains actual, projected, and
+  available savings.
+- Added consistent section hierarchy for financial activity, trends, and Smart
+  Savings Insights; simplified the entry accordion to one enlarged yellow
+  boundary; applied the red, yellow, and teal theme palette to budget bars; and
+  normalized the dashboard-guide body typography.
+- Refined the embedded Insights workspace with balanced question and answer
+  panels, exactly three suggested-question actions with lightbulb cues,
+  width-efficient evidence and caveat grids, a yellow verified-fallback badge,
+  explicit completion feedback, and a bounded 30-second request with retry
+  guidance.
 
 Evidence:
 [`milestones/milestone3-personal-finance-smart-insights.md`](milestones/milestone3-personal-finance-smart-insights.md).

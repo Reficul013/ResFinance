@@ -32,6 +32,8 @@ export type TransactionCommand = components["schemas"]["TransactionCommand"];
 export type VoidTransactionCommand =
   components["schemas"]["VoidTransactionCommand"];
 export type BudgetCommand = components["schemas"]["BudgetCommand"];
+export type DeactivateBudgetCommand =
+  components["schemas"]["DeactivateBudgetCommand"];
 export type RecurringEntryCommand =
   components["schemas"]["RecurringEntryCommand"];
 export type DeactivateRecurringCommand =
@@ -263,6 +265,20 @@ export async function setFinanceBudget(
 ): Promise<FinanceEvent> {
   return financeCommand(
     "/api/v1/finance/budgets",
+    accessToken,
+    idempotencyKey,
+    command,
+  );
+}
+
+export async function deactivateFinanceBudget(
+  accessToken: string,
+  budgetId: string,
+  idempotencyKey: string,
+  command: DeactivateBudgetCommand,
+): Promise<FinanceEvent> {
+  return financeCommand(
+    `/api/v1/finance/budgets/${encodeURIComponent(budgetId)}/deactivate`,
     accessToken,
     idempotencyKey,
     command,

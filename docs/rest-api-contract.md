@@ -78,6 +78,7 @@ Access tokens are opaque and held only in API/browser process memory. Refresh to
 - `POST /api/v1/finance/transactions` appends an integer-cent USD income or expense.
 - `POST /api/v1/finance/transactions/{id}/void` appends a compensating void event.
 - `POST /api/v1/finance/budgets` appends or replaces the named category-month budget in the projection.
+- `POST /api/v1/finance/budgets/{id}/deactivate` appends a budget deactivation event; the original budget remains in the audit projection but no longer contributes an active monthly guardrail.
 - `POST /api/v1/finance/recurring` appends a monthly recurring entry.
 - `POST /api/v1/finance/recurring/{id}/deactivate` appends a deactivation event.
 

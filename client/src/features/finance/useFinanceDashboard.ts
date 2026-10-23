@@ -7,12 +7,14 @@ import {
 
 import {
   createFinanceRecurringEntry,
+  deactivateFinanceBudget,
   deactivateFinanceRecurringEntry,
   getFinanceOverview,
   recordFinanceTransaction,
   setFinanceBudget,
   voidFinanceTransaction,
   type BudgetCommand,
+  type DeactivateBudgetCommand,
   type DeactivateRecurringCommand,
   type RecurringEntryCommand,
   type TransactionCommand,
@@ -67,6 +69,15 @@ export function useFinanceDashboard(accessToken: string, month: string) {
       setFinanceBudget(accessToken, idempotencyKey, body),
     onSuccess: refresh,
   });
+  const deactivateBudget = useMutation({
+    mutationFn: ({
+      recordId,
+      body,
+      idempotencyKey,
+    }: RecordCommand<DeactivateBudgetCommand>) =>
+      deactivateFinanceBudget(accessToken, recordId, idempotencyKey, body),
+    onSuccess: refresh,
+  });
   const recurring = useMutation({
     mutationFn: ({ body, idempotencyKey }: Command<RecurringEntryCommand>) =>
       createFinanceRecurringEntry(accessToken, idempotencyKey, body),
@@ -93,14 +104,15 @@ export function useFinanceDashboard(accessToken: string, month: string) {
     transaction,
     voidTransaction,
     budget,
+    deactivateBudget,
     recurring,
     deactivateRecurring,
   };
 }
 
-function financeTrendMonths(month: string): string[] {
+export function financeTrendMonths(month: string): string[] {
   const selected = new Date(`${month}-01T00:00:00Z`);
-  return Array.from({ length: 9 }, (_, index) => {
+  return Array.from({ length: 6 }, (_, index) => {
     const date = new Date(selected);
     date.setUTCMonth(selected.getUTCMonth() + index - 5);
     return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
