@@ -5,7 +5,6 @@ connects personal budgeting, shared expenses, and explainable BTC/ETH/SOL
 portfolio analysis through one auditable financial record.
 
 For milestone progress and current readiness, see [`docs/ResFinance-Current-Status.md`](docs/ResFinance-Current-Status.md).
-
 The canonical eight-milestone convention is defined in [`docs/milestones/milestones.md`](docs/milestones/milestones.md).
 
 ## Product journey
