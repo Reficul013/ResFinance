@@ -1,12 +1,17 @@
 # ResFinance Current Status
 
-Last updated: 2026-10-22
+Last updated: 2026-10-24
 
 ResFinance uses the eight-milestone convention in
 [`milestones/milestones.md`](milestones/milestones.md). Milestones 1–7 are complete for the
 declared local development and non-commercial research scope. Milestone 8 is on
 hold. Local completion does not establish cloud, production, commercial,
 custody, trading, investment-advice, or independent-BFT readiness.
+
+On 2026-10-24, the project owner finalized and accepted the ResWallet
+functionality and Personal Finance dashboard for the declared local-development
+scope. No remaining owner-side functionality or presentation tasks are tracked
+for those two areas.
 
 ## Milestone 1: ResFinance Foundation — Architecture, Feasibility Gate & Platform Foundation
 
@@ -34,7 +39,7 @@ Evidence:
 
 ## Milestone 2: ResWallet — Custom Hardened ResVault & Wallet Authentication
 
-**Status:** Complete for local development.
+**Status:** Finalized and project-owner accepted for local development.
 
 - Delivered the custom Manifest V3 ResWallet extension with Argon2id and
   AES-256-GCM seed protection, memory-only unlocked secrets, exact-origin
@@ -48,13 +53,15 @@ Evidence:
   a labeled public address, inline setup guidance, toolbar approval in the same
   browser window, live locked/unlocked status, Enter-key submission, visible
   wrong-password feedback, and a blinking locked-state indicator.
+- Project-owner acceptance on 2026-10-24 closed the remaining ResWallet
+  functionality and presentation tasks for the local-development scope.
 
 Evidence:
 [`milestones/milestone2-reswallet-wallet-authentication.md`](milestones/milestone2-reswallet-wallet-authentication.md).
 
 ## Milestone 3: Personal Finance — Dashboard & Smart Insights (Read-only AI)
 
-**Status:** Complete for local development.
+**Status:** Finalized and project-owner accepted for local development.
 
 - Delivered encrypted append-only Finance records, the fixed category catalog,
   income and expenses, budgets, recurring entries, compensating corrections,
@@ -90,6 +97,12 @@ Evidence:
   width-efficient evidence and caveat grids, a yellow verified-fallback badge,
   explicit completion feedback, and a bounded 30-second request with retry
   guidance.
+- Finalized the dashboard charts with viewport-timed entrance motion,
+  visible budget-bar fills, an emphasized running-balance path, consistent
+  title casing, and reduced-motion handling; expanded the dashboard guide to
+  explain monthly review, append-only corrections, and read-only Insights.
+- Project-owner acceptance on 2026-10-24 closed the remaining Personal Finance
+  functionality and presentation tasks for the local-development scope.
 
 Evidence:
 [`milestones/milestone3-personal-finance-smart-insights.md`](milestones/milestone3-personal-finance-smart-insights.md).

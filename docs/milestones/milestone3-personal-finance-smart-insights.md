@@ -1,8 +1,15 @@
 # Milestone 3: Personal Finance — Dashboard & Smart Insights (Read-only AI)
 
-Status: Complete for local development and real-stack acceptance
+Status: Finalized and project-owner accepted for local development and real-stack acceptance
 
 Finance evidence date: 2026-10-14 America/Los_Angeles
+
+Finalization date: 2026-10-24 America/Los_Angeles
+
+The project owner has accepted the delivered Personal Finance functionality
+and presentation for the declared local-development scope. No remaining
+owner-side Personal Finance dashboard tasks are tracked; the non-production
+and read-only AI boundaries below remain unchanged.
 
 Smart Insights uses historical `scripts.milestone8` and
 `config/milestone8-*` implementation identifiers. Those identifiers remain
@@ -84,6 +91,13 @@ The 2026-10-19 dashboard update added Vitest request-boundary coverage and a Chr
 The 2026-10-23 follow-up extended the same generated-client and Playwright coverage to budget deactivation, including confirmation, optimistic versioning, projection refresh, and removal from active guardrails while preserving the source budget event.
 
 The dashboard presentation follow-up grouped finance entry and monthly review into one labelled activity section, placed explanatory copy directly beneath its section titles, simplified the entry accordion to one yellow boundary, applied the red/yellow/teal palette to budget progress, standardized guide typography, and aligned the shared notification bell with the yellow status color.
+
+The final chart pass added viewport-timed entrance motion, ensured budget-bar
+colors remain visible when data mounts after loading, emphasized the running
+balance path, aligned analytics title casing, and disabled decorative motion
+when the operating system requests reduced motion. The dashboard guide now
+explains monthly review, append-only correction behavior, the savings measures,
+and the read-only authority boundary of Smart Savings Insights.
 
 ```bash
 .venv/bin/ruff check .

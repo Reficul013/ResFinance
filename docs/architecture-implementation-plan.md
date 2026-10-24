@@ -342,7 +342,7 @@ Feasibility implementations are narrow, disposable spikes unless the platform fo
 
 ### Milestone 2: ResWallet — Custom Hardened ResVault & Wallet Authentication
 
-**Status:** complete for local development; evidence is recorded in [`milestones/milestone2-reswallet-wallet-authentication.md`](milestones/milestone2-reswallet-wallet-authentication.md).
+**Status:** finalized and project-owner accepted for local development; evidence is recorded in [`milestones/milestone2-reswallet-wallet-authentication.md`](milestones/milestone2-reswallet-wallet-authentication.md).
 
 - Implement the Milestone 1 feasibility audit decision by completing the documented custom ResWallet extension required by the failed audit.
 - Implement challenge login, in-memory access tokens, refresh-session hashes in ResilientDB, logout/revocation, address derivation, and signed-intent verification.
@@ -352,7 +352,7 @@ Feasibility implementations are narrow, disposable spikes unless the platform fo
 
 ### Milestone 3: Personal Finance — Dashboard & Smart Insights (Read-only AI)
 
-**Status:** complete for local development; Finance and Smart Insights evidence is recorded in [`milestones/milestone3-personal-finance-smart-insights.md`](milestones/milestone3-personal-finance-smart-insights.md).
+**Status:** finalized and project-owner accepted for local development; Finance and Smart Insights evidence is recorded in [`milestones/milestone3-personal-finance-smart-insights.md`](milestones/milestone3-personal-finance-smart-insights.md).
 
 - Implement income/expense events, the fixed direction-aware category catalog, budgets, recurring entries, summaries, savings calculation, and receivable/payable projections.
 - Build accessible charts, validation, empty/loading/error states, provenance views, and confirmed per-record correction actions that append void or deactivation events without deleting history.
