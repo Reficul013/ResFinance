@@ -206,7 +206,7 @@ class AuthenticationService:
         with self._lock:
             principal = self._access_tokens.pop(access_hash, None)
             if principal is None or principal.expires_at <= now:
-                raise SessionUnauthorized("access token is not valid")
+                raise SessionUnauthorized("Access Token Is Not Valid!")
             if principal.origin != origin:
                 raise OriginRejected("access-token origin does not match request origin")
             if refresh_token is not None:
@@ -231,7 +231,7 @@ class AuthenticationService:
         now = self._clock().astimezone(UTC)
         principal = self._access_tokens.get(_hash(access_token))
         if principal is None or principal.expires_at <= now:
-            raise SessionUnauthorized("access token is not valid")
+            raise SessionUnauthorized("Access Token Is Not Valid!")
         if principal.origin != origin:
             raise OriginRejected("access-token origin does not match request origin")
         if self._repository.session_was_revoked(principal.session_id):
