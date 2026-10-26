@@ -8,6 +8,8 @@ import {
   type SignedIntent,
 } from "../auth/reswallet";
 import { formatUsd, usdToMinorUnits } from "../finance/money";
+import { ExpensesPanel } from "./ExpensesPanel";
+import { PersonName } from "./MemberName";
 import { MembersMenu } from "./MembersMenu";
 import { memberDisplayName, shortAddress } from "./members";
 import {
@@ -18,7 +20,11 @@ import {
   type SplitRow,
 } from "./split";
 import { SplitEditor } from "./SplitEditor";
-import { useGroupAction } from "./useGroupAction";
+import {
+  useGroupAction,
+  type GroupAction,
+  type GroupActionSteps,
+} from "./useGroupAction";
 import { useGroupsDashboard } from "./useGroupsDashboard";
 
 interface Props {
@@ -179,12 +185,13 @@ function GroupWorkspace({
         />
       </div>
 
+      <ExpensesPanel actorAddress={actorAddress} group={group} />
       <ObligationsPanel
         actorAddress={actorAddress}
         group={group}
         dashboard={dashboard}
       />
-      <NotificationsPanel actorAddress={actorAddress} group={group} />
+      <NotificationsPanel group={group} />
       <footer className="provenance-footer">
         <strong>Data Freshness and Provenance</strong>
         <span>Projection v{group.provenance.projection_version}</span>
@@ -239,11 +246,11 @@ function CreateGroupPanel({
             required
           />
         </label>
-        <button disabled={pending}>
+        <button disabled={pending || action.busy}>
           {pending ? "Creating…" : "Create group"}
         </button>
       </form>
-      <MutationError error={action.error} />
+      <ActionFeedback action={action} />
     </section>
   );
 }
@@ -297,9 +304,11 @@ function AddMemberPanel({
             required
           />
         </label>
-        <button disabled={isGroupWritePending(dashboard)}>Add member</button>
+        <button disabled={isGroupWritePending(dashboard) || action.busy}>
+          Add member
+        </button>
       </form>
-      <MutationError error={action.error} />
+      <ActionFeedback action={action} />
     </section>
   );
 }
@@ -324,17 +333,15 @@ function FundCreditsPanel({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          void action.run(async () => {
+          void action.run(async ({ sign }) => {
             const amountMinorUnits = usdToMinorUnits(amount);
             const parameters = {
               group_id: group.group_id,
               amount_minor_units: amountMinorUnits,
               expected_version: group.provenance.projection_version,
             };
-            const intent = await requestSignature(
-              "credits.fund",
-              group.group_id,
-              parameters,
+            const intent = await sign(
+              requestSignature("credits.fund", group.group_id, parameters),
             );
             await dashboard.credits.mutateAsync({
               groupId: group.group_id,
@@ -359,12 +366,12 @@ function FundCreditsPanel({
             required
           />
         </label>
-        <button disabled={isGroupWritePending(dashboard)}>
+        <button disabled={isGroupWritePending(dashboard) || action.busy}>
           Approve funding in ResWallet
         </button>
       </form>
       <p className="form-note">Funding wallet: {shortAddress(actorAddress)}</p>
-      <MutationError error={action.error} />
+      <ActionFeedback action={action} />
     </section>
   );
 }
@@ -408,7 +415,7 @@ function CreateExpensePanel({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          void action.run(async () => {
+          void action.run(async ({ sign }) => {
             const expenseId = `expense-${crypto.randomUUID()}`;
             const { amountMinorUnits, shares } = buildShares(
               amount,
@@ -430,10 +437,8 @@ function CreateExpensePanel({
               ),
               expected_version: group.provenance.projection_version,
             };
-            const intent = await requestSignature(
-              "split.approve",
-              expenseId,
-              parameters,
+            const intent = await sign(
+              requestSignature("split.approve", expenseId, parameters),
             );
             await dashboard.expense.mutateAsync({
               groupId: group.group_id,
@@ -523,11 +528,11 @@ function CreateExpensePanel({
             setShareAmounts((current) => ({ ...current, [address]: value }))
           }
         />
-        <button disabled={isGroupWritePending(dashboard)}>
+        <button disabled={isGroupWritePending(dashboard) || action.busy}>
           Approve split in ResWallet
         </button>
       </form>
-      <MutationError error={action.error} />
+      <ActionFeedback action={action} />
     </section>
   );
 }
@@ -543,6 +548,10 @@ function ObligationsPanel({
 }) {
   const [settlements, setSettlements] = useState<Record<string, string>>({});
   const action = useGroupAction();
+  const yourCredits = group.credit_balances[actorAddress]?.minor_units ?? 0;
+  const expenseNames = new Map(
+    group.expenses.map((expense) => [expense.expense_id, expense.description]),
+  );
   return (
     <section
       className="panel obligations-panel"
@@ -581,10 +590,26 @@ function ObligationsPanel({
                     {formatUsd(obligation.outstanding_amount.minor_units)}{" "}
                     outstanding
                   </h3>
+                  <p className="obligation-parties">
+                    <PersonName
+                      address={obligation.debtor_address}
+                      members={group.members}
+                      actorAddress={actorAddress}
+                    />{" "}
+                    {isDebtor ? "owe" : "owes"}{" "}
+                    <PersonName
+                      address={obligation.creditor_address}
+                      members={group.members}
+                      actorAddress={actorAddress}
+                      capitalized={false}
+                    />
+                    {expenseNames.has(obligation.expense_id) &&
+                      ` for ${expenseNames.get(obligation.expense_id)}`}
+                  </p>
                   <p>
-                    {shortAddress(obligation.debtor_address)} owes{" "}
-                    {shortAddress(obligation.creditor_address)} · original{" "}
-                    {formatUsd(obligation.amount.minor_units)}
+                    Original {formatUsd(obligation.amount.minor_units)}
+                    {obligation.settled_amount.minor_units > 0 &&
+                      ` · ${formatUsd(obligation.settled_amount.minor_units)} settled`}
                   </p>
                 </div>
                 {isDebtor && obligation.status === "pending" && (
@@ -593,14 +618,15 @@ function ObligationsPanel({
                       <button
                         key={decision}
                         className={decision === "reject" ? "secondary" : ""}
-                        disabled={isGroupWritePending(dashboard)}
+                        disabled={isGroupWritePending(dashboard) || action.busy}
                         onClick={() =>
-                          void action.run(() =>
+                          void action.run((steps) =>
                             decideObligation(
                               dashboard,
                               group,
                               obligation.obligation_id,
                               decision,
+                              steps,
                             ),
                           )
                         }
@@ -619,12 +645,13 @@ function ObligationsPanel({
                       event.preventDefault();
                       const amount =
                         settlements[obligation.obligation_id] ?? "";
-                      void action.run(() =>
+                      void action.run((steps) =>
                         settleObligation(
                           dashboard,
                           group,
                           obligation.obligation_id,
                           amount,
+                          steps,
                         ),
                       );
                     }}
@@ -646,9 +673,22 @@ function ObligationsPanel({
                         required
                       />
                     </label>
-                    <button disabled={isGroupWritePending(dashboard)}>
+                    <button
+                      disabled={isGroupWritePending(dashboard) || action.busy}
+                    >
                       Settle with credits
                     </button>
+                    {yourCredits <
+                      obligation.outstanding_amount.minor_units && (
+                      <p className="form-note settle-hint">
+                        You have {formatUsd(yourCredits)} in credits. Fund{" "}
+                        {formatUsd(
+                          obligation.outstanding_amount.minor_units -
+                            yourCredits,
+                        )}{" "}
+                        more under Fund internal credits to settle this in full.
+                      </p>
+                    )}
                   </form>
                 )}
               </article>
@@ -656,25 +696,17 @@ function ObligationsPanel({
           })}
         </div>
       )}
-      <MutationError error={action.error} />
+      <ActionFeedback action={action} />
     </section>
   );
 }
 
-function NotificationsPanel({
-  actorAddress,
-  group,
-}: {
-  actorAddress: string;
-  group: GroupOverview;
-}) {
+function NotificationsPanel({ group }: { group: GroupOverview }) {
   return (
     <section className="panel notifications-panel">
       <h2>Notifications</h2>
       {group.notifications.length === 0 ? (
-        <p className="empty-copy">
-          No new group notifications for {shortAddress(actorAddress)}.
-        </p>
+        <p className="empty-copy">No new group notifications.</p>
       ) : (
         <ul>
           {group.notifications.map((notice) => (
@@ -694,6 +726,7 @@ async function decideObligation(
   group: GroupOverview,
   obligationId: string,
   decision: "approve" | "reject",
+  { sign }: GroupActionSteps,
 ) {
   const parameters = {
     group_id: group.group_id,
@@ -701,10 +734,8 @@ async function decideObligation(
     decision,
     expected_version: group.provenance.projection_version,
   };
-  const intent = await requestSignature(
-    "split.approve",
-    obligationId,
-    parameters,
+  const intent = await sign(
+    requestSignature("split.approve", obligationId, parameters),
   );
   await dashboard.decision.mutateAsync({
     groupId: group.group_id,
@@ -723,6 +754,7 @@ async function settleObligation(
   group: GroupOverview,
   obligationId: string,
   amount: string,
+  { sign }: GroupActionSteps,
 ) {
   const amountMinorUnits = usdToMinorUnits(amount);
   const parameters = {
@@ -731,10 +763,8 @@ async function settleObligation(
     amount_minor_units: amountMinorUnits,
     expected_version: group.provenance.projection_version,
   };
-  const intent = await requestSignature(
-    "settlement.authorize",
-    obligationId,
-    parameters,
+  const intent = await sign(
+    requestSignature("settlement.authorize", obligationId, parameters),
   );
   await dashboard.settlement.mutateAsync({
     groupId: group.group_id,
@@ -803,6 +833,25 @@ function DashboardState({
       <h2>{text}</h2>
     </section>
   );
+}
+
+function ActionFeedback({ action }: { action: GroupAction }) {
+  if (action.status === "signing")
+    return (
+      <p className="form-status" role="status">
+        <span className="loading-orb" aria-hidden="true" />
+        Waiting for your approval in ResWallet. If no ResWallet window appeared,
+        check behind this browser window, or reload the page and try again.
+      </p>
+    );
+  if (action.status === "saving")
+    return (
+      <p className="form-status" role="status">
+        <span className="loading-orb" aria-hidden="true" />
+        Saving to the group…
+      </p>
+    );
+  return <MutationError error={action.error} />;
 }
 
 function MutationError({ error }: { error: Error | null }) {

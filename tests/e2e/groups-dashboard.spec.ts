@@ -199,14 +199,22 @@ test("approves and settles an obligation partially and fully", async ({
     .click();
   await expect(membersPopover).toHaveCount(0);
 
+  await expect(page.locator(".obligation-parties")).toHaveText(
+    words("You owe Alex"),
+    { useInnerText: true },
+  );
   await page.getByRole("button", { name: "Approve in ResWallet" }).click();
   await expect(page.getByText("open", { exact: true })).toBeVisible();
+  await expect(page.locator(".settle-hint")).toHaveText(
+    "You have $0.00 in credits. Fund $60.00 more under Fund internal credits to settle this in full.",
+  );
 
   await page.getByLabel("Credit amount (USD units)").fill("60.00");
   await page
     .getByRole("button", { name: "Approve funding in ResWallet" })
     .click();
   await expect(page.getByText("$60.00", { exact: true })).toBeVisible();
+  await expect(page.locator(".settle-hint")).toHaveCount(0);
 
   await page.getByLabel("Partial or full amount").fill("20.00");
   await page.getByRole("button", { name: "Settle with credits" }).click();
@@ -381,9 +389,7 @@ test("splits an expense equally between the selected members by default", async 
   await expenseForm.getByLabel("Description").fill("Dinner");
   await expenseForm.getByLabel("Total amount").fill("90.00");
   for (const name of ["Alex", "Sam", "Priya"])
-    await expect(expenseForm.getByLabel(`${name}'s share`)).toHaveText(
-      "$30.00",
-    );
+    await expect(equalShare(expenseForm, name)).toHaveText("$30.00");
   await expect(
     expenseForm.getByText(
       "All $90.00 assigned, split equally between 3 people.",
@@ -391,15 +397,13 @@ test("splits an expense equally between the selected members by default", async 
   ).toBeVisible();
 
   await expenseForm.getByLabel("Include Priya").uncheck();
-  await expect(expenseForm.getByLabel("Alex's share")).toHaveText("$45.00");
-  await expect(expenseForm.getByLabel("Sam's share")).toHaveText("$45.00");
-  await expect(expenseForm.getByLabel("Priya's share")).toHaveText(
-    "Not included",
-  );
+  await expect(equalShare(expenseForm, "Alex")).toHaveText("$45.00");
+  await expect(equalShare(expenseForm, "Sam")).toHaveText("$45.00");
+  await expect(equalShare(expenseForm, "Priya")).toHaveText("Not included");
 
   await expenseForm.getByLabel("Total amount").fill("10.01");
-  await expect(expenseForm.getByLabel("Alex's share")).toHaveText("$5.01");
-  await expect(expenseForm.getByLabel("Sam's share")).toHaveText("$5.00");
+  await expect(equalShare(expenseForm, "Alex")).toHaveText("$5.01");
+  await expect(equalShare(expenseForm, "Sam")).toHaveText("$5.00");
   await expect(
     expenseForm.getByText(
       "All $10.01 assigned, split equally between 2 people.",
@@ -484,6 +488,215 @@ test("lets the payer adjust an equal split into exact amounts", async ({
   await expect(expenseForm.getByLabel("Include Priya")).toBeChecked();
 });
 
+test("shows that it is waiting for ResWallet and then saving", async ({
+  page,
+}) => {
+  let releaseSave = () => {};
+  const saveReleased = new Promise<void>((resolve) => {
+    releaseSave = resolve;
+  });
+  let saveRequests = 0;
+  await mockVault(page, { ok: true, actorAddress: creditor, manual: true });
+  await mockSession(page, creditor);
+  await mockGroup(page, [
+    { address: creditor, name: "Alex" },
+    { address: debtor, name: "Sam" },
+  ]);
+  await page.route("**/api/v1/groups/friends/expenses", async (route) => {
+    saveRequests += 1;
+    await saveReleased;
+    await commandResponse(route, "expense");
+  });
+
+  await page.goto("/groups");
+  const expenseForm = page.locator(".expense-form");
+  const submit = expenseForm.getByRole("button", {
+    name: "Approve split in ResWallet",
+  });
+  await expenseForm.getByLabel("Description").fill("Taxi");
+  await expenseForm.getByLabel("Total amount").fill("40.00");
+  await submit.click();
+
+  const status = expenseForm.getByRole("status");
+  await expect(status).toContainText("Waiting for your approval in ResWallet");
+  await expect(status).toContainText("check behind this browser window");
+  await expect(submit).toBeDisabled();
+  await page.screenshot({ path: "test-results/groups-waiting-reswallet.png" });
+  expect(saveRequests).toBe(0);
+
+  await page.evaluate(() =>
+    (window as unknown as { approveVault(): void }).approveVault(),
+  );
+  await expect(status).toHaveText("Saving to the group…");
+  await expect(submit).toBeDisabled();
+  await expect.poll(() => saveRequests).toBe(1);
+
+  releaseSave();
+  await expect(status).toHaveCount(0);
+  await expect(submit).toBeEnabled();
+  await expect(expenseForm.getByRole("alert")).toHaveCount(0);
+  await expect(expenseForm.getByLabel("Description")).toHaveValue("");
+});
+
+test("lists expenses and obligations by name", async ({ page }) => {
+  const priya = `0x${"c".repeat(40)}`;
+  const usd = (minor_units: number) => ({ currency: "USD", minor_units });
+  const obligation = (
+    id: string,
+    expenseId: string,
+    creditor: string,
+    debtor: string,
+    amount: number,
+    settled: number,
+    status: string,
+  ) => ({
+    obligation_id: id,
+    expense_id: expenseId,
+    creditor_address: creditor,
+    debtor_address: debtor,
+    amount: usd(amount),
+    settled_amount: usd(settled),
+    outstanding_amount: usd(amount - settled),
+    due_on: null,
+    status,
+    source_event_id: `evt-${id}`,
+    contract_receipts: [`receipt-${id}`],
+  });
+  await mockSession(page, creditor);
+  await mockGroup(
+    page,
+    [
+      { address: creditor, name: "Alex" },
+      { address: debtor, name: "Sam" },
+      { address: priya, name: "Priya" },
+    ],
+    {
+      expenses: [
+        {
+          expense_id: "dinner",
+          payer_address: creditor,
+          description: "Dinner",
+          amount: usd(9000),
+          occurred_on: "2026-10-18",
+          shares: {
+            [creditor]: usd(3000),
+            [debtor]: usd(3000),
+            [priya]: usd(3000),
+          },
+          obligation_ids: ["obl-dinner-sam", "obl-dinner-priya"],
+          source_event_id: "evt-dinner",
+          contract_receipts: ["receipt-dinner"],
+        },
+        {
+          expense_id: "taxi",
+          payer_address: debtor,
+          description: "Taxi",
+          amount: usd(4000),
+          occurred_on: "2026-10-19",
+          shares: { [debtor]: usd(2000), [creditor]: usd(2000) },
+          obligation_ids: ["obl-taxi-alex"],
+          source_event_id: "evt-taxi",
+          contract_receipts: ["receipt-taxi"],
+        },
+      ],
+      obligations: [
+        obligation(
+          "obl-dinner-sam",
+          "dinner",
+          creditor,
+          debtor,
+          3000,
+          0,
+          "pending",
+        ),
+        obligation(
+          "obl-dinner-priya",
+          "dinner",
+          creditor,
+          priya,
+          3000,
+          1000,
+          "partially_settled",
+        ),
+        obligation("obl-taxi-alex", "taxi", debtor, creditor, 2000, 0, "open"),
+      ],
+      credit_balances: { [creditor]: usd(500) },
+    },
+  );
+
+  await page.goto("/groups");
+  const expenses = page.locator(".expenses-panel");
+  await expect(expenses.getByText("2 total")).toBeVisible();
+  const cards = expenses.locator(".expense-card");
+  await expect(cards).toHaveCount(2);
+
+  const taxi = cards.nth(0);
+  await expect(taxi.getByRole("heading", { name: "Taxi" })).toBeVisible();
+  await expect(taxi.locator(".expense-heading p")).toHaveText(
+    words("Oct 19, 2026 · Paid by Sam"),
+    { useInnerText: true },
+  );
+  await expect(taxi.locator(".expense-total")).toHaveText("$40.00");
+  const taxiShares = taxi.getByRole("list", { name: "Split for Taxi" });
+  await expect(taxiShares.getByRole("listitem")).toHaveText(
+    [words("Sam $20.00 Own share"), words("You $20.00")],
+    { useInnerText: true },
+  );
+
+  const dinner = cards.nth(1);
+  await expect(dinner.locator(".expense-heading p")).toHaveText(
+    words("Oct 18, 2026 · Paid by you"),
+    { useInnerText: true },
+  );
+  await expect(
+    dinner
+      .getByRole("list", { name: "Split for Dinner" })
+      .getByRole("listitem"),
+  ).toHaveText(
+    [words("You $30.00 Own share"), words("Sam $30.00"), words("Priya $30.00")],
+    { useInnerText: true },
+  );
+  const dinnerSam = dinner
+    .getByRole("listitem")
+    .filter({ hasText: "Sam" })
+    .locator(".member-name");
+  await dinnerSam.hover();
+  await expect(dinnerSam.getByRole("tooltip")).toBeVisible();
+  await expect(dinnerSam.getByRole("tooltip")).toHaveText(debtor);
+
+  const obligations = page.locator(".obligation-card");
+  await expect(obligations.locator(".obligation-parties")).toHaveText(
+    [
+      words("Sam owes you for Dinner"),
+      words("Priya owes you for Dinner"),
+      words("You owe Sam for Taxi"),
+    ],
+    { useInnerText: true },
+  );
+  await expect(obligations.nth(1)).toContainText(
+    "Original $30.00 · $10.00 settled",
+  );
+  await expect(obligations.nth(0)).not.toContainText("settled ·");
+
+  const taxiDebt = obligations.nth(2);
+  await expect(
+    taxiDebt.getByRole("button", { name: "Settle with credits" }),
+  ).toBeVisible();
+  await expect(taxiDebt.locator(".settle-hint")).toHaveText(
+    "You have $5.00 in credits. Fund $15.00 more under Fund internal credits to settle this in full.",
+  );
+  await expect(obligations.nth(0).locator(".settle-hint")).toHaveCount(0);
+  await expect(page.getByText("No new group notifications.")).toBeVisible();
+
+  await page.mouse.move(0, 0);
+  await page.locator(".expenses-panel").screenshot({
+    path: "test-results/groups-expenses.png",
+  });
+  await page.locator(".obligations-panel").screenshot({
+    path: "test-results/groups-obligations.png",
+  });
+});
+
 async function mockSplitGroup(page: Page): Promise<ExpenseRequest[]> {
   const posted: ExpenseRequest[] = [];
   await mockVault(page, { ok: true, actorAddress: creditor });
@@ -510,7 +723,8 @@ interface ExpenseRequest {
 }
 
 type VaultOutcome =
-  { ok: true; actorAddress: string } | { ok: false; error: string };
+  | { ok: true; actorAddress: string; manual?: boolean }
+  | { ok: false; error: string };
 
 async function mockVault(page: Page, outcome: VaultOutcome) {
   await page.addInitScript((outcome: VaultOutcome) => {
@@ -527,39 +741,43 @@ async function mockVault(page: Page, outcome: VaultOutcome) {
       )
         return;
       const intent = message.intent!;
-      window.postMessage(
-        outcome.ok
-          ? {
-              source: "reswallet",
-              version: 1,
-              request_id: message.request_id,
-              ok: true,
-              result: {
+      const respond = () =>
+        window.postMessage(
+          outcome.ok
+            ? {
+                source: "reswallet",
                 version: 1,
-                intent_id: intent.intent_id,
-                action: intent.action,
-                actor_public_key: "e2e-public-key",
-                actor_address: outcome.actorAddress,
-                resource_id: intent.resource_id,
-                parameters_hash: intent.parameters_hash,
-                nonce: intent.nonce,
-                issued_at: intent.issued_at,
-                expires_at: intent.expires_at,
-                origin: intent.origin,
-                audience: intent.audience,
-                network_id: intent.network_id,
-                signature: "e2e-signature",
+                request_id: message.request_id,
+                ok: true,
+                result: {
+                  version: 1,
+                  intent_id: intent.intent_id,
+                  action: intent.action,
+                  actor_public_key: "e2e-public-key",
+                  actor_address: outcome.actorAddress,
+                  resource_id: intent.resource_id,
+                  parameters_hash: intent.parameters_hash,
+                  nonce: intent.nonce,
+                  issued_at: intent.issued_at,
+                  expires_at: intent.expires_at,
+                  origin: intent.origin,
+                  audience: intent.audience,
+                  network_id: intent.network_id,
+                  signature: "e2e-signature",
+                },
+              }
+            : {
+                source: "reswallet",
+                version: 1,
+                request_id: message.request_id,
+                ok: false,
+                error: outcome.error,
               },
-            }
-          : {
-              source: "reswallet",
-              version: 1,
-              request_id: message.request_id,
-              ok: false,
-              error: outcome.error,
-            },
-        window.location.origin,
-      );
+          window.location.origin,
+        );
+      if (outcome.ok && outcome.manual)
+        (window as unknown as { approveVault(): void }).approveVault = respond;
+      else respond();
     });
   }, outcome);
 }
@@ -589,6 +807,11 @@ async function mockSession(page: Page, actorAddress: string) {
 async function mockGroup(
   page: Page,
   members: { address: string; name: string }[],
+  extras: {
+    expenses?: unknown[];
+    obligations?: unknown[];
+    credit_balances?: Record<string, unknown>;
+  } = {},
 ) {
   await page.route("**/api/v1/groups", async (route) => {
     if (route.request().method() !== "GET") return route.fallback();
@@ -621,9 +844,9 @@ async function mockGroup(
           active: true,
           source_event_id: `evt-member-${index}`,
         })),
-        expenses: [],
-        obligations: [],
-        credit_balances: {},
+        expenses: extras.expenses ?? [],
+        obligations: extras.obligations ?? [],
+        credit_balances: extras.credit_balances ?? {},
         notifications: [],
         provenance: {
           projection_version: 2,
@@ -635,6 +858,20 @@ async function mockGroup(
       }),
     });
   });
+}
+
+function words(text: string): RegExp {
+  const escaped = text
+    .split(" ")
+    .map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  return new RegExp(`^\\s*${escaped.join("\\s+")}\\s*$`, "i");
+}
+
+function equalShare(form: Locator, name: string): Locator {
+  return form
+    .locator(".split-editor li")
+    .filter({ has: form.page().getByLabel(`Include ${name}`) })
+    .locator(".split-amount");
 }
 
 async function expectInsideViewport(page: Page, locator: Locator) {

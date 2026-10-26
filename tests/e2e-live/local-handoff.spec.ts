@@ -505,7 +505,12 @@ async function createAndSettleGroup(
   await owner.getByLabel("Description").fill("Shared dinner");
   await owner.getByLabel("Total amount").fill("60.00");
   await owner.getByLabel("Include Owner").uncheck();
-  await expect(owner.getByLabel("Member's share")).toHaveText("$60.00");
+  await expect(
+    owner
+      .locator(".split-editor li")
+      .filter({ has: owner.getByLabel("Include Member") })
+      .locator(".split-amount"),
+  ).toHaveText("$60.00");
   await expect(
     owner.getByText("All $60.00 assigned, split equally between 1 person."),
   ).toBeVisible();

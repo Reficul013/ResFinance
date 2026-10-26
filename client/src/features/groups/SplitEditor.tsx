@@ -78,17 +78,13 @@ export function SplitEditor({
               )}
             </span>
             {mode === "equal" ? (
-              <output
-                className="split-amount"
-                aria-label={`${row.name}'s share`}
-                aria-live="off"
-              >
+              <span className="split-amount">
                 {!row.included
                   ? "Not included"
                   : row.amount === ""
                     ? "—"
                     : formatUsd(Number(row.amount.replace(".", "")))}
-              </output>
+              </span>
             ) : (
               <input
                 aria-label={`${row.name}'s share`}
