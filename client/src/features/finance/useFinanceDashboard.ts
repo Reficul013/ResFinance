@@ -7,17 +7,27 @@ import {
 
 import {
   createFinanceRecurringEntry,
+  deactivateFinanceBudget,
+  deactivateFinanceRecurringEntry,
   getFinanceOverview,
   recordFinanceTransaction,
   setFinanceBudget,
+  voidFinanceTransaction,
   type BudgetCommand,
+  type DeactivateBudgetCommand,
+  type DeactivateRecurringCommand,
   type RecurringEntryCommand,
   type TransactionCommand,
+  type VoidTransactionCommand,
 } from "../../lib/api/client";
 
 interface Command<T> {
   body: T;
   idempotencyKey: string;
+}
+
+interface RecordCommand<T> extends Command<T> {
+  recordId: string;
 }
 
 export function useFinanceDashboard(accessToken: string, month: string) {
@@ -45,9 +55,27 @@ export function useFinanceDashboard(accessToken: string, month: string) {
       recordFinanceTransaction(accessToken, idempotencyKey, body),
     onSuccess: refresh,
   });
+  const voidTransaction = useMutation({
+    mutationFn: ({
+      recordId,
+      body,
+      idempotencyKey,
+    }: RecordCommand<VoidTransactionCommand>) =>
+      voidFinanceTransaction(accessToken, recordId, idempotencyKey, body),
+    onSuccess: refresh,
+  });
   const budget = useMutation({
     mutationFn: ({ body, idempotencyKey }: Command<BudgetCommand>) =>
       setFinanceBudget(accessToken, idempotencyKey, body),
+    onSuccess: refresh,
+  });
+  const deactivateBudget = useMutation({
+    mutationFn: ({
+      recordId,
+      body,
+      idempotencyKey,
+    }: RecordCommand<DeactivateBudgetCommand>) =>
+      deactivateFinanceBudget(accessToken, recordId, idempotencyKey, body),
     onSuccess: refresh,
   });
   const recurring = useMutation({
@@ -55,12 +83,36 @@ export function useFinanceDashboard(accessToken: string, month: string) {
       createFinanceRecurringEntry(accessToken, idempotencyKey, body),
     onSuccess: refresh,
   });
-  return { overview, historyMonths, history, transaction, budget, recurring };
+  const deactivateRecurring = useMutation({
+    mutationFn: ({
+      recordId,
+      body,
+      idempotencyKey,
+    }: RecordCommand<DeactivateRecurringCommand>) =>
+      deactivateFinanceRecurringEntry(
+        accessToken,
+        recordId,
+        idempotencyKey,
+        body,
+      ),
+    onSuccess: refresh,
+  });
+  return {
+    overview,
+    historyMonths,
+    history,
+    transaction,
+    voidTransaction,
+    budget,
+    deactivateBudget,
+    recurring,
+    deactivateRecurring,
+  };
 }
 
-function financeTrendMonths(month: string): string[] {
+export function financeTrendMonths(month: string): string[] {
   const selected = new Date(`${month}-01T00:00:00Z`);
-  return Array.from({ length: 9 }, (_, index) => {
+  return Array.from({ length: 6 }, (_, index) => {
     const date = new Date(selected);
     date.setUTCMonth(selected.getUTCMonth() + index - 5);
     return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;

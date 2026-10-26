@@ -34,7 +34,7 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
   if (dashboard.overview.isError) {
     return (
       <DashboardState
-        title="Crypto analysis is unavailable."
+        title="Crypto Intelligence is unavailable."
         text={dashboard.overview.error.message}
         error
       />
@@ -63,7 +63,10 @@ export function CryptoDashboard({ accessToken }: { accessToken: string }) {
         </label>
       </section>
 
-      <section className="summary-grid" aria-label="Crypto analysis summary">
+      <section
+        className="summary-grid"
+        aria-label="Crypto Intelligence summary"
+      >
         <Metric
           label="Default capital"
           value={formatUsd(overview.default_capital.minor_units)}

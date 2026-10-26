@@ -132,6 +132,7 @@ class Budget:
     category_id: str
     month: str
     limit_minor_units: int
+    active: bool
     source_event_id: str
 
 
@@ -283,8 +284,15 @@ def reduce_finance_event(
             category_id=_text(payload, "category_id"),
             month=_month(payload, "month"),
             limit_minor_units=_positive_money(payload, field_name="limit_minor_units"),
+            active=True,
             source_event_id=event.event_id,
         )
+    elif event.event_type == "finance.budget-deactivated":
+        budget_id = _text(payload, "budget_id")
+        budget = budgets.get(budget_id)
+        if budget is None or not budget.active:
+            raise FinanceProjectionError("budget cannot be deactivated")
+        budgets[budget_id] = replace(budget, active=False)
     elif event.event_type == "finance.recurring-entry-created":
         recurring_id = _text(payload, "recurring_entry_id")
         if recurring_id in recurring_entries:
@@ -500,7 +508,11 @@ def _budget_statuses(
 ) -> tuple[BudgetStatus, ...]:
     results: list[BudgetStatus] = []
     for budget in sorted(
-        (value for value in projection.budgets.values() if value.month == month),
+        (
+            value
+            for value in projection.budgets.values()
+            if value.active and value.month == month
+        ),
         key=lambda value: value.budget_id,
     ):
         matching = [

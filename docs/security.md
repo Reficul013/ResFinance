@@ -5,7 +5,7 @@ Status: Milestones 1 and 2 application encryption, wallet hardening, and authent
 ## Trust boundaries
 
 1. Web pages are untrusted, including the ResFinance page when compromised by XSS or a dependency.
-2. ResVault is the only boundary allowed to hold an unlocked seed or private key.
+2. ResWallet is the only boundary allowed to hold an unlocked seed or private key.
 3. FastAPI authenticates users, authorizes resources, verifies signed intents, and exposes `/api/v1`.
 4. ResContract and ResilientDB are private services reachable only by application services and controlled workers.
 5. External data/model providers are untrusted inputs and cannot initiate writes outside their ingestion commands.
@@ -29,7 +29,7 @@ ResFinance application payloads use separate AES-256-GCM data-encryption keys be
 
 For local development, the Compose certificate initializer generates a 32-byte Finance event key into the existing private Docker certificate volume. The API mounts that file read-only; the key is never committed or written into the container image. This is local non-production key handling and does not lift the deployment hold or replace the deferred production KMS design.
 
-Milestone 1 implements authenticated encryption for event and blob repositories. Event payloads are stored as AES-256-GCM envelopes, and large blobs are compressed, encrypted, content-addressed, chunked, and verified on read. Local acceptance tests use an ephemeral test key; production key custody and destruction remain later-milestone work.
+Milestone 1 implements authenticated encryption for event and blob repositories. Event payloads are stored as AES-256-GCM envelopes, and large blobs are compressed, encrypted, content-addressed, chunked, and verified on read. Local acceptance tests use an ephemeral test key; production key custody and destruction remain Milestone 8 work, which is on hold.
 
 ## Service controls
 
@@ -47,8 +47,8 @@ Structured logs use allowlisted fields. The following are always redacted or omi
 
 Security tests must inspect the browser page, extension messaging, network capture, server logs, worker logs, error responses, and generated feasibility evidence for prohibited values.
 
-## Current ResVault disposition
+## Current ResWallet disposition
 
-The pinned official ResVault source fails this contract. ADR 0001 selected substantial hardening while preserving ResVault behavior. Milestone 2 implements the compatible redesign as a Manifest V3 extension with a versioned Argon2id/AES-256-GCM seed record, memory-only unlocked state, exact-origin messaging, extension-owned approvals, and background-only Ed25519 signing. Authentication refresh hashes, nonce use, and revocation markers persist in ResilientDB while access tokens remain memory-only.
+The pinned official ResVault source fails this contract. ADR 0001 therefore created ResWallet as the custom ResFinance wallet while preserving the useful browser-wallet role and explicit approval flow. Milestone 2 implements ResWallet as a Manifest V3 extension with a versioned Argon2id/AES-256-GCM seed record, memory-only unlocked state, exact-origin messaging, extension-owned approvals, and background-only Ed25519 signing. Authentication refresh hashes, nonce use, and revocation markers persist in ResilientDB while access tokens remain memory-only.
 
-Local acceptance and remaining non-production limits are recorded in [`milestone2-wallet-authentication.md`](milestone2-wallet-authentication.md). The original source findings remain in [`audits/resvault-2026-10-12.md`](audits/resvault-2026-10-12.md).
+Local acceptance and remaining non-production limits are recorded in [`milestones/milestone2-reswallet-wallet-authentication.md`](milestones/milestone2-reswallet-wallet-authentication.md). The original source findings remain in [`audits/resvault-2026-10-12.md`](audits/resvault-2026-10-12.md).

@@ -1,5 +1,7 @@
+import { Lightbulb } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
+import { AlwaysVisibleScroll } from "../../components/AlwaysVisibleScroll";
 import type { FinanceOverview, InsightResponse } from "../../lib/api/client";
 import { currentMonth } from "../finance/money";
 import { useInsightsDashboard } from "./useInsightsDashboard";
@@ -78,6 +80,9 @@ export function SmartSavingsInsights({
     );
   }
   const response = dashboard.query.data ?? dashboard.overview.data.insight;
+  const suggestedQuestions = buildSuggestedQuestions(
+    response.follow_up_questions,
+  );
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -100,7 +105,7 @@ export function SmartSavingsInsights({
         className="smart-savings-insights"
         aria-labelledby="smart-insights-title"
       >
-        <div className="insights-section-heading">
+        <div className="dashboard-section-heading">
           <div>
             <p className="section-kicker">Evidence-linked guidance</p>
             <h2 id="smart-insights-title">Smart Savings Insights</h2>
@@ -130,11 +135,27 @@ export function SmartSavingsInsights({
                 <textarea
                   value={question}
                   maxLength={500}
-                  rows={3}
+                  rows={2}
                   required
                   onChange={(event) => setQuestion(event.target.value)}
                 />
               </label>
+              <div
+                className="follow-up-row"
+                role="group"
+                aria-label="Suggested questions"
+              >
+                {suggestedQuestions.map((item) => (
+                  <button type="button" key={item} onClick={() => ask(item)}>
+                    <Lightbulb
+                      className="suggestion-icon"
+                      size={14}
+                      aria-hidden="true"
+                    />
+                    {item}
+                  </button>
+                ))}
+              </div>
               <button
                 className="primary-button"
                 disabled={
@@ -156,7 +177,7 @@ export function SmartSavingsInsights({
             )}
           </section>
 
-          <InsightResult response={response} onAsk={ask} />
+          <InsightResult response={response} />
         </div>
       </section>
 
@@ -190,37 +211,42 @@ function CombinedProvenancePanel({
       >
         {financeOverview !== undefined && (
           <section
-            className="provenance-column"
+            className="provenance-column finance-provenance"
             aria-labelledby="finance-provenance-title"
           >
-            <h3 id="finance-provenance-title">Finance Insights</h3>
-            <p>
-              Projection{" "}
-              <strong>v{financeOverview.provenance.projection_version}</strong>
-              {financeOverview.provenance.as_of_utc === null
-                ? " has no events yet."
-                : ` rebuilt through ${new Date(financeOverview.provenance.as_of_utc).toLocaleString()}.`}
-            </p>
-            <p>
-              Savings calculation{" "}
-              <code>{financeOverview.summary.savings.calculation_id}</code> uses{" "}
-              <code>{financeOverview.summary.savings.formula_version}</code> and{" "}
-              {financeOverview.summary.savings.source_event_ids.length} source
-              event(s).
-            </p>
-            {financeOverview.provenance.source_event_ids.length > 0 && (
-              <ul className="event-id-list">
-                {financeOverview.provenance.source_event_ids.map((eventId) => (
-                  <li key={eventId}>
-                    <code>{eventId}</code>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <AlwaysVisibleScroll>
+              <h3 id="finance-provenance-title">Finance Insights</h3>
+              <p className="provenance-oneline">
+                Projection{" "}
+                <strong>
+                  v{financeOverview.provenance.projection_version}
+                </strong>
+                {financeOverview.provenance.as_of_utc === null
+                  ? " has no events yet."
+                  : ` rebuilt through ${new Date(financeOverview.provenance.as_of_utc).toLocaleString()}.`}{" "}
+                Savings calculation{" "}
+                <code>{financeOverview.summary.savings.calculation_id}</code>{" "}
+                uses{" "}
+                <code>{financeOverview.summary.savings.formula_version}</code>{" "}
+                and {financeOverview.summary.savings.source_event_ids.length}{" "}
+                source event(s).
+              </p>
+              {financeOverview.provenance.source_event_ids.length > 0 && (
+                <ul className="event-id-list">
+                  {financeOverview.provenance.source_event_ids.map(
+                    (eventId) => (
+                      <li key={eventId}>
+                        <code>{eventId}</code>
+                      </li>
+                    ),
+                  )}
+                </ul>
+              )}
+            </AlwaysVisibleScroll>
           </section>
         )}
         <section
-          className="provenance-column"
+          className="provenance-column savings-provenance"
           aria-labelledby="savings-provenance-title"
         >
           <h3 id="savings-provenance-title">Savings Insights</h3>
@@ -240,7 +266,7 @@ function CombinedProvenancePanel({
                 evidence.
               </p>
               <p>
-                This path has no write, ResVault, ResContract, trading, or
+                This path has no write, ResWallet, ResContract, trading, or
                 direct ResilientDB capability.
               </p>
             </>
@@ -251,13 +277,9 @@ function CombinedProvenancePanel({
   );
 }
 
-function InsightResult({
-  response,
-  onAsk,
-}: {
-  response: InsightResponse;
-  onAsk(question: string): void;
-}) {
+function InsightResult({ response }: { response: InsightResponse }) {
+  const evidenceCards = padEvidenceCards(response.evidence, 4);
+
   return (
     <section
       className={`insight-result panel${response.refused ? " refusal" : ""}`}
@@ -271,17 +293,31 @@ function InsightResult({
           ? response.summary
           : "What your records show?"}
       </h2>
-      {response.evidence.length > 0 && (
+      {!response.refused && (
         <ul className="evidence-list" aria-label="Evidence used">
-          {response.evidence.map((item) => (
-            <li key={item.fact_id}>
-              <p>{item.statement}</p>
-              <small>
-                Based on {item.source_ids.length} verified{" "}
-                {item.source_ids.length === 1 ? "record" : "records"}
-              </small>
-            </li>
-          ))}
+          {evidenceCards.map((item, index) =>
+            item === null ? (
+              <li
+                key={`empty-${index}`}
+                className="evidence-card-empty"
+                aria-hidden="true"
+              >
+                <p>No additional evidence for this answer.</p>
+              </li>
+            ) : (
+              <li
+                key={item.fact_id}
+                data-topic={item.topic}
+                title={item.statement}
+              >
+                <p>{item.statement}</p>
+                <small>
+                  Based on {item.source_ids.length} verified{" "}
+                  {item.source_ids.length === 1 ? "record" : "records"}
+                </small>
+              </li>
+            ),
+          )}
         </ul>
       )}
       <ul className="caveat-list">
@@ -289,17 +325,34 @@ function InsightResult({
           <li key={item}>{item}</li>
         ))}
       </ul>
-      {response.follow_up_questions.length > 0 && (
-        <div className="follow-up-row" aria-label="Suggested questions">
-          {response.follow_up_questions.map((item) => (
-            <button type="button" key={item} onClick={() => onAsk(item)}>
-              {item}
-            </button>
-          ))}
-        </div>
-      )}
     </section>
   );
+}
+
+const SUGGESTED_QUESTION_DEFAULTS = [
+  "Which recorded budgets need attention?",
+  "How do recurring items affect projected savings?",
+  "What is my available savings?",
+  "What are my biggest expenses this month?",
+] as const;
+
+function buildSuggestedQuestions(followUps: string[]): string[] {
+  // Keep the four canonical prompts visible; unique API follow-ups only fill gaps.
+  return [...new Set([...SUGGESTED_QUESTION_DEFAULTS, ...followUps])].slice(
+    0,
+    4,
+  );
+}
+
+function padEvidenceCards<T>(items: T[], count: number): Array<T | null> {
+  const prioritized = items.slice(0, count);
+  return [
+    ...prioritized,
+    ...Array.from(
+      { length: Math.max(0, count - prioritized.length) },
+      () => null,
+    ),
+  ];
 }
 
 function DashboardState({

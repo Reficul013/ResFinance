@@ -2,7 +2,7 @@ import type { components, paths } from "./generated/schema";
 import type {
   SignedIntent,
   WalletIdentity,
-} from "../../features/auth/resvault";
+} from "../../features/auth/reswallet";
 
 type HealthResponse =
   paths["/api/v1/health"]["get"]["responses"][200]["content"]["application/json"];
@@ -29,9 +29,15 @@ type RefreshResponse =
 export type FinanceOverview = components["schemas"]["FinanceOverviewModel"];
 export type CategoryCommand = components["schemas"]["CategoryCommand"];
 export type TransactionCommand = components["schemas"]["TransactionCommand"];
+export type VoidTransactionCommand =
+  components["schemas"]["VoidTransactionCommand"];
 export type BudgetCommand = components["schemas"]["BudgetCommand"];
+export type DeactivateBudgetCommand =
+  components["schemas"]["DeactivateBudgetCommand"];
 export type RecurringEntryCommand =
   components["schemas"]["RecurringEntryCommand"];
+export type DeactivateRecurringCommand =
+  components["schemas"]["DeactivateRecurringCommand"];
 export type FinanceEvent = components["schemas"]["EventResponse"];
 export type GroupSummary = components["schemas"]["GroupSummaryModel"];
 export type GroupOverview = components["schemas"]["GroupOverviewModel"];
@@ -238,6 +244,20 @@ export async function recordFinanceTransaction(
   );
 }
 
+export async function voidFinanceTransaction(
+  accessToken: string,
+  transactionId: string,
+  idempotencyKey: string,
+  command: VoidTransactionCommand,
+): Promise<FinanceEvent> {
+  return financeCommand(
+    `/api/v1/finance/transactions/${encodeURIComponent(transactionId)}/void`,
+    accessToken,
+    idempotencyKey,
+    command,
+  );
+}
+
 export async function setFinanceBudget(
   accessToken: string,
   idempotencyKey: string,
@@ -251,6 +271,20 @@ export async function setFinanceBudget(
   );
 }
 
+export async function deactivateFinanceBudget(
+  accessToken: string,
+  budgetId: string,
+  idempotencyKey: string,
+  command: DeactivateBudgetCommand,
+): Promise<FinanceEvent> {
+  return financeCommand(
+    `/api/v1/finance/budgets/${encodeURIComponent(budgetId)}/deactivate`,
+    accessToken,
+    idempotencyKey,
+    command,
+  );
+}
+
 export async function createFinanceRecurringEntry(
   accessToken: string,
   idempotencyKey: string,
@@ -258,6 +292,20 @@ export async function createFinanceRecurringEntry(
 ): Promise<FinanceEvent> {
   return financeCommand(
     "/api/v1/finance/recurring",
+    accessToken,
+    idempotencyKey,
+    command,
+  );
+}
+
+export async function deactivateFinanceRecurringEntry(
+  accessToken: string,
+  recurringEntryId: string,
+  idempotencyKey: string,
+  command: DeactivateRecurringCommand,
+): Promise<FinanceEvent> {
+  return financeCommand(
+    `/api/v1/finance/recurring/${encodeURIComponent(recurringEntryId)}/deactivate`,
     accessToken,
     idempotencyKey,
     command,

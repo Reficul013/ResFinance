@@ -1,6 +1,6 @@
 # REST API Contract
 
-Status: Milestone 8 authentication, Finance, Groups, contractual settlement, Crypto portfolio, and read-only AI boundaries implemented for local development
+Status: Milestones 2–7 authentication, Finance, Groups, contractual settlement, Crypto Intelligence portfolio, read-only AI, and integration boundaries implemented for local development
 
 ## Boundary
 
@@ -78,6 +78,7 @@ Access tokens are opaque and held only in API/browser process memory. Refresh to
 - `POST /api/v1/finance/transactions` appends an integer-cent USD income or expense.
 - `POST /api/v1/finance/transactions/{id}/void` appends a compensating void event.
 - `POST /api/v1/finance/budgets` appends or replaces the named category-month budget in the projection.
+- `POST /api/v1/finance/budgets/{id}/deactivate` appends a budget deactivation event; the original budget remains in the audit projection but no longer contributes an active monthly guardrail.
 - `POST /api/v1/finance/recurring` appends a monthly recurring entry.
 - `POST /api/v1/finance/recurring/{id}/deactivate` appends a deactivation event.
 
@@ -118,7 +119,7 @@ weights, exact integer-cent allocations, and a no-trading warning.
 
 - `GET /api/v1/insights/overview?month=YYYY-MM` returns a wallet-authorized,
   content-addressed fact bundle, an initial Smart Savings Insight, and in-app
-  notifications linking to Finance, Groups, or Crypto.
+  notifications linking to Finance, Groups, or Crypto Intelligence.
 - `POST /api/v1/insights/query` accepts a month and a question of at most 500
   characters. The POST is computational only: it appends no event and changes
   no projection.

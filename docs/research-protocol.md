@@ -1,6 +1,6 @@
 # Research Protocol
 
-Status: Milestone 9 forward-completion protocol predeclared on 2026-10-15; local, non-commercial research only
+Status: Milestone 7 forward-completion protocol predeclared on 2026-10-15; local, non-commercial research only
 
 ## Scope
 
@@ -51,13 +51,13 @@ Artifacts are compressed, encrypted with AES-256-GCM, split into 256 KiB logical
 
 The local 100 MiB reconstruction smoke test does not satisfy persistence acceptance; the identical round trip must also pass through real ResilientDB and survive restart.
 
-## Milestone 6 implementation note
+## Milestone 5 reproducible ML implementation note
 
 The checked-in implementation uses pinned NumPy and PyTorch dependencies, CPU-only deterministic algorithms, one framework thread, no random data shuffling, five expanding walk-forward folds, a 15-day embargo, fold-local masked standardization, and validation-only split-conformal calibration. The clean-room MSPCIFormer adaptation uses separate market, sentiment, and on-chain encoders, masked adaptive gating, multi-scale temporal patches, shared channel-independent Transformer processing, learned scale aggregation, asset embeddings, and five-horizon return, direction, and quantile heads.
 
 Synthetic smoke results validate deterministic mechanics, model contracts, comparisons, and persistence. They do not establish real-data performance, statistical significance, financial advice, or promotion eligibility. A full research run must use the fixed point-in-time provider dataset, retain the same manifest contract, and pass the declared promotion criteria before its model can become an approved forecast source.
 
-## Milestone 9 untouched-forward completion protocol
+## Milestone 7 untouched-forward completion protocol
 
 This protocol is frozen before retrieving or scoring the forward holdout. It is a new evaluation, not a reinterpretation of the already-observed 2020-04-10 through 2025-01-01 five-fold results.
 

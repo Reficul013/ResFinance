@@ -137,12 +137,12 @@ def preflight(*, model_dir: Path | None, require_model: bool) -> list[Check]:
             "installed" if (ROOT / "client" / "node_modules").is_dir() else "run npm ci in client",
         ),
         Check(
-            "resvault-dependencies",
-            (ROOT / "resvault" / "node_modules" / ".package-lock.json").is_file(),
+            "reswallet-dependencies",
+            (ROOT / "reswallet" / "node_modules" / ".package-lock.json").is_file(),
             (
                 "installed"
-                if (ROOT / "resvault" / "node_modules").is_dir()
-                else "run npm ci in resvault"
+                if (ROOT / "reswallet" / "node_modules").is_dir()
+                else "run npm ci in reswallet"
             ),
         ),
     ]
@@ -254,7 +254,7 @@ def _stop_client() -> None:
 def start(*, model_dir: Path | None, require_model: bool) -> None:
     selected_model = model_dir.resolve() if model_dir is not None else None
     _require_preflight(selected_model, require_model)
-    _run(("npm", "run", "build"), cwd=ROOT / "resvault")
+    _run(("npm", "run", "build"), cwd=ROOT / "reswallet")
     _run(("npm", "run", "build"), cwd=ROOT / "client")
     _run(
         (

@@ -301,6 +301,10 @@ def test_authenticated_api_exposes_read_only_insights_and_notifications() -> Non
     assert body["insight"]["mode"] == "template-fallback"
     assert any(item["severity"] == "urgent" for item in body["notifications"])
     assert any(item["href"] == "/crypto" for item in body["notifications"])
+    assert any(
+        item["title"] == "Crypto Intelligence is gated"
+        for item in body["notifications"]
+    )
 
     query = client.post(
         "/api/v1/insights/query",

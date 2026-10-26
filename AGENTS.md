@@ -6,8 +6,9 @@ These instructions apply to the entire repository. Add a nested `AGENTS.md` only
 
 - Use `docs/architecture-implementation-plan.md` for architecture, security, data boundaries, milestone order, and acceptance criteria relevant to the current task.
 - Use `docs/project-spec.md` for product behavior and the end-to-end user journey.
-- When implementing or debugging ResilientDB, ResVault, or ResContract, consult `docs/development-references.md`, pin the exact upstream revision used, and validate documented behavior against the local stack.
-- Follow the dependency-ordered roadmap. Milestone 0 feasibility gates block dependent feature work when they fail; do not bypass a gate with a substitute technology.
+- Use `docs/milestones/milestones.md` for the canonical eight-milestone naming convention and the mapping from legacy artifact identifiers. New planning, status updates, commits, and handoffs must use this convention.
+- When implementing or debugging ResilientDB, ResWallet, the upstream ResVault reference, or ResContract, consult `docs/development-references.md`, pin the exact upstream revision used, and validate documented behavior against the local stack.
+- Follow the dependency-ordered roadmap. Milestone 1 feasibility gates block dependent feature work when they fail; do not bypass a gate with a substitute technology. Historical `milestone0`–`milestone9` script, configuration, image, attestation, and run identifiers remain stable compatibility names and do not define the current milestone numbering.
 
 ## Product and architecture boundaries
 
@@ -15,7 +16,7 @@ These instructions apply to the entire repository. Add a nested `AGENTS.md` only
 - Crypto support is exactly `BTC | ETH | SOL` across domain types, APIs, providers, models, UI, fixtures, and tests.
 - USD is the only fiat denomination in V1. Store money as integer USD cents and crypto quantities/prices as validated decimal strings; never use binary floating point for monetary calculations.
 - Browser code communicates with application services only through generated REST clients under `/api/v1`. It must not contact ResilientDB, ResContract GraphQL, or contract CLI endpoints directly.
-- ResVault seeds and private keys never leave the extension. Contract-affecting actions require an explicitly approved, backend-verified signed intent.
+- ResWallet seeds and private keys never leave the extension. Contract-affecting actions require an explicitly approved, backend-verified signed intent.
 - ResContract is authoritative for obligations and settlement state. Finance changes only after confirmed contract state and receipts.
 - Group settlement uses internal, non-redeemable, non-monetary credits. V1 does not transfer fiat or native cryptocurrency, execute trades, or provide exchange custody.
 - Domain records are append-only, schema-versioned, idempotent, UTC-based, and reducer-rebuildable. Corrections append compensating events.
@@ -38,7 +39,7 @@ These instructions apply to the entire repository. Add a nested `AGENTS.md` only
 
 - Every behavioral change needs tests at the lowest appropriate layer plus an integration test for cross-module behavior.
 - Run the relevant available tests, lint, type checks, and builds before handoff. Use real ResilientDB integration tests where persistence behavior matters.
-- Run the Milestone 0 checks with `.venv/bin/ruff check .`, `.venv/bin/mypy`, and `.venv/bin/pytest` after installing the exact development tools from `requirements/requirements-dev.txt`. The standard-library fallback is `python3 -m unittest discover -s tests -p 'test_*.py'`.
+- Run the Milestone 1 foundation and feasibility checks with `.venv/bin/ruff check .`, `.venv/bin/mypy`, and `.venv/bin/pytest` after installing the exact development tools from `requirements/requirements-dev.txt`. The standard-library fallback is `python3 -m unittest discover -s tests -p 'test_*.py'`.
 - Run the current feasibility harness with `python3 -m scripts.milestone0.run --upstream /private/tmp/resfinance-resilientdb-upstream --output /tmp/resfinance-milestone0-evidence.json --network --allow-incomplete`. Omit `--allow-incomplete` in CI so incomplete mandatory gates fail the job; omit `--network` only when provider access is intentionally unavailable.
 - Derive later milestone verification commands from checked-in configuration; do not invent commands for toolchains that have not been established.
 - Architecture exceptions require an ADR and explicit review. A failing integration never justifies silently introducing another database or weakening security boundaries.
@@ -61,6 +62,7 @@ These instructions apply to the entire repository. Add a nested `AGENTS.md` only
 - When a task produces substantial, complete repository changes, verify the work, review the diff, create a focused commit with a meaningful Conventional Commit message, and push the current branch to its configured upstream before handing off.
 - Substantial changes include working application code, tests, API or data-model changes, build configuration, and documentation that materially changes project behavior or direction.
 - Before committing and pushing, review `README.md` against the completed diff. Update it in the same commit when user-visible behavior, setup or verification commands, architecture, supported scope, project status, or repository layout changed.
+- Update `docs/ResFinance-Current-Status.md` in the same commit whenever a pushed change materially changes milestone scope, status, behavior, verification evidence, readiness, or known limitations. Keep detailed milestone progress out of the root README.
 - When the completed diff does not affect README content, confirm that the README remains accurate and do not edit it solely to create documentation churn.
 - Do not commit trivial formatting, typo-only edits, temporary debugging, empty scaffolding by itself, or unfinished/broken work.
 - Stage only changes belonging to the completed task. Preserve unrelated user changes and never commit secrets, local environment files, credentials, generated artifacts, or large data/model files.

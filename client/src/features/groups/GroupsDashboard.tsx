@@ -6,7 +6,7 @@ import {
   signIntent,
   type JsonValue,
   type SignedIntent,
-} from "../auth/resvault";
+} from "../auth/reswallet";
 import { formatUsd, usdToMinorUnits } from "../finance/money";
 import { MembersMenu } from "./MembersMenu";
 import { memberDisplayName, shortAddress } from "./members";
@@ -360,7 +360,7 @@ function FundCreditsPanel({
           />
         </label>
         <button disabled={isGroupWritePending(dashboard)}>
-          Approve funding in ResVault
+          Approve funding in ResWallet
         </button>
       </form>
       <p className="form-note">Funding wallet: {shortAddress(actorAddress)}</p>
@@ -524,7 +524,7 @@ function CreateExpensePanel({
           }
         />
         <button disabled={isGroupWritePending(dashboard)}>
-          Approve split in ResVault
+          Approve split in ResWallet
         </button>
       </form>
       <MutationError error={action.error} />
@@ -606,7 +606,7 @@ function ObligationsPanel({
                         }
                       >
                         {decision === "approve"
-                          ? "Approve in ResVault"
+                          ? "Approve in ResWallet"
                           : "Reject"}
                       </button>
                     ))}
@@ -783,7 +783,7 @@ async function requestSignature(
     network_id: "pinned-local-network",
   });
   if (signed.action !== action)
-    throw new Error("ResVault signed another action");
+    throw new Error("ResWallet signed another action");
   return { ...signed, action };
 }
 

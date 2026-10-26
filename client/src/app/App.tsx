@@ -1,15 +1,14 @@
 import { lazy, Suspense } from "react";
 import {
   Navigate,
-  Link,
   NavLink,
   Route,
   Routes,
-  useLocation,
   useNavigate,
 } from "react-router-dom";
 
 import { AuthCard } from "../components/AuthCard";
+import { GitHubLink } from "../components/GitHubLink";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useAuthentication } from "../features/auth/useAuthentication";
 import { NotificationCenter } from "../features/insights/NotificationCenter";
@@ -32,18 +31,10 @@ const CryptoDashboard = lazy(() =>
 
 export function App() {
   const navigate = useNavigate();
-  const location = useLocation();
   const authentication = useAuthentication();
   const authenticated =
     authentication.state === "authenticated" &&
     authentication.accessToken !== null;
-  const financeActive =
-    location.pathname === "/" || location.pathname === "/finance";
-  const financeDashboard = authenticated ? (
-    <Suspense fallback={<RouteLoading text="Opening Personal Finance…" />}>
-      <FinanceDashboard accessToken={authentication.accessToken!} />
-    </Suspense>
-  ) : null;
 
   async function logout() {
     try {
@@ -55,13 +46,19 @@ export function App() {
 
   return (
     <main className={authenticated ? "app-shell" : "shell"}>
-      {!authenticated && <ThemeToggle />}
+      {!authenticated && (
+        <div className="welcome-actions">
+          <GitHubLink />
+          <ThemeToggle />
+        </div>
+      )}
       {!authenticated && (
         <>
           <h1>ResFinance</h1>
           <p className="lede">
-            Connect the hardened ResVault extension to open your encrypted
-            finance and groups dashboards. Your seed stays inside the extension.
+            Connect to the ResWallet extension to open your Encrypted Personal
+            Finance, Bill Split, and Crypto Intelligence dashboards. Your seed
+            always stays inside the extension.
           </p>
         </>
       )}
@@ -81,15 +78,9 @@ export function App() {
         {authenticated && (
           <div className="authenticated-navigation">
             <nav className="dashboard-nav" aria-label="ResFinance dashboards">
-              <Link
-                to="/finance"
-                className={financeActive ? "active" : undefined}
-                aria-current={financeActive ? "page" : undefined}
-              >
-                Personal Finance
-              </Link>
+              <NavLink to="/finance">Personal Finance</NavLink>
               <NavLink to="/groups">Friends &amp; Groups</NavLink>
-              <NavLink to="/crypto">Crypto</NavLink>
+              <NavLink to="/crypto">Crypto Intelligence</NavLink>
             </nav>
           </div>
         )}
@@ -97,8 +88,16 @@ export function App() {
       {authenticated ? (
         <>
           <Routes>
-            <Route path="/" element={financeDashboard} />
-            <Route path="/finance" element={financeDashboard} />
+            <Route
+              path="/finance"
+              element={
+                <Suspense
+                  fallback={<RouteLoading text="Opening Personal Finance…" />}
+                >
+                  <FinanceDashboard accessToken={authentication.accessToken!} />
+                </Suspense>
+              }
+            />
             <Route
               path="/groups"
               element={
@@ -115,7 +114,11 @@ export function App() {
             <Route
               path="/crypto"
               element={
-                <Suspense fallback={<RouteLoading text="Opening Crypto…" />}>
+                <Suspense
+                  fallback={
+                    <RouteLoading text="Opening Crypto Intelligence…" />
+                  }
+                >
                   <CryptoDashboard accessToken={authentication.accessToken!} />
                 </Suspense>
               }

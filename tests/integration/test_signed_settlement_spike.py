@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
-from blockchain.wallet.spike_signer import ResVaultSpikeSigner, WalletSigningRejected
+from blockchain.wallet.spike_signer import ResWalletSpikeSigner, WalletSigningRejected
 from server.app.api.settlement import create_app
 from server.app.application.settlement import SettlementService, parameters_hash
 from server.app.domain.settlement import (
@@ -60,7 +60,7 @@ class FakeEventStore:
 
 
 def signed_command(
-    signer: ResVaultSpikeSigner,
+    signer: ResWalletSpikeSigner,
     parameters: SettlementParameters,
     *,
     nonce: str = "nonce-0000000000000001",
@@ -103,7 +103,7 @@ def post(client: TestClient, body: dict[str, object], key: str = "idem-1"):
 def test_signed_intent_changes_contract_then_appends_event() -> None:
     client, contract, events = client_and_ports()
     command = signed_command(
-        ResVaultSpikeSigner(), SettlementParameters(credit_units=100, expected_version=4)
+        ResWalletSpikeSigner(), SettlementParameters(credit_units=100, expected_version=4)
     )
 
     response = post(client, command)
@@ -120,7 +120,7 @@ def test_signed_intent_changes_contract_then_appends_event() -> None:
 def test_idempotent_retry_does_not_call_contract_twice() -> None:
     client, contract, _ = client_and_ports()
     command = signed_command(
-        ResVaultSpikeSigner(), SettlementParameters(credit_units=100, expected_version=0)
+        ResWalletSpikeSigner(), SettlementParameters(credit_units=100, expected_version=0)
     )
 
     first = post(client, command)
@@ -134,7 +134,7 @@ def test_idempotent_retry_does_not_call_contract_twice() -> None:
 def test_tampering_and_nonce_replay_are_rejected() -> None:
     client, contract, _ = client_and_ports()
     command = signed_command(
-        ResVaultSpikeSigner(), SettlementParameters(credit_units=100, expected_version=0)
+        ResWalletSpikeSigner(), SettlementParameters(credit_units=100, expected_version=0)
     )
     tampered = json.loads(json.dumps(command))
     tampered["parameters"]["credit_units"] = 101
@@ -149,7 +149,7 @@ def test_page_network_server_storage_and_logs_never_contain_private_material(
     caplog,
 ) -> None:
     client, contract, events = client_and_ports()
-    signer = ResVaultSpikeSigner()
+    signer = ResWalletSpikeSigner()
     with caplog.at_level(logging.DEBUG):
         command = signed_command(
             signer, SettlementParameters(credit_units=100, expected_version=0)
@@ -174,7 +174,7 @@ def test_page_network_server_storage_and_logs_never_contain_private_material(
 
 def test_wallet_requires_exact_origin_and_explicit_approval() -> None:
     parameters = SettlementParameters(credit_units=100, expected_version=0)
-    signer = ResVaultSpikeSigner()
+    signer = ResWalletSpikeSigner()
     common = {
         "version": 1,
         "intent_id": "intent-1",

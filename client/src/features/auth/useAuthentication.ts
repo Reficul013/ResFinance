@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   createChallenge,
@@ -8,15 +8,24 @@ import {
 } from "../../lib/api/client";
 import {
   formatIntentTimestamp,
-  getWalletIdentity,
+  getWalletStatus,
   hashParameters,
   lockWallet,
   signIntent,
+  subscribeWalletStatus,
   type WalletIdentity,
-} from "./resvault";
+  type WalletStatus,
+} from "./reswallet";
 
 export type AuthenticationState =
-  "checking" | "disconnected" | "ready" | "pending" | "authenticated" | "error";
+  | "checking"
+  | "disconnected"
+  | "locked"
+  | "ready"
+  | "pending"
+  | "signing-in"
+  | "authenticated"
+  | "error";
 
 interface Authentication {
   state: AuthenticationState;
@@ -39,28 +48,73 @@ function refreshInitialSession(): ReturnType<typeof refreshSession> {
 
 export function useAuthentication(): Authentication {
   const [state, setState] = useState<AuthenticationState>("checking");
+  const stateRef = useRef<AuthenticationState>("checking");
   const [message, setMessage] = useState("Checking wallet and session state…");
   const [identity, setIdentity] = useState<WalletIdentity | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [actorAddress, setActorAddress] = useState<string | null>(null);
 
-  const inspectWallet = useCallback(async () => {
-    try {
-      const current = await getWalletIdentity();
-      setIdentity(current);
-      setState(current === null ? "disconnected" : "ready");
-      setMessage(
-        current === null
-          ? "Initialize ResVault before connecting."
-          : "ResVault is available. Continue to approve login.",
-      );
-    } catch {
-      setState("disconnected");
-      setMessage(
-        "Install the ResVault extension to use wallet authentication.",
-      );
-    }
+  const transitionTo = useCallback((next: AuthenticationState) => {
+    stateRef.current = next;
+    setState(next);
   }, []);
+
+  const applyWalletStatus = useCallback(
+    (current: WalletStatus, preserveActiveSession = false) => {
+      setIdentity(current.identity);
+      if (
+        preserveActiveSession &&
+        (stateRef.current === "authenticated" ||
+          stateRef.current === "pending" ||
+          stateRef.current === "signing-in")
+      ) {
+        return;
+      }
+      transitionTo(
+        !current.exists || current.identity === null
+          ? "disconnected"
+          : current.unlocked
+            ? "ready"
+            : "locked",
+      );
+      setMessage(walletStatusMessage(current));
+    },
+    [transitionTo],
+  );
+
+  const inspectWallet = useCallback(
+    async (preserveActiveSession = false) => {
+      try {
+        applyWalletStatus(await getWalletStatus(), preserveActiveSession);
+      } catch {
+        if (preserveActiveSession) return;
+        setIdentity(null);
+        transitionTo("disconnected");
+        setMessage(
+          "Install the ResWallet extension to use wallet authentication.",
+        );
+      }
+    },
+    [applyWalletStatus, transitionTo],
+  );
+
+  useEffect(
+    () => subscribeWalletStatus((status) => applyWalletStatus(status, true)),
+    [applyWalletStatus],
+  );
+
+  useEffect(() => {
+    const refreshVisibleWallet = () => void inspectWallet(true);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") refreshVisibleWallet();
+    };
+    window.addEventListener("focus", refreshVisibleWallet);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.removeEventListener("focus", refreshVisibleWallet);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [inspectWallet]);
 
   useEffect(() => {
     let active = true;
@@ -72,7 +126,7 @@ export function useAuthentication(): Authentication {
         if (!active) return;
         setAccessToken(session.access_token);
         setActorAddress(session.actor_address);
-        setState("authenticated");
+        transitionTo("authenticated");
         setMessage("Authenticated with a rotated ResilientDB-backed session.");
       })
       .catch(() => {
@@ -81,19 +135,27 @@ export function useAuthentication(): Authentication {
     return () => {
       active = false;
     };
-  }, [inspectWallet]);
+  }, [inspectWallet, transitionTo]);
 
   const connect = useCallback(async () => {
-    setState("pending");
+    transitionTo("pending");
     setMessage("Preparing a short-lived login challenge…");
     try {
-      const current = identity ?? (await getWalletIdentity());
-      if (current === null) throw new Error("ResVault is not initialized.");
-      setIdentity(current);
-      const challenge = await createChallenge(current);
+      const status = await getWalletStatus();
+      if (!status.exists || status.identity === null)
+        throw new Error("ResWallet is not initialized.");
+      if (!status.unlocked) {
+        setIdentity(status.identity);
+        transitionTo("locked");
+        setMessage("ResWallet is Locked!");
+        return;
+      }
+      setIdentity(status.identity);
+      const challenge = await createChallenge(status.identity);
       const origin = window.location.origin;
       const parameters = { challenge: challenge.challenge, origin };
       const issuedAt = new Date();
+      setMessage("Review and approve the sign-in request in ResWallet!");
       const intent = await signIntent({
         version: 1,
         intent_id: crypto.randomUUID(),
@@ -110,22 +172,29 @@ export function useAuthentication(): Authentication {
         audience: "resfinance-api",
         network_id: "pinned-local-network",
       });
+      transitionTo("signing-in");
+      setMessage("Approval Received! Signing you in to ResFinance…");
       const session = await createSession(challenge.challenge, intent);
       setAccessToken(session.access_token);
       setActorAddress(session.actor_address);
-      setState("authenticated");
+      transitionTo("authenticated");
       setMessage(
         "Wallet challenge approved. Access token is held in memory only.",
       );
     } catch (error) {
-      setState("error");
-      setMessage(
+      const errorMessage =
         error instanceof Error
           ? error.message
-          : "Wallet authentication failed.",
-      );
+          : "Wallet authentication failed.";
+      if (errorMessage === "ResWallet is locked") {
+        transitionTo("locked");
+        setMessage("ResWallet is Locked!");
+      } else {
+        transitionTo("error");
+        setMessage(errorMessage);
+      }
     }
-  }, [identity]);
+  }, [transitionTo]);
 
   const logout = useCallback(async () => {
     if (accessToken === null) return;
@@ -152,4 +221,11 @@ export function useAuthentication(): Authentication {
     connect,
     logout,
   };
+}
+
+function walletStatusMessage(status: WalletStatus): string {
+  if (!status.exists || status.identity === null)
+    return "Initialize ResWallet before connecting...";
+  if (!status.unlocked) return "ResWallet is Locked!";
+  return "ResWallet Unlocked! Connect to Wallet now...";
 }

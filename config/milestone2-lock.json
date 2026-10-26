@@ -4,7 +4,7 @@
     "repository": "https://github.com/apache/incubator-resilientdb",
     "commit": "4de5cb43686276ace4307f44839a1de920ab524a",
     "manifest_version": "1.2.2",
-    "decision": "compatible-redesign"
+    "decision": "custom-reswallet"
   },
   "cryptography": {
     "argon2id": {

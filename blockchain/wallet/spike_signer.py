@@ -16,7 +16,7 @@ class WalletSigningRejected(ValueError):
     pass
 
 
-class ResVaultSpikeSigner:
+class ResWalletSpikeSigner:
     """M0 background-context signer with an intentionally narrow public boundary.
 
     This proves approval, origin restriction, and non-disclosure. It is not the
@@ -34,7 +34,7 @@ class ResVaultSpikeSigner:
         self.__allowed_origins = allowed_origins
 
     def __repr__(self) -> str:
-        return "ResVaultSpikeSigner(locked=False)"
+        return "ResWalletSpikeSigner(locked=False)"
 
     def sign_intent(
         self,

@@ -110,222 +110,241 @@ export function FinanceEntryForms({
   );
 
   return (
-    <section className="entry-panel" aria-labelledby="add-record-title">
-      <div className="section-heading">
-        <div>
-          <p className="section-kicker">Update your ledger</p>
-          <h2 id="add-record-title">Add a finance record</h2>
+    <section
+      className="entry-panel"
+      aria-label="Add A Finance Record (Update Your Ledger)"
+    >
+      <details className="entry-accordion">
+        <summary>
+          <span id="add-record-title">
+            Add A Finance Record (Update Your Ledger)
+          </span>
+          <small>
+            Every saved change appends an encrypted, auditable event!
+          </small>
+        </summary>
+        <div className="entry-grid">
+          <section className="entry-form-card transaction-form">
+            <h3>Income or expense</h3>
+            <form
+              onSubmit={transaction.handleSubmit(async (values) => {
+                const id = crypto.randomUUID();
+                await dashboard.transaction.mutateAsync({
+                  idempotencyKey: `transaction-${id}`,
+                  body: {
+                    transaction_id: `transaction-${id}`,
+                    direction: values.direction,
+                    category_id: values.category_id,
+                    amount: {
+                      currency: "USD",
+                      minor_units: usdToMinorUnits(values.amount),
+                    },
+                    occurred_on: values.occurred_on,
+                    description: values.description,
+                    recurring_entry_id: null,
+                    expected_version: overview.provenance.projection_version,
+                  },
+                });
+                transaction.reset({
+                  direction: values.direction,
+                  category_id: "",
+                  amount: "",
+                  occurred_on: currentDate(),
+                  description: "",
+                });
+              })}
+            >
+              <div className="form-row">
+                <Field
+                  label="Type"
+                  error={transaction.formState.errors.direction?.message}
+                >
+                  <select
+                    {...transaction.register("direction", {
+                      onChange: () => transaction.setValue("category_id", ""),
+                    })}
+                  >
+                    <option value="expense">Expense</option>
+                    <option value="income">Income</option>
+                  </select>
+                </Field>
+                <CategoryField
+                  label="Category"
+                  categories={deterministicCategories.filter(
+                    (item) => item.direction === transactionDirection,
+                  )}
+                  registration={transaction.register("category_id")}
+                  error={transaction.formState.errors.category_id?.message}
+                />
+              </div>
+              <div className="form-row">
+                <Field
+                  label="Amount in USD"
+                  error={transaction.formState.errors.amount?.message}
+                >
+                  <input
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    {...transaction.register("amount")}
+                  />
+                </Field>
+                <Field
+                  label="Date"
+                  error={transaction.formState.errors.occurred_on?.message}
+                >
+                  <input type="date" {...transaction.register("occurred_on")} />
+                </Field>
+              </div>
+              <Field
+                label="Description"
+                error={transaction.formState.errors.description?.message}
+              >
+                <input
+                  autoComplete="off"
+                  {...transaction.register("description")}
+                />
+              </Field>
+              <SubmitButton
+                pending={dashboard.transaction.isPending}
+                tone="transaction"
+              >
+                Save transaction
+              </SubmitButton>
+              <MutationError error={dashboard.transaction.error} />
+            </form>
+          </section>
+
+          <section className="entry-form-card budget-form">
+            <h3>Monthly budget</h3>
+            <form
+              onSubmit={budget.handleSubmit(async (values) => {
+                const id = `${month}-${values.category_id}`;
+                await dashboard.budget.mutateAsync({
+                  idempotencyKey: `budget-${crypto.randomUUID()}`,
+                  body: {
+                    budget_id: `budget-${id}`,
+                    category_id: values.category_id,
+                    month,
+                    limit: {
+                      currency: "USD",
+                      minor_units: usdToMinorUnits(values.amount),
+                    },
+                    expected_version: overview.provenance.projection_version,
+                  },
+                });
+                budget.reset();
+              })}
+            >
+              <CategoryField
+                label="Expense category"
+                categories={expenseCategories}
+                registration={budget.register("category_id")}
+                error={budget.formState.errors.category_id?.message}
+              />
+              <Field
+                label="Monthly limit in USD"
+                error={budget.formState.errors.amount?.message}
+              >
+                <input
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  {...budget.register("amount")}
+                />
+              </Field>
+              <SubmitButton
+                pending={dashboard.budget.isPending}
+                disabled={expenseCategories.length === 0}
+                tone="budget"
+              >
+                Save budget
+              </SubmitButton>
+              <MutationError error={dashboard.budget.error} />
+            </form>
+          </section>
+
+          <section className="entry-form-card recurring-form">
+            <h3>Monthly recurring item</h3>
+            <form
+              onSubmit={recurring.handleSubmit(async (values) => {
+                const id = crypto.randomUUID();
+                await dashboard.recurring.mutateAsync({
+                  idempotencyKey: `recurring-${id}`,
+                  body: {
+                    recurring_entry_id: `recurring-${id}`,
+                    direction: values.direction,
+                    category_id: values.category_id,
+                    amount: {
+                      currency: "USD",
+                      minor_units: usdToMinorUnits(values.amount),
+                    },
+                    description: values.description,
+                    cadence: "monthly",
+                    starts_on: `${month}-01`,
+                    ends_on: null,
+                    expected_version: overview.provenance.projection_version,
+                  },
+                });
+                recurring.reset({
+                  direction: values.direction,
+                  category_id: "",
+                  amount: "",
+                  description: "",
+                });
+              })}
+            >
+              <div className="form-row">
+                <Field
+                  label="Type"
+                  error={recurring.formState.errors.direction?.message}
+                >
+                  <select
+                    {...recurring.register("direction", {
+                      onChange: () => recurring.setValue("category_id", ""),
+                    })}
+                  >
+                    <option value="expense">Expense</option>
+                    <option value="income">Income</option>
+                  </select>
+                </Field>
+                <CategoryField
+                  label="Category"
+                  categories={deterministicCategories.filter(
+                    (item) => item.direction === recurringDirection,
+                  )}
+                  registration={recurring.register("category_id")}
+                  error={recurring.formState.errors.category_id?.message}
+                />
+              </div>
+              <Field
+                label="Amount in USD"
+                error={recurring.formState.errors.amount?.message}
+              >
+                <input
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  {...recurring.register("amount")}
+                />
+              </Field>
+              <Field
+                label="Description"
+                error={recurring.formState.errors.description?.message}
+              >
+                <input
+                  autoComplete="off"
+                  {...recurring.register("description")}
+                />
+              </Field>
+              <SubmitButton
+                pending={dashboard.recurring.isPending}
+                tone="recurring"
+              >
+                Save recurring item
+              </SubmitButton>
+              <MutationError error={dashboard.recurring.error} />
+            </form>
+          </section>
         </div>
-        <p>Every saved change appends an encrypted, auditable event.</p>
-      </div>
-      <div className="entry-grid">
-        <details>
-          <summary>Income or expense</summary>
-          <form
-            onSubmit={transaction.handleSubmit(async (values) => {
-              const id = crypto.randomUUID();
-              await dashboard.transaction.mutateAsync({
-                idempotencyKey: `transaction-${id}`,
-                body: {
-                  transaction_id: `transaction-${id}`,
-                  direction: values.direction,
-                  category_id: values.category_id,
-                  amount: {
-                    currency: "USD",
-                    minor_units: usdToMinorUnits(values.amount),
-                  },
-                  occurred_on: values.occurred_on,
-                  description: values.description,
-                  recurring_entry_id: null,
-                  expected_version: overview.provenance.projection_version,
-                },
-              });
-              transaction.reset({
-                direction: values.direction,
-                category_id: "",
-                amount: "",
-                occurred_on: currentDate(),
-                description: "",
-              });
-            })}
-          >
-            <Field
-              label="Type"
-              error={transaction.formState.errors.direction?.message}
-            >
-              <select
-                {...transaction.register("direction", {
-                  onChange: () => transaction.setValue("category_id", ""),
-                })}
-              >
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-              </select>
-            </Field>
-            <CategoryField
-              label="Category"
-              categories={deterministicCategories.filter(
-                (item) => item.direction === transactionDirection,
-              )}
-              registration={transaction.register("category_id")}
-              error={transaction.formState.errors.category_id?.message}
-            />
-            <Field
-              label="Amount in USD"
-              error={transaction.formState.errors.amount?.message}
-            >
-              <input
-                inputMode="decimal"
-                placeholder="0.00"
-                {...transaction.register("amount")}
-              />
-            </Field>
-            <Field
-              label="Date"
-              error={transaction.formState.errors.occurred_on?.message}
-            >
-              <input type="date" {...transaction.register("occurred_on")} />
-            </Field>
-            <Field
-              label="Description"
-              error={transaction.formState.errors.description?.message}
-            >
-              <input
-                autoComplete="off"
-                {...transaction.register("description")}
-              />
-            </Field>
-            <SubmitButton pending={dashboard.transaction.isPending}>
-              Save transaction
-            </SubmitButton>
-            <MutationError error={dashboard.transaction.error} />
-          </form>
-        </details>
-
-        <details>
-          <summary>Monthly budget</summary>
-          <form
-            onSubmit={budget.handleSubmit(async (values) => {
-              const id = `${month}-${values.category_id}`;
-              await dashboard.budget.mutateAsync({
-                idempotencyKey: `budget-${crypto.randomUUID()}`,
-                body: {
-                  budget_id: `budget-${id}`,
-                  category_id: values.category_id,
-                  month,
-                  limit: {
-                    currency: "USD",
-                    minor_units: usdToMinorUnits(values.amount),
-                  },
-                  expected_version: overview.provenance.projection_version,
-                },
-              });
-              budget.reset();
-            })}
-          >
-            <CategoryField
-              label="Expense category"
-              categories={expenseCategories}
-              registration={budget.register("category_id")}
-              error={budget.formState.errors.category_id?.message}
-            />
-            <Field
-              label="Monthly limit in USD"
-              error={budget.formState.errors.amount?.message}
-            >
-              <input
-                inputMode="decimal"
-                placeholder="0.00"
-                {...budget.register("amount")}
-              />
-            </Field>
-            <SubmitButton
-              pending={dashboard.budget.isPending}
-              disabled={expenseCategories.length === 0}
-            >
-              Save budget
-            </SubmitButton>
-            <MutationError error={dashboard.budget.error} />
-          </form>
-        </details>
-
-        <details>
-          <summary>Monthly recurring item</summary>
-          <form
-            onSubmit={recurring.handleSubmit(async (values) => {
-              const id = crypto.randomUUID();
-              await dashboard.recurring.mutateAsync({
-                idempotencyKey: `recurring-${id}`,
-                body: {
-                  recurring_entry_id: `recurring-${id}`,
-                  direction: values.direction,
-                  category_id: values.category_id,
-                  amount: {
-                    currency: "USD",
-                    minor_units: usdToMinorUnits(values.amount),
-                  },
-                  description: values.description,
-                  cadence: "monthly",
-                  starts_on: `${month}-01`,
-                  ends_on: null,
-                  expected_version: overview.provenance.projection_version,
-                },
-              });
-              recurring.reset({
-                direction: values.direction,
-                category_id: "",
-                amount: "",
-                description: "",
-              });
-            })}
-          >
-            <Field
-              label="Type"
-              error={recurring.formState.errors.direction?.message}
-            >
-              <select
-                {...recurring.register("direction", {
-                  onChange: () => recurring.setValue("category_id", ""),
-                })}
-              >
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-              </select>
-            </Field>
-            <CategoryField
-              label="Category"
-              categories={deterministicCategories.filter(
-                (item) => item.direction === recurringDirection,
-              )}
-              registration={recurring.register("category_id")}
-              error={recurring.formState.errors.category_id?.message}
-            />
-            <Field
-              label="Amount in USD"
-              error={recurring.formState.errors.amount?.message}
-            >
-              <input
-                inputMode="decimal"
-                placeholder="0.00"
-                {...recurring.register("amount")}
-              />
-            </Field>
-            <Field
-              label="Description"
-              error={recurring.formState.errors.description?.message}
-            >
-              <input
-                autoComplete="off"
-                {...recurring.register("description")}
-              />
-            </Field>
-            <SubmitButton pending={dashboard.recurring.isPending}>
-              Save recurring item
-            </SubmitButton>
-            <MutationError error={dashboard.recurring.error} />
-          </form>
-        </details>
-      </div>
+      </details>
     </section>
   );
 }
@@ -379,15 +398,17 @@ function CategoryField({
 function SubmitButton({
   pending,
   disabled = false,
+  tone,
   children,
 }: {
   pending: boolean;
   disabled?: boolean;
+  tone: "transaction" | "budget" | "recurring";
   children: React.ReactNode;
 }) {
   return (
     <button
-      className="primary-button"
+      className={`primary-button form-action ${tone}`}
       type="submit"
       disabled={pending || disabled}
     >

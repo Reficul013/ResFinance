@@ -35,7 +35,7 @@ test("approves and settles an obligation partially and fully", async ({
       const intent = message.intent!;
       window.postMessage(
         {
-          source: "resvault",
+          source: "reswallet",
           version: 1,
           request_id: message.request_id,
           ok: true,
@@ -199,12 +199,12 @@ test("approves and settles an obligation partially and fully", async ({
     .click();
   await expect(membersPopover).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Approve in ResVault" }).click();
+  await page.getByRole("button", { name: "Approve in ResWallet" }).click();
   await expect(page.getByText("open", { exact: true })).toBeVisible();
 
   await page.getByLabel("Credit amount (USD units)").fill("60.00");
   await page
-    .getByRole("button", { name: "Approve funding in ResVault" })
+    .getByRole("button", { name: "Approve funding in ResWallet" })
     .click();
   await expect(page.getByText("$60.00", { exact: true })).toBeVisible();
 
@@ -308,7 +308,7 @@ test("shows validation and signing failures inside the affected form", async ({
   let commandRequests = 0;
   await mockVault(page, {
     ok: false,
-    error: "User rejected the request in ResVault",
+    error: "User rejected the request in ResWallet",
   });
   await mockSession(page, creditor);
   await mockGroup(page, [
@@ -332,7 +332,7 @@ test("shows validation and signing failures inside the affected form", async ({
   await expenseForm.getByLabel("Alex's share").fill("0.00");
   await expenseForm.getByLabel("Sam's share").fill("60.00");
   await expenseForm
-    .getByRole("button", { name: "Approve split in ResVault" })
+    .getByRole("button", { name: "Approve split in ResWallet" })
     .click();
   await expect(expenseForm.getByRole("alert")).toHaveText(
     "Alex's share: Amount must be greater than $0.00.",
@@ -341,10 +341,10 @@ test("shows validation and signing failures inside the affected form", async ({
   await expenseForm.getByLabel("Include Alex").uncheck();
   await expect(expenseForm.getByText("All $60.00 assigned.")).toBeVisible();
   await expenseForm
-    .getByRole("button", { name: "Approve split in ResVault" })
+    .getByRole("button", { name: "Approve split in ResWallet" })
     .click();
   await expect(expenseForm.getByRole("alert")).toHaveText(
-    "User rejected the request in ResVault",
+    "User rejected the request in ResWallet",
   );
 
   const creditForm = page
@@ -352,13 +352,13 @@ test("shows validation and signing failures inside the affected form", async ({
     .filter({ hasText: "Fund internal credits" });
   await creditForm.getByLabel("Credit amount (USD units)").fill("0");
   await creditForm
-    .getByRole("button", { name: "Approve funding in ResVault" })
+    .getByRole("button", { name: "Approve funding in ResWallet" })
     .click();
   await expect(creditForm.getByRole("alert")).toHaveText(
     "Amount must be greater than $0.00.",
   );
   await expect(expenseForm.getByRole("alert")).toHaveText(
-    "User rejected the request in ResVault",
+    "User rejected the request in ResWallet",
   );
   expect(commandRequests).toBe(0);
 });
@@ -417,7 +417,7 @@ test("splits an expense equally between the selected members by default", async 
   });
 
   await expenseForm
-    .getByRole("button", { name: "Approve split in ResVault" })
+    .getByRole("button", { name: "Approve split in ResWallet" })
     .click();
   await expect.poll(() => posted.length).toBe(1);
   const body = posted[0]!;
@@ -471,7 +471,7 @@ test("lets the payer adjust an equal split into exact amounts", async ({
   });
 
   await expenseForm
-    .getByRole("button", { name: "Approve split in ResVault" })
+    .getByRole("button", { name: "Approve split in ResWallet" })
     .click();
   await expect.poll(() => posted.length).toBe(1);
   expect(posted[0]!.amount).toEqual({ currency: "USD", minor_units: 9000 });
@@ -530,7 +530,7 @@ async function mockVault(page: Page, outcome: VaultOutcome) {
       window.postMessage(
         outcome.ok
           ? {
-              source: "resvault",
+              source: "reswallet",
               version: 1,
               request_id: message.request_id,
               ok: true,
@@ -552,7 +552,7 @@ async function mockVault(page: Page, outcome: VaultOutcome) {
               },
             }
           : {
-              source: "resvault",
+              source: "reswallet",
               version: 1,
               request_id: message.request_id,
               ok: false,

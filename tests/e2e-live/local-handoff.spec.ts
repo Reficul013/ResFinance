@@ -13,7 +13,7 @@ import { join, resolve } from "node:path";
 
 const enabled = process.env.RESFINANCE_LOCAL_HANDOFF === "1";
 const root = resolve(process.cwd(), "..");
-const extension = resolve(root, "resvault/dist");
+const extension = resolve(root, "reswallet/dist");
 const python = resolve(root, ".venv/bin/python");
 const lifecycle = ["-m", "scripts.milestone9.local_handoff"];
 const password = "local-handoff-only-password";
@@ -23,7 +23,7 @@ test.skip(
   "run with npm run test:e2e:local against the Milestone 9 stack",
 );
 
-test("real ResVault and services preserve the local journey through restart", async () => {
+test("real ResWallet and services preserve the local journey through restart", async () => {
   const first = await walletContext("owner");
   const second = await walletContext("member");
   try {
@@ -66,7 +66,9 @@ test("real ResVault and services preserve the local journey through restart", as
     );
 
     const cryptoProjection = waitForGet(ownerPage, /\/crypto\/overview\?/);
-    await ownerPage.getByRole("link", { name: "Crypto" }).click();
+    await ownerPage
+      .getByRole("link", { name: "Crypto Intelligence", exact: true })
+      .click();
     const crypto = (await (await cryptoProjection).json()) as {
       default_capital: { minor_units: number };
       savings_formula_version: string;
@@ -172,7 +174,9 @@ test("real ResVault and services preserve the local journey through restart", as
     await selectGroup(ownerPage, groupName);
     await expect(ownerPage.getByText("$0.00 outstanding")).toBeVisible();
     await expect(ownerPage.getByText("settled", { exact: true })).toBeVisible();
-    await ownerPage.getByRole("link", { name: "Crypto" }).click();
+    await ownerPage
+      .getByRole("link", { name: "Crypto Intelligence", exact: true })
+      .click();
     await expect(
       ownerPage.getByRole("heading", { name: "Portfolio allocation" }),
     ).toBeVisible();
@@ -185,10 +189,18 @@ test("real ResVault and services preserve the local journey through restart", as
     await ownerPage.getByRole("button", { name: "Log out" }).click();
     expect((await loggedOut).status()).toBe(204);
     await expect(ownerPage).toHaveURL("http://127.0.0.1:5173/");
+    await expect(ownerPage.getByText("ResWallet is Locked!")).toBeVisible();
     await expect(
-      ownerPage.getByRole("button", { name: "Connect wallet" }),
-    ).toBeEnabled();
+      ownerPage.getByRole("button", { name: "Connect Wallet" }),
+    ).toBeDisabled();
     await expectWalletLocked(first);
+    await unlockWallet(first, true);
+    await expect(
+      ownerPage.getByText("ResWallet Unlocked! Connect to Wallet now..."),
+    ).toBeVisible();
+    await expect(
+      ownerPage.getByRole("button", { name: "Connect Wallet" }),
+    ).toBeEnabled();
     await expect(ownerPage.locator("main")).not.toContainText(beforeRestart);
   } finally {
     await first.close();
@@ -239,17 +251,29 @@ async function initializeWallet(
   context: BrowserContext,
   label: string,
 ): Promise<{ address: string }> {
+  const applicationPage = await context.newPage();
+  await applicationPage.goto("http://127.0.0.1:5173/");
+  await expect(
+    applicationPage.getByText(/Initialize ResWallet before connecting/),
+  ).toBeVisible();
   const page = await context.newPage();
   await page.goto(
     `chrome-extension://${await extensionId(context)}/popup.html`,
   );
   await page.locator("#setup-password").fill(password);
-  await page.getByRole("button", { name: "Create ResVault" }).click();
+  await page.locator("#setup-password").press("Enter");
   await expect(page.locator("#unlocked")).toBeVisible({ timeout: 30_000 });
   await expect(page.locator("#address")).not.toHaveText("");
+  await expect(
+    applicationPage.getByText("ResWallet Unlocked! Connect to Wallet now..."),
+  ).toBeVisible();
+  await expect(
+    applicationPage.getByRole("button", { name: "Connect Wallet" }),
+  ).toBeEnabled();
   const address = (await page.locator("#address").textContent())?.trim();
   if (!address) throw new Error(`${label} wallet address was not created`);
   await page.close();
+  await applicationPage.close();
   return { address };
 }
 
@@ -257,10 +281,10 @@ async function authenticate(context: BrowserContext): Promise<Page> {
   const page = await context.newPage();
   await page.goto("http://127.0.0.1:5173/finance");
   await expect(
-    page.getByRole("button", { name: "Connect wallet" }),
+    page.getByRole("button", { name: "Connect Wallet" }),
   ).toBeEnabled();
   await approveAfter(context, () =>
-    page.getByRole("button", { name: "Connect wallet" }).click(),
+    page.getByRole("button", { name: "Connect Wallet" }).click(),
   );
   await expect(
     page.locator(".auth-card").getByRole("heading", { name: "ResFinance" }),
@@ -273,47 +297,95 @@ async function approveAfter(
   action: () => Promise<unknown>,
 ) {
   await unlockWallet(context);
+  let worker = context.serviceWorkers()[0];
+  worker ??= await context.waitForEvent("serviceworker");
   const applicationPage = context
     .pages()
     .find((page) => page.url().startsWith("http://127.0.0.1:5173/"));
   if (applicationPage === undefined)
     throw new Error("ResFinance application page is unavailable");
   await expectExtensionAvailable(applicationPage);
-  const popupPromise = context.waitForEvent("page", { timeout: 15_000 });
   await action();
-  let approval: Page;
-  try {
-    approval = await popupPromise;
-  } catch (error) {
-    const diagnostics = await Promise.all(
-      context.pages().map(async (page) => ({
-        url: page.url(),
-        text: await page
-          .locator("body")
-          .innerText()
-          .catch(() => ""),
-      })),
-    );
-    throw new Error(
-      `ResVault approval did not open: ${JSON.stringify(diagnostics)}`,
-      {
-        cause: error,
+  let approvalUrl = "";
+  await expect
+    .poll(
+      async () => {
+        approvalUrl = await worker.evaluate(async () => {
+          const contexts = await chrome.runtime.getContexts({
+            contextTypes: ["POPUP"],
+          });
+          return (
+            contexts.find((context) =>
+              context.documentUrl?.includes("/approval.html?request="),
+            )?.documentUrl ?? ""
+          );
+        });
+        return approvalUrl;
       },
-    );
-  }
-  await approval.waitForLoadState("domcontentloaded");
-  await approval.getByRole("button", { name: "Approve and sign" }).click();
+      { timeout: 15_000 },
+    )
+    .toContain("/approval.html?request=");
+  const requestId = new URL(approvalUrl).searchParams.get("request");
+  if (requestId === null) throw new Error("Approval request ID is unavailable");
+  const browserWindowCount = await worker.evaluate(
+    async () => (await chrome.windows.getAll()).length,
+  );
+  expect(browserWindowCount).toBe(1);
+  await expect(applicationPage).toHaveURL(/127\.0\.0\.1:5173/);
+  const result = await worker.evaluate(
+    async (approvalRequestId) =>
+      await chrome.runtime.sendMessage({
+        type: "APPROVAL_DECISION",
+        request_id: approvalRequestId,
+        approved: true,
+      }),
+    requestId,
+  );
+  expect(result).toEqual({ ok: true, result: { approved: true } });
+  await applicationPage.bringToFront();
 }
 
-async function unlockWallet(context: BrowserContext) {
+async function unlockWallet(context: BrowserContext, verifyIncorrectPassword = false) {
   const page = await context.newPage();
   await page.goto(
     `chrome-extension://${await extensionId(context)}/popup.html`,
   );
   if (await page.locator("#locked").isVisible()) {
+    await expect(page.locator("#unlock-password")).toHaveAttribute(
+      "placeholder",
+      "Enter your password",
+    );
+    await expect(page.getByText("Password", { exact: true })).not.toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Unlock your Wallet" }),
+    ).toBeVisible();
+    if (verifyIncorrectPassword) {
+      await page.locator("#unlock-password").fill("incorrect-password-value");
+      await page.locator("#unlock-password").press("Enter");
+      await expect(page.locator("#status-text")).toHaveText(
+        "Incorrect Password",
+        { timeout: 30_000 },
+      );
+      await expect(page.locator("#status")).toHaveAttribute("data-tone", "error");
+    }
     await page.locator("#unlock-password").fill(password);
-    await page.getByRole("button", { name: "Unlock" }).click();
+    await page.locator("#unlock-password").press("Enter");
     await expect(page.locator("#unlocked")).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator(".identity > span")).toHaveText(
+      "Your Wallet Address",
+    );
+    await expect(page.locator("#unlocked .hint")).toHaveText(
+      "Your private key never leaves ResWallet. For your security, the wallet locks automatically after 5 minutes of inactivity.",
+    );
+    const lockButtonBox = await page
+      .getByRole("button", { name: "Lock now" })
+      .boundingBox();
+    const unlockedSectionBox = await page.locator("#unlocked").boundingBox();
+    expect(lockButtonBox).not.toBeNull();
+    expect(unlockedSectionBox).not.toBeNull();
+    expect(
+      Math.abs(lockButtonBox!.width - unlockedSectionBox!.width),
+    ).toBeLessThan(1);
   }
   await page.close();
 }
@@ -324,12 +396,23 @@ async function expectWalletLocked(context: BrowserContext) {
     `chrome-extension://${await extensionId(context)}/popup.html`,
   );
   await expect(page.locator("#locked")).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("#status-text")).toHaveText("ResWallet is Locked!");
+  await expect(page.locator("#status-bulb")).toBeVisible();
+  const unlockButtonBox = await page
+    .getByRole("button", { name: "Unlock your Wallet" })
+    .boundingBox();
+  const lockedFormBox = await page.locator("#locked").boundingBox();
+  expect(unlockButtonBox).not.toBeNull();
+  expect(lockedFormBox).not.toBeNull();
+  expect(
+    Math.abs(unlockButtonBox!.width - lockedFormBox!.width),
+  ).toBeLessThan(1);
   await page.close();
 }
 
 async function seedFinance(page: Page) {
   await expect(
-    page.getByRole("heading", { name: "Your money, in one view." }),
+    page.getByRole("heading", { name: "Your money, in one view!" }),
   ).toBeVisible();
   await expect(
     page.locator("summary").filter({ hasText: /^Category$/ }),
@@ -427,7 +510,7 @@ async function createAndSettleGroup(
     owner.getByText("All $60.00 assigned, split equally between 1 person."),
   ).toBeVisible();
   const expenseButton = owner.getByRole("button", {
-    name: "Approve split in ResVault",
+    name: "Approve split in ResWallet",
   });
   expect(
     await expenseButton
@@ -451,7 +534,7 @@ async function createAndSettleGroup(
   const decisionCreated = waitForPost(member, /\/decision$/);
   const decisionProjection = waitForGroupProjection(member);
   await approveAfter(member.context(), () =>
-    member.getByRole("button", { name: "Approve in ResVault" }).click(),
+    member.getByRole("button", { name: "Approve in ResWallet" }).click(),
   );
   expect((await decisionCreated).status()).toBe(201);
   await decisionProjection;
@@ -463,7 +546,7 @@ async function createAndSettleGroup(
   const fundingCreated = waitForPost(member, /\/credits$/);
   const fundingProjection = waitForGroupProjection(member);
   await approveAfter(member.context(), () =>
-    member.getByRole("button", { name: "Approve funding in ResVault" }).click(),
+    member.getByRole("button", { name: "Approve funding in ResWallet" }).click(),
   );
   const fundingRequest = await fundingRequestPromise;
   expect((await fundingCreated).status()).toBe(201);
@@ -575,7 +658,7 @@ async function proveWrongOriginHasNoExtension(context: BrowserContext) {
         const timer = window.setTimeout(() => resolve(false), 750);
         window.addEventListener("message", (event) => {
           const value = event.data as { source?: string; request_id?: string };
-          if (value.source === "resvault" && value.request_id === requestId) {
+          if (value.source === "reswallet" && value.request_id === requestId) {
             window.clearTimeout(timer);
             resolve(true);
           }
@@ -611,7 +694,7 @@ async function expectExtensionAvailable(page: Page) {
             ok?: boolean;
             error?: string;
           };
-          if (value.source === "resvault" && value.request_id === requestId) {
+          if (value.source === "reswallet" && value.request_id === requestId) {
             window.clearTimeout(timer);
             resolve(value);
           }
