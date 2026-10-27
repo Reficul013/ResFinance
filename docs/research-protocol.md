@@ -95,3 +95,42 @@ the schema-v1 calibration.
   naive MAE by construction, so promotion rests on interval coverage.
 - **Before relying on the gain.** Predeclare a forward-protocol update covering seed
   averaging, the calibration window, and horizons, and score it on new data.
+
+## Forward protocol `untouched-forward-holdout-v2`
+
+Predeclared 2026-10-27, before any v2 run on provider data. It brings the forward protocol in
+line with the exploratory 15–30 day study, whose final configuration scored 4.7% better than
+no-change on pinball loss. It uses forecast policy `no-change-centre-native-heads-v1` and the
+stale-source switch above.
+
+- **Horizons.** 15, 20 and 30 days. The forecast snapshot and portfolio optimizer still use
+  the 15-day horizon. The 20- and 30-day forecasts are trained, evaluated and recorded with
+  each run.
+- **Seeds.** 11, 23 and 37. Every neural model, including each ablation and the market-only
+  fallback, is trained once per seed. Predictions are averaged over the three seeds: the
+  expected return, P(up) after the sigmoid, and each quantile.
+- **Training.** Lookback 16 days. Full-batch Adam for 100 epochs at learning rate 0.001,
+  which is the Transformer configuration selected in the study's final run. The loss is
+  unchanged.
+- **Windows (decision dates).**
+
+  | Window | Dates |
+  |---|---|
+  | Training | first eligible date through 2024-01-30 |
+  | Embargo | 30 days |
+  | Validation / calibration | 2024-03-01 through 2025-02-28 (one full year) |
+  | Embargo | 30 days |
+  | Holdout | 2025-04-01 through the latest decision date with a mature 30-day target |
+
+  Every training target matures before validation begins. Every validation target matures
+  before the holdout begins.
+- **Calibration.** Symmetric split-conformal adjustment per horizon at alpha 0.2, fit on
+  the validation window from the switched seed-averaged outputs.
+- **Deployment.** The evaluated seed ensembles are deployed unchanged, with no refit. They
+  are stored as one deterministic bundle per model, so each model has a single artifact hash.
+- **Promotion.** `forecast-promotion-v1` is unchanged.
+- **Holdout status.** The 2025-04-01 onward period was scored once by the exploratory study
+  on 2026-10-26. A v2 holdout result therefore confirms the implementation; it is not new
+  untouched evidence. New evidence must come from prospective snapshots published after this
+  predeclaration. Holdout labels may be read only by the immutable evaluation, and no
+  post-holdout tuning is permitted.
