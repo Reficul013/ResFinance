@@ -448,7 +448,9 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(page.getByText("Total Earned This Month")).toBeVisible();
   await expect(page.getByText("Total Spent This Month")).toBeVisible();
   await expect(page.getByLabel("Projected savings calculation")).toBeVisible();
-  await expect(page.getByText("Here Savings (Projected) is defined as:")).toBeVisible();
+  await expect(
+    page.getByText("Here Savings (Projected) is defined as:"),
+  ).toBeVisible();
   await expect(page.getByText("Near the limit")).toBeVisible();
   await expect(
     page.getByRole("progressbar", { name: "Groceries budget utilization" }),
@@ -1038,6 +1040,46 @@ test("voids transactions and deactivates recurring items and budgets through con
     page.getByRole("progressbar", { name: "Groceries budget utilization" }),
   ).toHaveCount(0);
   expect(removeBudgetRequest).toEqual({ expected_version: 10 });
+});
+
+test("separates the wallet controls while checking the initial session", async ({
+  page,
+}) => {
+  let releaseRefresh = () => {};
+  const holdRefresh = new Promise<void>((resolve) => {
+    releaseRefresh = resolve;
+  });
+  await page.route("**/api/v1/auth/refresh", async (route) => {
+    await holdRefresh;
+    await route.fulfill({ status: 401 });
+  });
+  await page.goto("/");
+
+  const card = page.locator(".auth-card");
+  const connect = page.getByRole("button", { name: "Connect Wallet" });
+  const help = page.getByRole("button", { name: "How to connect ResWallet" });
+  await expect(card).toHaveAttribute("data-state", "checking");
+  await expect(
+    page.getByText("Checking wallet and session state…"),
+  ).toBeVisible();
+  await expect(connect).toBeDisabled();
+
+  const cardBox = await card.boundingBox();
+  const connectBox = await connect.boundingBox();
+  const helpBox = await help.boundingBox();
+  expect(cardBox).not.toBeNull();
+  expect(connectBox).not.toBeNull();
+  expect(helpBox).not.toBeNull();
+  expect(cardBox!.height).toBeGreaterThanOrEqual(168);
+  expect(connectBox!.y - (helpBox!.y + helpBox!.height)).toBeGreaterThanOrEqual(
+    8,
+  );
+  await page.screenshot({
+    path: "test-results/reswallet-checking.png",
+    fullPage: false,
+  });
+
+  releaseRefresh();
 });
 
 test("separates the wallet controls before a wallet is created", async ({
