@@ -313,7 +313,13 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     "https://medium.com/@haseebshaik00/resfinance-57064e9a54ef",
   );
   await expect(mediumLink).toHaveAttribute("target", "_blank");
-  await expect(mediumLink.locator(".medium-icon")).toBeVisible();
+  const mediumIcon = mediumLink.locator(".medium-icon");
+  await expect(mediumIcon).toBeVisible();
+  expect(
+    await mediumIcon.evaluate((icon) =>
+      Number.parseFloat(getComputedStyle(icon).width),
+    ),
+  ).toBeGreaterThan(19);
   await expect(githubLink).toHaveAttribute(
     "href",
     "https://github.com/haseebshaik00/ResFinance",
