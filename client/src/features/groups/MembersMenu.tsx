@@ -87,7 +87,9 @@ export function MembersMenu({
               return (
                 <li key={member.actor_address}>
                   <div className="member-row-name">
-                    <strong>{member.display_name}</strong>
+                    <span className="member-display-name">
+                      {member.display_name}
+                    </span>
                     {member.actor_address === ownerAddress && (
                       <span className="member-tag">Owner</span>
                     )}

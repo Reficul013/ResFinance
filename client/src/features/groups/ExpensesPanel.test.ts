@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatExpenseDate, newestFirst } from "./ExpensesPanel";
+import { formatExpenseDate, newestFirst, previewShares } from "./ExpensesPanel";
 
 describe("expense history", () => {
   it("lists the newest expense date first", () => {
@@ -20,6 +20,15 @@ describe("expense history", () => {
         { id: "coffee", occurred_on: "2026-10-19" },
       ]).map((item) => item.id),
     ).toEqual(["coffee", "lunch"]);
+  });
+
+  it("keeps eight shares on the card and counts the rest", () => {
+    const eight = ["a", "b", "c", "d", "e", "f", "g", "h"];
+    expect(previewShares(eight)).toEqual({ visible: eight, hiddenCount: 0 });
+    expect(previewShares([...eight, "i", "j"])).toEqual({
+      visible: eight,
+      hiddenCount: 2,
+    });
   });
 
   it("formats the calendar date without shifting it by time zone", () => {
