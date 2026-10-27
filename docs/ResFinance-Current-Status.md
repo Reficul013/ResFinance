@@ -203,13 +203,31 @@ Evidence:
   direction heads with a split-conformal adjustment. Assets whose sentiment or
   on-chain source is missing or stale at decision time switch to the persisted
   market-only model. Schema-v1 calibrations keep their original behavior.
-- Known limitation: an exploratory 15/20/30-day study (five yearly folds and one
-  sealed holdout) found native ranges and P(up) about 4.7% better than
-  no-change on pinball loss. That study used three-seed averaging and a
-  full-year calibration window. In a single-seed smoke run of the unchanged
-  forward protocol (75-day calibration window), the deployable ranges were wider
-  than no-change (92.5% vs 88.1% coverage). The forward protocol therefore needs
-  a predeclared update before this policy is promoted on new evidence.
+- Implemented forward protocol v2 (`untouched-forward-holdout-v2`), predeclared
+  on 2026-10-27:
+  - 15/20/30-day horizons;
+  - three-seed ensembles (11, 23, 37) trained for 100 epochs at learning rate 0.001;
+  - a full-year 2024-03-01 to 2025-02-28 calibration window and a 30-day embargo;
+  - holdout decisions from 2025-04-01;
+  - schema-v3 manifests validated on persistence;
+  - deterministic seed-ensemble checkpoint bundles.
+
+  The published snapshot stays at 15 days.
+- Known limitation: a provider-data smoke run of protocol v2 did not reproduce the
+  exploratory study's gain, so do not treat a v1-gate pass as evidence of better
+  ranges.
+  - **15-day results:** the deployable forecast covered 92.0% at interval score
+    0.525, against 84.3% and 0.465 for no-change.
+  - **20 and 30 days:** it was about level with no-change (0.567 vs 0.557; 0.689 vs
+    0.689).
+  - **Cause 1 (no news):** news ingestion ends on 2025-01-01, so every holdout
+    decision used the market-only fallback.
+  - **Cause 2 (calibration mismatch):** the single conformal adjustment was fitted
+    mostly on the adaptive model's validation outputs, then applied to the fallback
+    model.
+  - **Fix needs a new protocol:** calibrating each path separately and restoring
+    ongoing news ingestion require a newly predeclared protocol scored on
+    prospective data. The holdout from 2025-04-01 has already been observed.
 
 Evidence:
 [`milestones/milestone7-cross-dashboard-local-handoff.md`](milestones/milestone7-cross-dashboard-local-handoff.md)

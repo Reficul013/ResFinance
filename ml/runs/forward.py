@@ -3,9 +3,9 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import cast
 
@@ -13,7 +13,6 @@ import torch
 from torch import Tensor, nn
 
 from ml.data.datasets import (
-    HORIZONS,
     SOURCE_NAMES,
     MaskedStandardizer,
     ResearchSequenceDataset,
@@ -30,31 +29,46 @@ from ml.models.mspciformer import (
     ThreeAssetMSPCIFormer,
 )
 from ml.runs import runner as base_runner
-from ml.runs.checkpoints import deterministic_checkpoint
+from ml.runs.checkpoints import ensemble_checkpoint
 from ml.runs.runner import MODEL_ORDER, SmokeRunConfig
 from server.app.infrastructure.encryption import canonical_json_bytes
 
 FORECAST_POLICY = "no-change-centre-native-heads-v1"
 FALLBACK_MODEL_ARTIFACT = "deployment-checkpoint-market-only.json"
+FORWARD_PROTOCOL = "untouched-forward-holdout-v2"
+# The exploratory 15-30 day study scored the period from 2025-04-01 once on 2026-10-26.
+EXPLORATORY_HOLDOUT_SCORED = date(2026, 10, 26)
 
 
 @dataclass(frozen=True)
 class ForwardRunConfig:
+    """Forward protocol v2, predeclared 2026-10-27 in docs/research-protocol.md."""
+
     seed: int = 1731
+    seeds: tuple[int, ...] = (11, 23, 37)
+    horizons: tuple[int, ...] = (15, 20, 30)
     lookback: int = 16
-    epochs: int = 20
-    learning_rate: float = 0.01
+    epochs: int = 100
+    learning_rate: float = 0.001
     conformal_alpha: float = 0.2
-    training_end: date = date(2024, 12, 17)
-    validation_start: date = date(2025, 1, 2)
-    validation_end: date = date(2025, 3, 17)
-    holdout_start: date = date(2025, 4, 2)
-    purpose: str = "milestone-9-untouched-forward-completion"
+    training_end: date = date(2024, 1, 30)
+    validation_start: date = date(2024, 3, 1)
+    validation_end: date = date(2025, 2, 28)
+    holdout_start: date = date(2025, 4, 1)
+    embargo_days: int = 30
+    predeclared_at_utc: str = "2026-10-27T00:00:00Z"
+    protocol: str = FORWARD_PROTOCOL
+    purpose: str = "forward-protocol-v2-untouched-forward-completion"
     owner: str = "resfinance-local-research"
 
     def to_dict(self) -> dict[str, object]:
         return {
+            "protocol": self.protocol,
+            "predeclared_at_utc": self.predeclared_at_utc,
             "seed": self.seed,
+            "seeds": list(self.seeds),
+            "horizons": list(self.horizons),
+            "embargo_days": self.embargo_days,
             "lookback": self.lookback,
             "epochs": self.epochs,
             "learning_rate": self.learning_rate,
@@ -112,13 +126,18 @@ def run_forward_research(
     started = now().astimezone(UTC)
     identifier = run_id or f"milestone9-forward-{uuid.uuid4().hex}"
     base_runner._configure_determinism(config.seed)
-    sequences = build_sequence_dataset(feature_dataset, lookback=config.lookback)
+    if not config.seeds or len(set(config.seeds)) != len(config.seeds):
+        raise ValueError("forward protocol seeds must be a non-empty unique sequence")
+    sequences = build_sequence_dataset(
+        feature_dataset, lookback=config.lookback, horizons=config.horizons
+    )
     train = _indices_through(sequences, config.training_end)
     validation = _indices_between(sequences, config.validation_start, config.validation_end)
     holdout = _indices_from(sequences, config.holdout_start)
     if not train.numel() or not validation.numel() or not holdout.numel():
         raise ValueError("forward protocol windows must all contain samples")
     _verify_disjoint(train, validation, holdout)
+    _verify_targets_mature(sequences, (train, validation, holdout), max(config.horizons))
     standardizer = MaskedStandardizer.fit(sequences.features[train], sequences.masks[train])
     normalized = standardizer.transform(sequences.features, sequences.masks)
     forecasts: dict[str, _Forecast] = {}
@@ -127,13 +146,8 @@ def run_forward_research(
 
     forecasts["naive-zero-return"] = _naive(sequences, validation, holdout, config)
     forecasts["linear-ridge"] = _linear(sequences, normalized, train, validation, holdout, config)
-    trained: dict[str, nn.Module] = {}
-    neural_specs: list[tuple[str, nn.Module]] = [
-        (
-            "lstm-sequence",
-            base_runner._initialized_model(LSTMForecastBaseline(), config.seed, 0, 0),
-        )
-    ]
+    trained: dict[str, list[nn.Module]] = {}
+    horizon_count = len(config.horizons)
     modes = (
         FusionMode.ADAPTIVE,
         FusionMode.FIXED_EQUAL,
@@ -142,42 +156,44 @@ def run_forward_research(
         FusionMode.WITHOUT_SENTIMENT,
         FusionMode.WITHOUT_ON_CHAIN,
     )
-    for model_index, mode in enumerate(modes, start=1):
-        neural_specs.append(
+    factories: list[tuple[str, Callable[[], nn.Module]]] = [
+        ("lstm-sequence", lambda: LSTMForecastBaseline(horizon_count=horizon_count)),
+        *(
             (
                 mode.value,
-                base_runner._initialized_model(
-                    ThreeAssetMSPCIFormer(fusion_mode=mode), config.seed, 0, model_index
+                lambda mode=mode: ThreeAssetMSPCIFormer(
+                    fusion_mode=mode, horizon_count=horizon_count
                 ),
             )
-        )
-    for name, model in neural_specs:
-        base_runner._train_neural(
-            model,
-            sequences,
-            normalized,
-            train,
-            SmokeRunConfig(
-                seed=config.seed,
-                lookback=config.lookback,
-                epochs=config.epochs,
-                learning_rate=config.learning_rate,
-                conformal_alpha=config.conformal_alpha,
-            ),
-        )
-        forecasts[name] = _neural(model, sequences, normalized, validation, holdout, config)
-        trained[name] = model
-        checkpoint = deterministic_checkpoint(
-            model,
+            for mode in modes
+        ),
+    ]
+    training = SmokeRunConfig(
+        seed=config.seed,
+        lookback=config.lookback,
+        epochs=config.epochs,
+        learning_rate=config.learning_rate,
+        conformal_alpha=config.conformal_alpha,
+    )
+    for model_index, (name, factory) in enumerate(factories):
+        members: list[nn.Module] = []
+        for seed in config.seeds:
+            model = base_runner._initialized_model(factory(), seed, 0, model_index)
+            base_runner._train_neural(model, sequences, normalized, train, training)
+            members.append(model)
+        trained[name] = members
+        forecasts[name] = _neural(members, sequences, normalized, validation, holdout, config)
+        checkpoint = ensemble_checkpoint(
+            members,
             model_config={
                 "name": name,
-                "protocol": "untouched-forward-holdout-v1",
+                "protocol": config.protocol,
                 "lookback": config.lookback,
-                "horizons": list(HORIZONS),
+                "horizons": list(config.horizons),
+                "seeds": list(config.seeds),
             },
         )
-        artifact_name = f"checkpoint-{name}.json"
-        checkpoints[artifact_name] = checkpoint
+        checkpoints[f"checkpoint-{name}.json"] = checkpoint
         if name == FusionMode.ADAPTIVE.value:
             checkpoints["deployment-checkpoint-adaptive-gating.json"] = checkpoint
         if name == FusionMode.MARKET_ONLY.value:
@@ -233,8 +249,9 @@ def run_forward_research(
     config_document = config.to_dict()
     provenance = base_runner._provenance(root)
     completed = now().astimezone(UTC)
+    holdout_previously_observed = config.holdout_start <= EXPLORATORY_HOLDOUT_SCORED
     manifest: dict[str, object] = {
-        "schema_version": 2,
+        "schema_version": 3,
         "run_id": identifier,
         "purpose": config.purpose,
         "owner": config.owner,
@@ -264,6 +281,7 @@ def run_forward_research(
             "framework": config.seed,
             "data_loader": config.seed,
             "optimizer": config.seed,
+            "ensemble": list(config.seeds),
         },
         "determinism": {
             "cpu_only": True,
@@ -272,9 +290,9 @@ def run_forward_research(
             "torch_threads": 1,
             "known_nondeterministic_operations": [],
         },
-        "evaluation_protocol": "untouched-forward-holdout-v1",
+        "evaluation_protocol": config.protocol,
         "forward_holdout": {
-            "predeclared_at_utc": "2026-10-15T00:00:00Z",
+            "predeclared_at_utc": config.predeclared_at_utc,
             "training_end": config.training_end.isoformat(),
             "validation_start": config.validation_start.isoformat(),
             "validation_end": config.validation_end.isoformat(),
@@ -283,9 +301,19 @@ def run_forward_research(
             "train_sample_count": int(train.numel()),
             "validation_sample_count": int(validation.numel()),
             "holdout_sample_count": int(holdout.numel()),
-            "embargo_days": 15,
+            "embargo_days": config.embargo_days,
+            "horizons": list(config.horizons),
+            "seeds": list(config.seeds),
             "holdout_labels_consumed_once": True,
             "post_holdout_tuning_permitted": False,
+            "holdout_previously_observed": holdout_previously_observed,
+            "holdout_note": (
+                "scored once by the exploratory 15-30 day study on "
+                f"{EXPLORATORY_HOLDOUT_SCORED.isoformat()}; this result confirms the "
+                "implementation and is not new untouched evidence"
+                if holdout_previously_observed
+                else "untouched at predeclaration"
+            ),
         },
         "folds": [],
         "preprocessing": "masked z-score fit only through the frozen training cutoff",
@@ -324,17 +352,16 @@ def run_forward_research(
 def infer_current_forecast(
     feature_dataset: FeatureDataset,
     *,
-    model: ThreeAssetMSPCIFormer,
+    model: nn.Module | Sequence[nn.Module],
     standardizer: MaskedStandardizer,
     calibration: dict[str, object],
     lookback: int = 16,
-    fallback_model: ThreeAssetMSPCIFormer | None = None,
+    fallback_model: nn.Module | Sequence[nn.Module] | None = None,
 ) -> CurrentForecast:
+    """Current forecast from a model or seed ensemble; ensembles average their predictions."""
     batch = build_inference_batch(feature_dataset, lookback=lookback)
     normalized = standardizer.transform(batch.features, batch.masks)
-    model.eval()
-    with torch.inference_mode():
-        output = cast(ModelOutput, model(normalized, batch.masks, batch.asset_indices))
+    output = _ensemble(_members(model), normalized, batch.masks, batch.asset_indices)
     adjustment = torch.tensor(
         cast(list[float], calibration["conformal_adjustment"]), dtype=output.quantiles.dtype
     )
@@ -342,25 +369,22 @@ def infer_current_forecast(
         if calibration.get("policy") != FORECAST_POLICY:
             raise ValueError("unsupported forecast policy")
         switch = requires_market_only_fallback(batch.masks)
-        quantiles, direction = output.quantiles, output.direction_logits
+        quantiles, probability = output.quantiles, output.probability
         if bool(switch.any()):
             if fallback_model is None:
                 raise ValueError("stale or missing sources require the market-only fallback model")
-            fallback_model.eval()
-            with torch.inference_mode():
-                fallback = cast(
-                    ModelOutput, fallback_model(normalized, batch.masks, batch.asset_indices)
-                )
+            fallback = _ensemble(
+                _members(fallback_model), normalized, batch.masks, batch.asset_indices
+            )
             quantiles = torch.where(switch.reshape(-1, 1, 1), fallback.quantiles, quantiles)
-            direction = torch.where(switch.reshape(-1, 1), fallback.direction_logits, direction)
-        expected = torch.zeros_like(direction)
-        probability = torch.sigmoid(direction)
+            probability = torch.where(switch.reshape(-1, 1), fallback.probability, probability)
+        expected = torch.zeros_like(probability)
         fallback_used = tuple(bool(value) for value in switch.tolist())
     else:
         # Schema-v1 runs used a validation-selected reliability shrinkage coefficient.
         coefficient = float(cast(float, calibration["selected_coefficient"]))
-        expected = output.expected_return * coefficient
-        probability = 0.5 + coefficient * (torch.sigmoid(output.direction_logits) - 0.5)
+        expected = output.expected * coefficient
+        probability = 0.5 + coefficient * (output.probability - 0.5)
         quantiles = output.quantiles * coefficient
         fallback_used = (False,) * len(batch.assets)
     lower = quantiles[:, :, 0] - adjustment
@@ -388,15 +412,15 @@ def standardizer_from_artifact(content: bytes) -> MaskedStandardizer:
 
 
 def _neural(
-    model: nn.Module,
+    models: Sequence[nn.Module],
     dataset: ResearchSequenceDataset,
     normalized: Tensor,
     validation: Tensor,
     holdout: Tensor,
     config: ForwardRunConfig,
 ) -> _Forecast:
-    """Report an ablation's own outputs, with split-conformal ranges from the validation window."""
-    validation_output, holdout_output = _outputs(model, dataset, normalized, validation, holdout)
+    """Report an ablation's seed-averaged outputs with split-conformal ranges."""
+    validation_output, holdout_output = _outputs(models, dataset, normalized, validation, holdout)
     lower, upper, _ = conformalize(
         dataset.targets[validation],
         validation_output.quantiles[:, :, 0],
@@ -406,8 +430,8 @@ def _neural(
         alpha=config.conformal_alpha,
     )
     return _Forecast(
-        expected=holdout_output.expected_return,
-        probability_up=torch.sigmoid(holdout_output.direction_logits),
+        expected=holdout_output.expected,
+        probability_up=holdout_output.probability,
         lower=lower,
         upper=upper,
         gate_weights=holdout_output.gate_weights,
@@ -415,8 +439,8 @@ def _neural(
 
 
 def _deployable(
-    adaptive: nn.Module,
-    market_only: nn.Module,
+    adaptive: Sequence[nn.Module],
+    market_only: Sequence[nn.Module],
     dataset: ResearchSequenceDataset,
     normalized: Tensor,
     validation: Tensor,
@@ -426,8 +450,8 @@ def _deployable(
     """No-change centre with the native range and direction heads.
 
     The expected return is fixed at zero because no evaluated point forecast beat the
-    zero-return baseline; ranges and P(up) come from the model's own heads. Samples whose
-    sentiment or on-chain source is missing or stale use the market-only model instead.
+    zero-return baseline; ranges and P(up) come from the seed-averaged native heads. Samples
+    whose sentiment or on-chain source is missing or stale use the market-only model instead.
     """
     primary = _outputs(adaptive, dataset, normalized, validation, holdout)
     fallback = _outputs(market_only, dataset, normalized, validation, holdout)
@@ -439,8 +463,8 @@ def _deployable(
         torch.where(switch.reshape(-1, 1, 1), fallback[index].quantiles, primary[index].quantiles)
         for index, switch in enumerate(switches)
     ]
-    direction = torch.where(
-        switches[1].reshape(-1, 1), fallback[1].direction_logits, primary[1].direction_logits
+    probability = torch.where(
+        switches[1].reshape(-1, 1), fallback[1].probability, primary[1].probability
     )
     lower, upper, adjustment = conformalize(
         dataset.targets[validation],
@@ -453,7 +477,7 @@ def _deployable(
     median = quantiles[1][:, :, 1]
     forecast = _Forecast(
         expected=torch.zeros_like(median),
-        probability_up=torch.sigmoid(direction),
+        probability_up=probability,
         lower=torch.minimum(lower, median),
         upper=torch.maximum(upper, median),
         gate_weights=primary[1].gate_weights,
@@ -462,8 +486,10 @@ def _deployable(
         "schema_version": 2,
         "policy": FORECAST_POLICY,
         "centre": "no-change: the expected return is fixed at zero",
-        "range_source": "native quantile head with a split-conformal adjustment",
-        "probability_source": "native direction head",
+        "range_source": "seed-averaged native quantile head with a split-conformal adjustment",
+        "probability_source": "seed-averaged native direction head",
+        "horizons": list(config.horizons),
+        "seeds": list(config.seeds),
         "stale_source_policy": {
             "rule": (
                 "use the market-only fusion model for an asset whose sentiment or on-chain "
@@ -483,25 +509,51 @@ def _deployable(
     return forecast, calibration
 
 
+@dataclass(frozen=True)
+class _EnsembleOutput:
+    expected: Tensor
+    probability: Tensor
+    quantiles: Tensor
+    gate_weights: Tensor
+
+
+def _members(model: nn.Module | Sequence[nn.Module]) -> list[nn.Module]:
+    return [model] if isinstance(model, nn.Module) else list(model)
+
+
+def _ensemble(
+    models: Sequence[nn.Module], features: Tensor, masks: Tensor, assets: Tensor
+) -> _EnsembleOutput:
+    """Average expected return, P(up) after the sigmoid, quantiles and gates over models."""
+    if not models:
+        raise ValueError("an ensemble needs at least one model")
+    outputs: list[ModelOutput] = []
+    with torch.inference_mode():
+        for model in models:
+            model.eval()
+            outputs.append(cast(ModelOutput, model(features, masks, assets)))
+    return _EnsembleOutput(
+        expected=torch.stack([item.expected_return for item in outputs]).mean(dim=0),
+        probability=torch.stack([torch.sigmoid(item.direction_logits) for item in outputs]).mean(
+            dim=0
+        ),
+        quantiles=torch.stack([item.quantiles for item in outputs]).mean(dim=0),
+        gate_weights=torch.stack([item.gate_weights for item in outputs]).mean(dim=0),
+    )
+
+
 def _outputs(
-    model: nn.Module,
+    models: Sequence[nn.Module],
     dataset: ResearchSequenceDataset,
     normalized: Tensor,
     validation: Tensor,
     holdout: Tensor,
-) -> tuple[ModelOutput, ModelOutput]:
-    model.eval()
-    with torch.inference_mode():
-        return cast(
-            tuple[ModelOutput, ModelOutput],
-            tuple(
-                cast(
-                    ModelOutput,
-                    model(normalized[index], dataset.masks[index], dataset.asset_indices[index]),
-                )
-                for index in (validation, holdout)
-            ),
-        )
+) -> tuple[_EnsembleOutput, _EnsembleOutput]:
+    validation_output, holdout_output = (
+        _ensemble(models, normalized[index], dataset.masks[index], dataset.asset_indices[index])
+        for index in (validation, holdout)
+    )
+    return validation_output, holdout_output
 
 
 def _naive(
@@ -560,7 +612,7 @@ def _prediction_rows(
     for name in MODEL_ORDER:
         forecast = forecasts[name]
         for position, sample_index in enumerate(indices.tolist()):
-            for horizon_index, horizon in enumerate(HORIZONS):
+            for horizon_index, horizon in enumerate(sequences.horizons):
                 rows.append(
                     {
                         "model": name,
@@ -601,6 +653,17 @@ def _indices_from(dataset: ResearchSequenceDataset, start: date) -> Tensor:
         [index for index, value in enumerate(dataset.decision_dates) if _date(value) >= start],
         dtype=torch.long,
     )
+
+
+def _verify_targets_mature(
+    dataset: ResearchSequenceDataset, windows: Sequence[Tensor], horizon: int
+) -> None:
+    """Every target in a window must mature before the next window's first decision date."""
+    for earlier, later in zip(windows, windows[1:], strict=False):
+        last = _date(dataset.decision_dates[int(earlier[-1])])
+        first = _date(dataset.decision_dates[int(later[0])])
+        if last + timedelta(days=horizon) >= first:
+            raise ValueError("forward protocol targets overlap the next window")
 
 
 def _verify_disjoint(*indices: Tensor) -> None:

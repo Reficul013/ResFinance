@@ -15,7 +15,7 @@ from torch import Tensor
 from ml.data.datasets import HORIZONS
 from ml.features.point_in_time import FeatureDataset, PointInTimeFeatureBuilder
 from ml.models.mspciformer import FusionMode, ThreeAssetMSPCIFormer
-from ml.runs.checkpoints import restore_checkpoint
+from ml.runs.checkpoints import restore_models
 from ml.runs.forward import (
     ForwardResearchResult,
     ForwardRunConfig,
@@ -60,7 +60,7 @@ def parser() -> argparse.ArgumentParser:
         type=date.fromisoformat,
         default=date.today() - timedelta(days=1),
     )
-    value.add_argument("--epochs", type=int, default=20)
+    value.add_argument("--epochs", type=int, default=ForwardRunConfig().epochs)
     value.add_argument("--approved-by", default="resfinance-local-research")
     value.add_argument("--encryption-key-env", default="RESFINANCE_RESEARCH_ENCRYPTION_KEY")
     value.add_argument("--encryption-key-container", default="resfinance-api-1")
@@ -73,7 +73,8 @@ def main() -> int:
     args = parser().parse_args()
     if args.epochs < 1:
         raise ValueError("epochs must be positive")
-    if args.current_cutoff_date < date(2025, 4, 17):
+    protocol = ForwardRunConfig()
+    if args.current_cutoff_date < protocol.holdout_start + timedelta(days=max(protocol.horizons)):
         raise ValueError("current cutoff cannot produce the predeclared forward holdout")
     environment_key = os.environ.get(args.encryption_key_env)
     key = load_research_key(
@@ -250,24 +251,33 @@ def make_snapshot(
     artifacts = result.artifacts
     model_artifact = str(manifest["deployment_model_artifact"])
     checkpoint = artifacts[model_artifact]
-    model = ThreeAssetMSPCIFormer(fusion_mode=FusionMode.ADAPTIVE)
-    model_hash = restore_checkpoint(model, checkpoint)
+    configuration = cast(dict[str, object], manifest["configuration"])
+    horizons = [int(value) for value in cast(list[int], configuration.get("horizons", HORIZONS))]
+    horizon_count = len(horizons)
+    models, model_hash = restore_models(
+        lambda: ThreeAssetMSPCIFormer(fusion_mode=FusionMode.ADAPTIVE, horizon_count=horizon_count),
+        checkpoint,
+    )
     standardizer = standardizer_from_artifact(artifacts[str(manifest["standardizer_artifact"])])
     calibration = cast(dict[str, object], manifest["adaptive_calibration"])
-    fallback_model = None
+    fallback_models = None
     fallback_artifact = manifest.get("fallback_model_artifact")
     if fallback_artifact:
-        fallback_model = ThreeAssetMSPCIFormer(fusion_mode=FusionMode.MARKET_ONLY)
-        restore_checkpoint(fallback_model, artifacts[str(fallback_artifact)])
+        fallback_models, _ = restore_models(
+            lambda: ThreeAssetMSPCIFormer(
+                fusion_mode=FusionMode.MARKET_ONLY, horizon_count=horizon_count
+            ),
+            artifacts[str(fallback_artifact)],
+        )
     current = infer_current_forecast(
         dataset,
-        model=model,
+        model=models,
         standardizer=standardizer,
         calibration=calibration,
-        fallback_model=fallback_model,
+        fallback_model=fallback_models,
     )
     assets = (CryptoAsset.BTC, CryptoAsset.ETH, CryptoAsset.SOL)
-    horizon_index = HORIZONS.index(15)
+    horizon_index = horizons.index(15)
     forecasts = tuple(
         AssetForecast(
             asset=asset,

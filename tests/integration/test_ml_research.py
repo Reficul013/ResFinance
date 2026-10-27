@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Sequence
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 import torch
@@ -13,7 +13,7 @@ from ml.data.synthetic import generate_synthetic_feature_dataset
 from ml.evaluation.protocol import expanding_walk_forward
 from ml.features.point_in_time import FeatureDataset
 from ml.models.mspciformer import FusionMode, ThreeAssetMSPCIFormer
-from ml.runs.checkpoints import deterministic_checkpoint, restore_checkpoint
+from ml.runs.checkpoints import deterministic_checkpoint, restore_checkpoint, restore_models
 from ml.runs.forward import (
     ForwardResearchResult,
     ForwardRunConfig,
@@ -241,7 +241,7 @@ def test_fourth_asset_and_incomplete_ablation_report_are_rejected(
 
 @pytest.fixture(scope="module")
 def forward_run() -> tuple[FeatureDataset, ForwardResearchResult]:
-    dataset = generate_synthetic_feature_dataset(day_count=700)
+    dataset = generate_synthetic_feature_dataset(day_count=900, start=date(2023, 1, 1))
     result = run_forward_research(
         dataset,
         config=ForwardRunConfig(epochs=1),
@@ -252,12 +252,16 @@ def forward_run() -> tuple[FeatureDataset, ForwardResearchResult]:
 
 def _deployment_models(
     result: ForwardResearchResult,
-) -> tuple[ThreeAssetMSPCIFormer, ThreeAssetMSPCIFormer, MaskedStandardizer, dict[str, object]]:
+) -> tuple[list[torch.nn.Module], list[torch.nn.Module], MaskedStandardizer, dict[str, object]]:
     manifest = result.manifest
-    primary = ThreeAssetMSPCIFormer(fusion_mode=FusionMode.ADAPTIVE)
-    restore_checkpoint(primary, result.artifacts[str(manifest["deployment_model_artifact"])])
-    fallback = ThreeAssetMSPCIFormer(fusion_mode=FusionMode.MARKET_ONLY)
-    restore_checkpoint(fallback, result.artifacts[str(manifest["fallback_model_artifact"])])
+    primary, _ = restore_models(
+        lambda: ThreeAssetMSPCIFormer(fusion_mode=FusionMode.ADAPTIVE, horizon_count=3),
+        result.artifacts[str(manifest["deployment_model_artifact"])],
+    )
+    fallback, _ = restore_models(
+        lambda: ThreeAssetMSPCIFormer(fusion_mode=FusionMode.MARKET_ONLY, horizon_count=3),
+        result.artifacts[str(manifest["fallback_model_artifact"])],
+    )
     standardizer = standardizer_from_artifact(
         result.artifacts[str(manifest["standardizer_artifact"])]
     )
@@ -291,10 +295,17 @@ def test_forward_protocol_uses_frozen_windows_and_immutable_promotion(
     calibration = manifest["adaptive_calibration"]
     metrics = manifest["metrics"]
 
+    assert manifest["schema_version"] == 3
+    assert manifest["evaluation_protocol"] == "untouched-forward-holdout-v2"
     assert isinstance(holdout, dict)
-    assert holdout["training_end"] == "2024-12-17"
-    assert holdout["validation_start"] == "2025-01-02"
-    assert holdout["holdout_start"] == "2025-04-02"
+    assert holdout["training_end"] == "2024-01-30"
+    assert holdout["validation_start"] == "2024-03-01"
+    assert holdout["validation_end"] == "2025-02-28"
+    assert holdout["holdout_start"] == "2025-04-01"
+    assert holdout["embargo_days"] == 30
+    assert holdout["horizons"] == [15, 20, 30]
+    assert holdout["seeds"] == [11, 23, 37]
+    assert holdout["holdout_previously_observed"] is True
     assert holdout["post_holdout_tuning_permitted"] is False
     assert isinstance(calibration, dict)
     assert calibration["schema_version"] == 2
@@ -312,7 +323,7 @@ def test_forward_protocol_uses_frozen_windows_and_immutable_promotion(
     )
     tampered_manifest = {
         **manifest,
-        "adaptive_calibration": {**calibration, "conformal_adjustment": [0.0] * 5},
+        "adaptive_calibration": {**calibration, "conformal_adjustment": [0.0] * 3},
     }
     with pytest.raises(ValueError, match="calibration artifact"):
         repository.put_completed_run(tampered_manifest, result.artifacts)
@@ -321,6 +332,16 @@ def test_forward_protocol_uses_frozen_windows_and_immutable_promotion(
     }
     with pytest.raises(ValueError, match="fallback model artifact"):
         repository.put_completed_run(without_fallback, result.artifacts)
+    for tampered_holdout in (
+        {**holdout, "horizons": [1, 3, 5, 7, 15]},
+        {**holdout, "seeds": [11]},
+        {**holdout, "validation_start": "2024-12-01"},
+        {**holdout, "embargo_days": 15},
+    ):
+        with pytest.raises(ValueError, match="forward protocol"):
+            repository.put_completed_run(
+                {**manifest, "forward_holdout": tampered_holdout}, result.artifacts
+            )
     repository.put_completed_run(manifest, result.artifacts)
     promotion = repository.promote_model(
         run_id=result.run_id,
@@ -353,6 +374,7 @@ def test_current_forecast_has_no_change_centre_and_native_ranges(
     )
 
     assert current.fallback_used == (False, False, False)
+    assert current.expected.shape == (3, 3)
     assert torch.all(current.expected == 0)
     assert torch.all((current.probability_up > 0) & (current.probability_up < 1))
     assert not torch.all(current.probability_up == 0.5)
@@ -378,16 +400,22 @@ def test_stale_sources_switch_that_asset_to_the_market_only_model(
     batch = build_inference_batch(stale)
     with torch.inference_mode():
         normalized = standardizer.transform(batch.features, batch.masks)
-        fallback_output = fallback(normalized, batch.masks, batch.asset_indices)
-        primary_output = primary(normalized, batch.masks, batch.asset_indices)
+        fallback_probability = torch.stack(
+            [
+                torch.sigmoid(model(normalized, batch.masks, batch.asset_indices).direction_logits)
+                for model in fallback
+            ]
+        ).mean(dim=0)
+        primary_probability = torch.stack(
+            [
+                torch.sigmoid(model(normalized, batch.masks, batch.asset_indices).direction_logits)
+                for model in primary
+            ]
+        ).mean(dim=0)
 
     assert switched.fallback_used == (False, True, False)
-    assert torch.equal(
-        switched.probability_up[1], torch.sigmoid(fallback_output.direction_logits[1])
-    )
-    assert torch.equal(
-        switched.probability_up[0], torch.sigmoid(primary_output.direction_logits[0])
-    )
+    assert torch.equal(switched.probability_up[1], fallback_probability[1])
+    assert torch.equal(switched.probability_up[0], primary_probability[0])
     assert torch.all(switched.expected == 0)
     with pytest.raises(ValueError, match="fallback model"):
         infer_current_forecast(
@@ -413,3 +441,47 @@ def test_schema_v1_calibration_keeps_its_shrinkage_behaviour(
     assert torch.all(current.expected == 0)
     assert torch.all(current.probability_up == 0.5)
     assert current.fallback_used == (False, False, False)
+
+
+def test_forward_deployment_artifact_is_a_three_seed_ensemble(
+    forward_run: tuple[FeatureDataset, ForwardResearchResult],
+) -> None:
+    _, result = forward_run
+    artifact = result.artifacts["deployment-checkpoint-adaptive-gating.json"]
+    document = json.loads(artifact)
+    models, digest = restore_models(
+        lambda: ThreeAssetMSPCIFormer(fusion_mode=FusionMode.ADAPTIVE, horizon_count=3), artifact
+    )
+
+    assert document["kind"] == "seed-ensemble"
+    assert document["model_config"]["seeds"] == [11, 23, 37]
+    assert document["model_config"]["horizons"] == [15, 20, 30]
+    assert len(models) == 3
+    assert (
+        digest == result.manifest["artifact_hashes"]["deployment-checkpoint-adaptive-gating.json"]
+    )
+    first, second = (dict(model.state_dict()) for model in models[:2])
+    assert any(not torch.equal(first[name], second[name]) for name in first)
+
+
+def test_forward_protocol_rejects_targets_that_overlap_the_next_window() -> None:
+    dataset = generate_synthetic_feature_dataset(day_count=900, start=date(2023, 1, 1))
+
+    with pytest.raises(ValueError, match="overlap the next window"):
+        run_forward_research(
+            dataset,
+            config=ForwardRunConfig(epochs=1, validation_start=date(2024, 2, 15)),
+            run_id="forward-embargo-test",
+        )
+
+
+def test_sequence_horizons_are_configurable_and_validated() -> None:
+    dataset = generate_synthetic_feature_dataset(day_count=180)
+
+    sequences = build_sequence_dataset(dataset, horizons=(15, 20, 30))
+
+    assert sequences.horizons == (15, 20, 30)
+    assert sequences.targets.shape[1] == 3
+    for invalid in ((), (20, 15), (15, 15), (0, 15), (15, 120)):
+        with pytest.raises(ValueError, match="strictly increasing"):
+            build_sequence_dataset(dataset, horizons=invalid)

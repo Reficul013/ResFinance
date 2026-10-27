@@ -248,7 +248,7 @@ Model:
 - Separate market, sentiment, and on-chain encoders.
 - Masked softmax Adaptive Multi-Source Gating per asset and time step.
 - Multi-scale patching, channel-independent Transformer blocks, and learnable aggregation following the MSPCIFormer design.
-- Horizons: 1, 3, 5, 7, and 15 days.
+- Horizons: 1, 3, 5, 7, and 15 days (Milestone 5 walk-forward). Forward protocol v2 uses 15, 20, and 30 days with three-seed ensembles; see [`research-protocol.md`](research-protocol.md).
 - Heads for expected return, direction probability, and p10/p50/p90 quantiles.
 - Split-conformal calibration on validation windows.
 - Required ablations: market-only, fixed equal fusion, adaptive gating, and one-source-removed variants.

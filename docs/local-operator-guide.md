@@ -188,6 +188,17 @@ freezes its deployment artifacts, and publishes a current 15-day snapshot.
 Choose the last complete provider date explicitly; do not move the frozen
 training, validation, or holdout boundaries after inspecting results.
 
+The runner now executes forward protocol v2 (`untouched-forward-holdout-v2`):
+- 15/20/30-day horizons;
+- three seeds per neural model, 100 epochs each;
+- a full-year 2024-03-01 to 2025-02-28 calibration window;
+- a 30-day embargo;
+- holdout decisions from 2025-04-01, so the cutoff must be 2025-05-01 or later.
+
+It trains 21 models, so expect a longer run than the v1 completion. The run
+deploys the seed ensembles and the market-only fallback, and the published
+snapshot stays at 15 days. The results recorded below are from protocol v1.
+
 ```bash
 .venv/bin/python -m scripts.milestone9.run_forward_completion \
   --current-cutoff-date 2026-10-14 \

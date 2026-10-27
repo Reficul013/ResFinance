@@ -80,9 +80,9 @@ class ChannelIndependentPatchScale(nn.Module):
 
 
 class ForecastHeads(nn.Module):
-    def __init__(self, dimension: int) -> None:
+    def __init__(self, dimension: int, horizon_count: int = len(HORIZONS)) -> None:
         super().__init__()
-        horizon_count = len(HORIZONS)
+        self.horizon_count = horizon_count
         self.expected = nn.Linear(dimension, horizon_count)
         self.direction = nn.Linear(dimension, horizon_count)
         self.quantile_parameters = nn.Linear(dimension, horizon_count * 3)
@@ -91,7 +91,7 @@ class ForecastHeads(nn.Module):
         expected = 0.1 * torch.tanh(self.expected(representation))
         direction = self.direction(representation)
         raw = self.quantile_parameters(representation).reshape(
-            representation.shape[0], len(HORIZONS), 3
+            representation.shape[0], self.horizon_count, 3
         )
         median = 0.1 * torch.tanh(raw[:, :, 1])
         lower = median - 0.1 * F.softplus(raw[:, :, 0])
@@ -114,6 +114,7 @@ class ThreeAssetMSPCIFormer(nn.Module):
         source_dimension: int = 6,
         model_dimension: int = 8,
         patch_sizes: tuple[int, ...] = (2, 4, 8),
+        horizon_count: int = len(HORIZONS),
     ) -> None:
         super().__init__()
         if not patch_sizes or any(size <= 0 for size in patch_sizes):
@@ -133,7 +134,7 @@ class ThreeAssetMSPCIFormer(nn.Module):
         )
         self.scale_logits = nn.Parameter(torch.zeros(len(patch_sizes)))
         self.asset_embedding = nn.Embedding(3, model_dimension)
-        self.heads = ForecastHeads(model_dimension)
+        self.heads = ForecastHeads(model_dimension, horizon_count)
 
     def forward(self, features: Tensor, masks: Tensor, asset_indices: Tensor) -> ModelOutput:
         if features.ndim != 4 or features.shape[2:] != (len(SOURCE_NAMES), SOURCE_WIDTH):
@@ -179,12 +180,12 @@ class ThreeAssetMSPCIFormer(nn.Module):
 
 
 class LSTMForecastBaseline(nn.Module):
-    def __init__(self, *, hidden_dimension: int = 12) -> None:
+    def __init__(self, *, hidden_dimension: int = 12, horizon_count: int = len(HORIZONS)) -> None:
         super().__init__()
         input_dimension = len(SOURCE_NAMES) * SOURCE_WIDTH * 2
         self.lstm = nn.LSTM(input_dimension, hidden_dimension, batch_first=True)
         self.asset_embedding = nn.Embedding(3, hidden_dimension)
-        self.heads = ForecastHeads(hidden_dimension)
+        self.heads = ForecastHeads(hidden_dimension, horizon_count)
 
     def forward(self, features: Tensor, masks: Tensor, asset_indices: Tensor) -> ModelOutput:
         values = torch.cat((features, masks.to(features.dtype)), dim=-1)

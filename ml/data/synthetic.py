@@ -12,11 +12,12 @@ from server.app.domain.crypto import CryptoAsset
 ASSETS = (CryptoAsset.BTC, CryptoAsset.ETH, CryptoAsset.SOL)
 
 
-def generate_synthetic_feature_dataset(*, day_count: int = 128) -> FeatureDataset:
+def generate_synthetic_feature_dataset(
+    *, day_count: int = 128, start: date = date(2024, 1, 1)
+) -> FeatureDataset:
     """Create deterministic, non-provider smoke data without writing generated data to Git."""
     if day_count < 120:
         raise ValueError("synthetic smoke data requires at least 120 days")
-    start = date(2024, 1, 1)
     rows: list[dict[str, object]] = []
     source_ids: set[str] = set()
     prices = {CryptoAsset.BTC: 40_000.0, CryptoAsset.ETH: 2_200.0, CryptoAsset.SOL: 90.0}

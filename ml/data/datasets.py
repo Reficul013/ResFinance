@@ -26,6 +26,7 @@ class ResearchSequenceDataset:
     assets: tuple[str, ...]
     dataset_hash: str
     source_record_ids: tuple[str, ...]
+    horizons: tuple[int, ...] = HORIZONS
 
     def __post_init__(self) -> None:
         sample_count = self.features.shape[0]
@@ -33,7 +34,7 @@ class ResearchSequenceDataset:
             raise ValueError("features must have shape [sample, lookback, 3, 3]")
         if self.masks.shape != self.features.shape:
             raise ValueError("feature masks must match features")
-        if self.targets.shape != (sample_count, len(HORIZONS)):
+        if self.targets.shape != (sample_count, len(self.horizons)):
             raise ValueError("targets must cover all forecast horizons")
         if len(self.decision_dates) != sample_count or len(self.assets) != sample_count:
             raise ValueError("sample metadata length mismatch")
@@ -98,8 +99,12 @@ def build_sequence_dataset(
     lookback: int = 16,
     horizons: tuple[int, ...] = HORIZONS,
 ) -> ResearchSequenceDataset:
-    if horizons != HORIZONS:
-        raise ValueError("Milestone 6 horizons must be 1, 3, 5, 7, and 15 days")
+    if (
+        not horizons
+        or any(horizon < 1 or horizon > 90 for horizon in horizons)
+        or list(horizons) != sorted(set(horizons))
+    ):
+        raise ValueError("horizons must be strictly increasing day counts from 1 to 90")
     if lookback < 8:
         raise ValueError("lookback must contain at least eight daily observations")
     manifest_assets = dataset.manifest.get("assets")
@@ -155,6 +160,7 @@ def build_sequence_dataset(
         assets=tuple(sample_assets[index] for index in order),
         dataset_hash=dataset.dataset_hash,
         source_record_ids=tuple(cast(list[str], source_ids)),
+        horizons=tuple(horizons),
     )
 
 

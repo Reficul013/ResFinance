@@ -7,7 +7,7 @@ import re
 import zlib
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any, cast
 
 from server.app.application.ports import ImmutableStoreResult, KeyValueStore
@@ -15,6 +15,11 @@ from server.app.infrastructure.blob_repository import EncryptedBlobRepository
 from server.app.infrastructure.encryption import canonical_json_bytes
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_FORWARD_PROTOCOLS: dict[object, str] = {
+    2: "untouched-forward-holdout-v1",
+    3: "untouched-forward-holdout-v2",
+}
+_FORWARD_EMBARGO_DAYS: dict[object, int] = {2: 15, 3: 30}
 _REQUIRED_MODELS = {
     "naive-zero-return",
     "linear-ridge",
@@ -75,7 +80,7 @@ class ResearchRunRepository:
             raise ValueError("metrics artifact does not match the run manifest")
         if json.loads(artifacts["gate-weights.json"]) != manifest.get("gate_weights"):
             raise ValueError("gate-weight artifact does not match the run manifest")
-        if manifest.get("schema_version") == 2 and json.loads(
+        if manifest.get("schema_version") in (2, 3) and json.loads(
             artifacts["adaptive-calibration.json"]
         ) != manifest.get("adaptive_calibration"):
             raise ValueError("adaptive calibration artifact does not match the run manifest")
@@ -191,10 +196,11 @@ class ResearchRunRepository:
             "interval_coverage": coverage >= criteria.minimum_interval_coverage,
             "artifact_hashes_present": bool(manifest.get("artifact_hashes")),
         }
-        if manifest.get("schema_version") == 2:
+        if manifest.get("schema_version") in (2, 3):
             holdout = manifest.get("forward_holdout")
             passed["untouched_forward_holdout"] = (
-                manifest.get("evaluation_protocol") == "untouched-forward-holdout-v1"
+                manifest.get("evaluation_protocol")
+                == _FORWARD_PROTOCOLS[manifest.get("schema_version")]
                 and isinstance(holdout, dict)
                 and holdout.get("holdout_labels_consumed_once") is True
                 and holdout.get("post_holdout_tuning_permitted") is False
@@ -293,8 +299,8 @@ class ResearchRunRepository:
 
 def _validate_manifest(manifest: Mapping[str, object]) -> None:
     schema_version = manifest.get("schema_version")
-    if schema_version not in (1, 2) or manifest.get("status") != "completed":
-        raise ValueError("only completed schema-v1 or schema-v2 research runs may be persisted")
+    if schema_version not in (1, 2, 3) or manifest.get("status") != "completed":
+        raise ValueError("only completed schema-v1, v2, or v3 research runs may be persisted")
     if manifest.get("assets") != ["BTC", "ETH", "SOL"]:
         raise ValueError("research run must contain exactly BTC, ETH, and SOL")
     reported = manifest.get("reported_models")
@@ -307,17 +313,21 @@ def _validate_manifest(manifest: Mapping[str, object]) -> None:
         raise ValueError("research run folds must be a list")
     if schema_version == 1 and len(folds) != 5:
         raise ValueError("schema-v1 research runs require five walk-forward folds")
-    if schema_version == 2:
+    if schema_version in (2, 3):
         holdout = manifest.get("forward_holdout")
         if (
             folds
-            or manifest.get("evaluation_protocol") != "untouched-forward-holdout-v1"
+            or manifest.get("evaluation_protocol") != _FORWARD_PROTOCOLS[schema_version]
             or not isinstance(holdout, dict)
-            or holdout.get("embargo_days") != 15
+            or holdout.get("embargo_days") != _FORWARD_EMBARGO_DAYS[schema_version]
             or holdout.get("holdout_labels_consumed_once") is not True
             or holdout.get("post_holdout_tuning_permitted") is not False
         ):
-            raise ValueError("schema-v2 research run violates the untouched-forward protocol")
+            raise ValueError(
+                f"schema-v{schema_version} research run violates the untouched-forward protocol"
+            )
+        if schema_version == 3:
+            _validate_forward_v2_holdout(holdout)
         artifacts = manifest.get("artifact_hashes")
         if not isinstance(artifacts, dict):
             raise ValueError("schema-v2 research artifact hashes are required")
@@ -367,6 +377,25 @@ def _validate_manifest(manifest: Mapping[str, object]) -> None:
     for field in ("environment", "seeds", "determinism", "metrics", "artifact_hashes"):
         if not isinstance(manifest.get(field), dict):
             raise ValueError(f"research manifest {field} is required")
+
+
+def _validate_forward_v2_holdout(holdout: Mapping[str, object]) -> None:
+    seeds = holdout.get("seeds")
+    try:
+        validation_days = (
+            date.fromisoformat(str(holdout.get("validation_end")))
+            - date.fromisoformat(str(holdout.get("validation_start")))
+        ).days + 1
+    except ValueError as exc:
+        raise ValueError("schema-v3 research run validation window is invalid") from exc
+    if (
+        holdout.get("horizons") != [15, 20, 30]
+        or not isinstance(seeds, list)
+        or len(seeds) != 3
+        or len(set(seeds)) != 3
+        or validation_days < 365
+    ):
+        raise ValueError("schema-v3 research run violates forward protocol v2")
 
 
 def _required_text(value: Mapping[str, object], field: str) -> str:
