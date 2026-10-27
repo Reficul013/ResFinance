@@ -345,7 +345,10 @@ async function approveAfter(
   await applicationPage.bringToFront();
 }
 
-async function unlockWallet(context: BrowserContext, verifyIncorrectPassword = false) {
+async function unlockWallet(
+  context: BrowserContext,
+  verifyIncorrectPassword = false,
+) {
   const page = await context.newPage();
   await page.goto(
     `chrome-extension://${await extensionId(context)}/popup.html`,
@@ -366,7 +369,10 @@ async function unlockWallet(context: BrowserContext, verifyIncorrectPassword = f
         "Incorrect Password",
         { timeout: 30_000 },
       );
-      await expect(page.locator("#status")).toHaveAttribute("data-tone", "error");
+      await expect(page.locator("#status")).toHaveAttribute(
+        "data-tone",
+        "error",
+      );
     }
     await page.locator("#unlock-password").fill(password);
     await page.locator("#unlock-password").press("Enter");
@@ -404,9 +410,9 @@ async function expectWalletLocked(context: BrowserContext) {
   const lockedFormBox = await page.locator("#locked").boundingBox();
   expect(unlockButtonBox).not.toBeNull();
   expect(lockedFormBox).not.toBeNull();
-  expect(
-    Math.abs(unlockButtonBox!.width - lockedFormBox!.width),
-  ).toBeLessThan(1);
+  expect(Math.abs(unlockButtonBox!.width - lockedFormBox!.width)).toBeLessThan(
+    1,
+  );
   await page.close();
 }
 
@@ -543,6 +549,7 @@ async function createAndSettleGroup(
   );
   expect((await decisionCreated).status()).toBe(201);
   await decisionProjection;
+  await member.locator("details.group-update > summary").click();
   await member.getByLabel("Credit amount (USD units)").fill("60.00");
   const fundingRequestPromise = member.waitForRequest(
     (request) =>
@@ -551,7 +558,9 @@ async function createAndSettleGroup(
   const fundingCreated = waitForPost(member, /\/credits$/);
   const fundingProjection = waitForGroupProjection(member);
   await approveAfter(member.context(), () =>
-    member.getByRole("button", { name: "Approve funding in ResWallet" }).click(),
+    member
+      .getByRole("button", { name: "Approve funding in ResWallet" })
+      .click(),
   );
   const fundingRequest = await fundingRequestPromise;
   expect((await fundingCreated).status()).toBe(201);

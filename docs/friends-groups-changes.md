@@ -45,14 +45,14 @@ under that form. The message is cleared as soon as you submit again.
 
 This applies to all six forms:
 
-| Form | Example of an error you can now see |
-|------|--------------------------------------|
-| Create group | Server says the request was rejected |
-| Add member | Server says the wallet is already a member |
-| Fund internal credits | `Amount must be greater than $0.00.` |
-| Create signed expense | `A share has an invalid wallet address` |
-| Approve / reject obligation | `User rejected the request in ResVault` |
-| Settle with credits | `Enter a positive USD amount with no more than two decimals.` |
+| Form                        | Example of an error you can now see                           |
+| --------------------------- | ------------------------------------------------------------- |
+| Create group                | Server says the request was rejected                          |
+| Add member                  | Server says the wallet is already a member                    |
+| Fund internal credits       | `Amount must be greater than $0.00.`                          |
+| Create signed expense       | `A share has an invalid wallet address`                       |
+| Approve / reject obligation | `User rejected the request in ResVault`                       |
+| Settle with credits         | `Enter a positive USD amount with no more than two decimals.` |
 
 Errors stay with the form they belong to. If the expense form shows an error
 and you then make a mistake in the credits form, each form shows its own
@@ -80,13 +80,13 @@ If you then click **Cancel** in ResVault:
 
 ### Files changed
 
-| File | What it does now |
-|------|------------------|
-| `client/src/features/groups/useGroupAction.ts` (new) | Small helper each form uses: clear the old error, run the action, catch and keep any new error. |
-| `client/src/features/groups/shares.ts` (new) | The code that reads `wallet=amount` lines. Moved out of the page unchanged so it can be tested on its own. |
-| `client/src/features/groups/GroupsDashboard.tsx` | All six forms use the helper and show their own error. |
-| `client/src/features/groups/shares.test.ts` (new) | Unit tests for reading share lines. |
-| `tests/e2e/groups-dashboard.spec.ts` | New browser test for the error messages. |
+| File                                                 | What it does now                                                                                           |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `client/src/features/groups/useGroupAction.ts` (new) | Small helper each form uses: clear the old error, run the action, catch and keep any new error.            |
+| `client/src/features/groups/shares.ts` (new)         | The code that reads `wallet=amount` lines. Moved out of the page unchanged so it can be tested on its own. |
+| `client/src/features/groups/GroupsDashboard.tsx`     | All six forms use the helper and show their own error.                                                     |
+| `client/src/features/groups/shares.test.ts` (new)    | Unit tests for reading share lines.                                                                        |
+| `tests/e2e/groups-dashboard.spec.ts`                 | New browser test for the error messages.                                                                   |
 
 ### What did not change
 
@@ -184,14 +184,14 @@ The name-with-address-on-hover display is its own small component
 
 ### Files changed
 
-| File | What it does now |
-|------|------------------|
-| `client/src/features/groups/members.ts` (new) | Looks up a member's display name from a wallet address (ignoring upper/lower case), and shortens addresses. |
-| `client/src/features/groups/MemberName.tsx` (new) | Shows a name, with the full wallet address in a pop-up on hover or keyboard focus. |
-| `client/src/features/groups/GroupsDashboard.tsx` | Adds the Members panel and the "No groups yet" message. |
-| `client/src/app/styles.css` | Styles for the member chips, labels, and address pop-up. Works in light and dark mode. |
-| `client/src/features/groups/members.test.ts` (new) | Unit tests for the name lookup. |
-| `tests/e2e/groups-dashboard.spec.ts` | Browser checks for the Members panel, the hover pop-up, and the empty state. |
+| File                                               | What it does now                                                                                            |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `client/src/features/groups/members.ts` (new)      | Looks up a member's display name from a wallet address (ignoring upper/lower case), and shortens addresses. |
+| `client/src/features/groups/MemberName.tsx` (new)  | Shows a name, with the full wallet address in a pop-up on hover or keyboard focus.                          |
+| `client/src/features/groups/GroupsDashboard.tsx`   | Adds the Members panel and the "No groups yet" message.                                                     |
+| `client/src/app/styles.css`                        | Styles for the member chips, labels, and address pop-up. Works in light and dark mode.                      |
+| `client/src/features/groups/members.test.ts` (new) | Unit tests for the name lookup.                                                                             |
+| `tests/e2e/groups-dashboard.spec.ts`               | Browser checks for the Members panel, the hover pop-up, and the empty state.                                |
 
 ### What did not change
 
@@ -281,14 +281,14 @@ Sam opens the "Friends" group, which has Alex (owner) and Sam.
 
 ### Files changed
 
-| File | What it does now |
-|------|------------------|
+| File                                               | What it does now                                                                              |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `client/src/features/groups/MembersMenu.tsx` (new) | The Members button and popover: open/close, Owner/You labels, shortened address, Copy button. |
-| `client/src/features/groups/members.ts` | Adds the `1 member` / `2 members` label. |
-| `client/src/features/groups/GroupsDashboard.tsx` | Uses the new Members button in the summary card; removes the separate Members panel. |
-| `client/src/app/styles.css` | Styles for the button and popover; removes the old panel styles. |
-| `client/src/features/groups/members.test.ts` | Unit test for the member count label. |
-| `tests/e2e/groups-dashboard.spec.ts` | Browser checks for the popover. |
+| `client/src/features/groups/members.ts`            | Adds the `1 member` / `2 members` label.                                                      |
+| `client/src/features/groups/GroupsDashboard.tsx`   | Uses the new Members button in the summary card; removes the separate Members panel.          |
+| `client/src/app/styles.css`                        | Styles for the button and popover; removes the old panel styles.                              |
+| `client/src/features/groups/members.test.ts`       | Unit test for the member count label.                                                         |
+| `tests/e2e/groups-dashboard.spec.ts`               | Browser checks for the popover.                                                               |
 
 `MemberName.tsx` from Task 2 (name with full address on hover) is no longer
 used on the page right now. It is kept on purpose: Tasks 3 and 4 use it for
@@ -399,19 +399,20 @@ All $90.00 assigned.
 7. **Clear error messages** that name the person, shown under the form if you
    submit something that does not work:
 
-   | What you did | Message |
-   |--------------|---------|
-   | Left the total empty | `Total amount: Enter a positive USD amount with no more than two decimals.` |
-   | Unticked everyone | `Choose at least one member to split with.` |
-   | Ticked only yourself | `Include at least one other member. Your own share does not create a debt.` |
-   | Gave Sam `0.00` | `Sam's share: Amount must be greater than $0.00.` |
+   | What you did            | Message                                                                          |
+   | ----------------------- | -------------------------------------------------------------------------------- |
+   | Left the total empty    | `Total amount: Enter a positive USD amount with no more than two decimals.`      |
+   | Unticked everyone       | `Choose at least one member to split with.`                                      |
+   | Ticked only yourself    | `Include at least one other member. Your own share does not create a debt.`      |
+   | Gave Sam `0.00`         | `Sam's share: Amount must be greater than $0.00.`                                |
    | Shares total $50 of $60 | `Shares add up to $50.00, but the total is $60.00. Assign the remaining $10.00.` |
-   | Shares total $65 of $60 | `Shares add up to $65.00, which is $5.00 more than the total of $60.00.` |
+   | Shares total $65 of $60 | `Shares add up to $65.00, which is $5.00 more than the total of $60.00.`         |
 
    The last three rows only apply to Exact amounts; an equal split always adds
    up. In Split equally, a share can still come out as $0.00 if the total is
    smaller than one cent per person (for example $0.02 between three people),
    and you will get the `$0.00` message for that person.
+
 8. **The form resets after a successful save:** fields are cleared, everyone is
    ticked again, and it goes back to Split equally.
 9. The panel heading is now **Add an expense** instead of
@@ -461,18 +462,18 @@ left out of `shares` entirely.
 
 ### Files changed
 
-| File | What it does now |
-|------|------------------|
-| `client/src/features/groups/split.ts` (new) | The split rules: the equal split (including where odd cents go), building the shares from ticked rows, the running total, and the error messages above. |
-| `client/src/features/groups/SplitEditor.tsx` (new) | The "Split between" list: Split equally / Exact amounts choice, checkbox, name with address on hover, amount (shown or editable), and running total. |
-| `client/src/features/groups/GroupsDashboard.tsx` | The expense form uses the new list instead of the text box. |
-| `client/src/features/groups/shares.ts` and `shares.test.ts` (removed) | The old `wallet=amount` reader; nothing uses it any more. |
-| `client/src/app/styles.css` | Styles for the split list and running total. |
-| `client/src/features/groups/split.test.ts` (new) | Unit tests for the split rules. |
-| `tests/e2e/groups-dashboard.spec.ts` | Two new browser tests (equal split, exact amounts); the error test now uses the new form. Shared test setup moved into small helpers. |
-| `tests/e2e-live/local-handoff.spec.ts` | The real two-wallet test now unticks the Owner and checks that the equal split gives the Member $60.00, instead of typing a `wallet=amount` line. |
-| `docs/local-demo-runbook.md` | The Friends & Groups demo steps now describe the new form. |
-| `README.md` | The feature list already promised "equal or custom splits", but equal splits did not exist until now. It now says you choose who shares each expense and split it equally or by exact amounts. |
+| File                                                                  | What it does now                                                                                                                                                                               |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `client/src/features/groups/split.ts` (new)                           | The split rules: the equal split (including where odd cents go), building the shares from ticked rows, the running total, and the error messages above.                                        |
+| `client/src/features/groups/SplitEditor.tsx` (new)                    | The "Split between" list: Split equally / Exact amounts choice, checkbox, name with address on hover, amount (shown or editable), and running total.                                           |
+| `client/src/features/groups/GroupsDashboard.tsx`                      | The expense form uses the new list instead of the text box.                                                                                                                                    |
+| `client/src/features/groups/shares.ts` and `shares.test.ts` (removed) | The old `wallet=amount` reader; nothing uses it any more.                                                                                                                                      |
+| `client/src/app/styles.css`                                           | Styles for the split list and running total.                                                                                                                                                   |
+| `client/src/features/groups/split.test.ts` (new)                      | Unit tests for the split rules.                                                                                                                                                                |
+| `tests/e2e/groups-dashboard.spec.ts`                                  | Two new browser tests (equal split, exact amounts); the error test now uses the new form. Shared test setup moved into small helpers.                                                          |
+| `tests/e2e-live/local-handoff.spec.ts`                                | The real two-wallet test now unticks the Owner and checks that the equal split gives the Member $60.00, instead of typing a `wallet=amount` line.                                              |
+| `docs/local-demo-runbook.md`                                          | The Friends & Groups demo steps now describe the new form.                                                                                                                                     |
+| `README.md`                                                           | The feature list already promised "equal or custom splits", but equal splits did not exist until now. It now says you choose who shares each expense and split it equally or by exact amounts. |
 
 ### What did not change
 
@@ -558,12 +559,12 @@ The approval window can fail to show up for two reasons:
 Every Groups form now shows what it is doing, and its button is disabled until
 it finishes:
 
-| Stage | What you see under the form |
-|-------|-----------------------------|
-| Waiting for ResVault | A spinner and "Waiting for your approval in ResVault. If no ResVault window appeared, check behind this browser window, or reload the page and try again." |
-| Approved, sending to the server | A spinner and "Saving to the group…" |
-| Done | The message disappears and the form resets. |
-| Failed or rejected | The red error message, as in Task 1. |
+| Stage                           | What you see under the form                                                                                                                                |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Waiting for ResVault            | A spinner and "Waiting for your approval in ResVault. If no ResVault window appeared, check behind this browser window, or reload the page and try again." |
+| Approved, sending to the server | A spinner and "Saving to the group…"                                                                                                                       |
+| Done                            | The message disappears and the form resets.                                                                                                                |
+| Failed or rejected              | The red error message, as in Task 1.                                                                                                                       |
 
 Clicking the button again while it is waiting does nothing, so you cannot
 start two approvals for the same expense.
@@ -593,14 +594,14 @@ only status message is the waiting/saving line.
 
 ### Files changed
 
-| File | What it does now |
-|------|------------------|
-| `client/src/features/groups/useGroupAction.ts` | Tracks the stage of each action (idle, waiting for ResVault, saving) and ignores repeat clicks while one is running. |
-| `client/src/features/groups/GroupsDashboard.tsx` | Each form shows the waiting/saving message and disables its button while busy. |
-| `client/src/features/groups/SplitEditor.tsx` | Equal-split amounts are plain text instead of status regions. |
-| `client/src/app/styles.css` | Style for the waiting/saving line and its small spinner. |
-| `tests/e2e/groups-dashboard.spec.ts` | New browser test for the waiting and saving stages; equal-split checks read amounts from each member's row. |
-| `tests/e2e-live/local-handoff.spec.ts` | Reads the Member's equal share the same way. |
+| File                                             | What it does now                                                                                                     |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `client/src/features/groups/useGroupAction.ts`   | Tracks the stage of each action (idle, waiting for ResVault, saving) and ignores repeat clicks while one is running. |
+| `client/src/features/groups/GroupsDashboard.tsx` | Each form shows the waiting/saving message and disables its button while busy.                                       |
+| `client/src/features/groups/SplitEditor.tsx`     | Equal-split amounts are plain text instead of status regions.                                                        |
+| `client/src/app/styles.css`                      | Style for the waiting/saving line and its small spinner.                                                             |
+| `tests/e2e/groups-dashboard.spec.ts`             | New browser test for the waiting and saving stages; equal-split checks read amounts from each member's row.          |
+| `tests/e2e-live/local-handoff.spec.ts`           | Reads the Member's equal share the same way.                                                                         |
 
 ### What did not change
 
@@ -668,11 +669,11 @@ Oct 18, 2026 · Paid by you
 
 **2. Obligations read like sentences:**
 
-| Before | After |
-|--------|-------|
-| `0xbbbbbb…bbbbbb owes 0xaaaaaa…aaaaaa · original $30.00` | **Sam owes you for Dinner** / Original $30.00 |
+| Before                                                   | After                                                            |
+| -------------------------------------------------------- | ---------------------------------------------------------------- |
+| `0xbbbbbb…bbbbbb owes 0xaaaaaa…aaaaaa · original $30.00` | **Sam owes you for Dinner** / Original $30.00                    |
 | `0xcccccc…cccccc owes 0xaaaaaa…aaaaaa · original $30.00` | **Priya owes you for Dinner** / Original $30.00 · $10.00 settled |
-| `0xaaaaaa…aaaaaa owes 0xbbbbbb…bbbbbb · original $20.00` | **You owe Sam for Taxi** / Original $20.00 |
+| `0xaaaaaa…aaaaaa owes 0xbbbbbb…bbbbbb · original $20.00` | **You owe Sam for Taxi** / Original $20.00                       |
 
 - "for Dinner" comes from the expense the debt was created by.
 - Once part of a debt is paid, it also shows how much has been settled.
@@ -706,14 +707,14 @@ Alex, Sam, and Priya are in a group. Alex is looking at the page.
 
 ### Files changed
 
-| File | What it does now |
-|------|------------------|
-| `client/src/features/groups/ExpensesPanel.tsx` (new) | The Expenses list, newest first, with date, payer, total, and each share by name. |
-| `client/src/features/groups/MemberName.tsx` | Adds `PersonName`: shows "You"/"you" for yourself and the name-with-wallet-hover for anyone else. |
-| `client/src/features/groups/GroupsDashboard.tsx` | Adds the Expenses panel; obligations show names, the expense they came from, the settled amount, and the credits hint. |
-| `client/src/app/styles.css` | Styles for the expense cards, share chips, obligation sentence, and credits hint. |
-| `client/src/features/groups/ExpensesPanel.test.ts` (new) | Unit tests for ordering and date formatting. |
-| `tests/e2e/groups-dashboard.spec.ts` | New browser test for the Expenses panel and named obligations; the main flow test also checks "You owe Alex" and the credits hint. |
+| File                                                     | What it does now                                                                                                                   |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `client/src/features/groups/ExpensesPanel.tsx` (new)     | The Expenses list, newest first, with date, payer, total, and each share by name.                                                  |
+| `client/src/features/groups/MemberName.tsx`              | Adds `PersonName`: shows "You"/"you" for yourself and the name-with-wallet-hover for anyone else.                                  |
+| `client/src/features/groups/GroupsDashboard.tsx`         | Adds the Expenses panel; obligations show names, the expense they came from, the settled amount, and the credits hint.             |
+| `client/src/app/styles.css`                              | Styles for the expense cards, share chips, obligation sentence, and credits hint.                                                  |
+| `client/src/features/groups/ExpensesPanel.test.ts` (new) | Unit tests for ordering and date formatting.                                                                                       |
+| `tests/e2e/groups-dashboard.spec.ts`                     | New browser test for the Expenses panel and named obligations; the main flow test also checks "You owe Alex" and the credits hint. |
 
 ### What did not change
 
@@ -740,9 +741,9 @@ Alex, Sam, and Priya are in a group. Alex is looking at the page.
   - Priya's line shows "$10.00 settled", and Sam's does not;
   - the credits hint appears only on Alex's taxi debt, with the exact amounts;
   - the empty notifications message.
-  The main flow test now also checks "You owe Alex", that the credits hint
-  shows "Fund $60.00 more" before funding, and that it disappears after
-  funding $60.
+    The main flow test now also checks "You owe Alex", that the credits hint
+    shows "Fund $60.00 more" before funding, and that it disappears after
+    funding $60.
 
 ### How to try it yourself
 
@@ -751,3 +752,72 @@ Alex, Sam, and Priya are in a group. Alex is looking at the page.
 3. Under **Obligations**, check that each line names the people and the
    expense. If you owe something and have fewer credits than the amount, look
    for the hint under **Settle with credits**.
+
+---
+
+## Task 7 — Make Friends & Groups readable at scale
+
+**Status:** implemented on `Anish-feature-branch`.
+
+### The problem in one sentence
+
+The page stacked every form, expense, and obligation in one long column, used
+undefined color tokens so buttons had no accent or focus ring, and would keep
+growing as a group added history.
+
+### What you will see
+
+The page now follows the Personal Finance layout:
+
+1. **Hero and group switcher.** The wallet chip sits in the header. Groups
+   stay in one horizontally scrolling row. **New group** hides the create
+   form once you already have a group.
+2. **Summary cards.** Members, Your credits, You owe, and You are owed. The
+   last two are read-only sums of confirmed outstanding obligations.
+3. **Update the group.** A collapsible section, open only when the group has
+   no expenses yet, holds Add member, Fund credits, and Add an expense.
+4. **Group activity tabs.** Obligations, Expenses, and Notifications. Each
+   tab shows a count. Obligations also shows a "to do" badge when you need to
+   approve or settle. The page opens on Obligations in that case, otherwise
+   on Expenses.
+5. **Filters and paging.** Obligations: All, Needs your action, Open,
+   Settled. Expenses: All, Paid by you. Each list starts at 6 items; **Show
+   more** adds 6 at a time.
+6. **Focus.** Group buttons now use the same primary, secondary, and
+   destructive styles as Personal Finance, with a visible focus ring on tabs,
+   chips, the switcher, the accordion, and form controls.
+
+Signing, settlement, and ResContract behavior are unchanged.
+
+### Files changed
+
+| File                                               | What it does now                                                |
+| -------------------------------------------------- | --------------------------------------------------------------- |
+| `client/src/features/groups/activity.ts`           | Filters, counts, paging, and the You owe / You are owed totals. |
+| `client/src/features/groups/GroupActivityTabs.tsx` | Tab list, filters, and Show more.                               |
+| `client/src/features/groups/ObligationsList.tsx`   | Approve, reject, and settle cards.                              |
+| `client/src/features/groups/GroupsDashboard.tsx`   | Hero, switcher, summary, and the Update the group accordion.    |
+| `client/src/features/groups/groupActions.ts`       | Shared signing helpers moved out of the dashboard file.         |
+| `client/src/app/styles.css`                        | Page tokens, spacing, tabs, chips, and focus rings.             |
+| `client/src/features/groups/activity.test.ts`      | Unit tests for filters, counts, paging, and cent totals.        |
+| `tests/e2e/groups-dashboard.spec.ts`               | Tabs, filters, paging, and keyboard focus.                      |
+| `tests/e2e-live/local-handoff.spec.ts`             | Opens Update the group before using the funding form.           |
+
+### How it was tested
+
+- Type check, lint, formatting, and production build: pass.
+- Unit tests: 24 of 24 group tests pass, including filters, counts, paging
+  boundaries, and You owe / You are owed totals in integer cents.
+- Browser tests (Chromium, mocked server): 8 of 8 pass. The new cases check
+  that Obligations opens when something needs your action, filter counts,
+  Show more on 14 mocked expenses, keyboard Tab reaching buttons with a
+  visible outline, and light/dark screenshots at desktop and mobile widths.
+
+### How to try it yourself
+
+1. Open **Friends & Groups**. Pick a group from the chip row, or use
+   **New group** if you need to create one.
+2. Check the summary cards, then open **Update the group** if you need to add
+   a member, fund credits, or add an expense.
+3. Use the activity tabs and filter chips. If a list is longer than six
+   items, use **Show more**. Tab to a button and confirm the focus ring.

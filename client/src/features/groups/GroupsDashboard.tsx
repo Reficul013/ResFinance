@@ -1,15 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
-import {
-  formatIntentTimestamp,
-  hashParameters,
-  signIntent,
-  type JsonValue,
-  type SignedIntent,
-} from "../auth/reswallet";
+import type { JsonValue } from "../auth/reswallet";
 import { formatUsd, usdToMinorUnits } from "../finance/money";
-import { ExpensesPanel } from "./ExpensesPanel";
-import { PersonName } from "./MemberName";
+import { groupTotals } from "./activity";
+import { ActionFeedback, errorMessage } from "./ActionFeedback";
+import { GroupActivityTabs } from "./GroupActivityTabs";
+import {
+  isGroupWritePending,
+  requestSignature,
+  type Dashboard,
+  type GroupOverview,
+} from "./groupActions";
 import { MembersMenu } from "./MembersMenu";
 import { memberDisplayName, shortAddress } from "./members";
 import {
@@ -20,11 +21,7 @@ import {
   type SplitRow,
 } from "./split";
 import { SplitEditor } from "./SplitEditor";
-import {
-  useGroupAction,
-  type GroupAction,
-  type GroupActionSteps,
-} from "./useGroupAction";
+import { useGroupAction } from "./useGroupAction";
 import { useGroupsDashboard } from "./useGroupsDashboard";
 
 interface Props {
@@ -34,72 +31,47 @@ interface Props {
 
 export function GroupsDashboard({ accessToken, actorAddress }: Props) {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const createPanelId = useId();
   const dashboard = useGroupsDashboard(accessToken, selectedGroupId);
+  const groups = dashboard.groups.data;
+  const hasGroups = groups !== undefined && groups.length > 0;
+  const showCreate = creating || (groups !== undefined && groups.length === 0);
 
   useEffect(() => {
-    if (
-      selectedGroupId === null &&
-      dashboard.groups.data !== undefined &&
-      dashboard.groups.data.length > 0
-    ) {
-      setSelectedGroupId(dashboard.groups.data[0]!.group_id);
+    if (selectedGroupId === null && groups !== undefined && groups.length > 0) {
+      setSelectedGroupId(groups[0]!.group_id);
     }
-  }, [dashboard.groups.data, selectedGroupId]);
+  }, [groups, selectedGroupId]);
 
   return (
-    <div className="dashboard groups-dashboard">
-      <header className="dashboard-header">
-        <div>
+    <div className="groups-dashboard">
+      <section className="dashboard-header" aria-labelledby="groups-title">
+        <div className="dashboard-hero-copy">
           <p className="eyebrow">Friends &amp; Groups</p>
-          <h1>Shared expenses, signed by every participant.</h1>
+          <h1 id="groups-title">
+            Shared expenses, signed by every participant.
+          </h1>
           <p className="lede">
             ResContract is authoritative for obligations and settlements.
             Finance changes only after an immutable contract receipt is
             confirmed.
           </p>
         </div>
-        <span className="provenance-chip">
-          Wallet {shortAddress(actorAddress)}
-        </span>
-      </header>
+        <span className="wallet-chip">Wallet {shortAddress(actorAddress)}</span>
+      </section>
 
-      <CreateGroupPanel
-        pending={dashboard.create.isPending}
-        onCreate={async (name, displayName) => {
-          const groupId = `group-${crypto.randomUUID()}`;
-          await dashboard.create.mutateAsync({
-            idempotencyKey: `create-${groupId}`,
-            body: {
-              group_id: groupId,
-              name,
-              owner_display_name: displayName,
-              expected_version: 0,
-            },
-          });
-          setSelectedGroupId(groupId);
-        }}
-      />
-
-      {dashboard.groups.isLoading && (
-        <DashboardState text="Loading your groups…" />
-      )}
-      {dashboard.groups.isError && (
-        <DashboardState text={errorMessage(dashboard.groups.error)} error />
-      )}
-      {dashboard.groups.data !== undefined &&
-        dashboard.groups.data.length === 0 && (
-          <p className="empty-copy">
-            No groups yet. Create one above, then add friends by wallet address
-            to start splitting expenses.
-          </p>
-        )}
-      {dashboard.groups.data !== undefined &&
-        dashboard.groups.data.length > 0 && (
+      {hasGroups && (
+        <div className="group-bar">
           <nav className="group-switcher" aria-label="Your groups">
-            {dashboard.groups.data.map((group) => (
+            {groups.map((group) => (
               <button
                 key={group.group_id}
-                className={group.group_id === selectedGroupId ? "active" : ""}
+                type="button"
+                className="group-chip"
+                aria-current={
+                  group.group_id === selectedGroupId ? "true" : undefined
+                }
                 onClick={() => setSelectedGroupId(group.group_id)}
               >
                 <strong>{group.name}</strong>
@@ -110,7 +82,51 @@ export function GroupsDashboard({ accessToken, actorAddress }: Props) {
               </button>
             ))}
           </nav>
-        )}
+          <button
+            type="button"
+            className="secondary-button new-group-button"
+            aria-expanded={creating}
+            aria-controls={createPanelId}
+            onClick={() => setCreating((current) => !current)}
+          >
+            {creating ? "Close new group" : "New group"}
+          </button>
+        </div>
+      )}
+
+      {showCreate && (
+        <CreateGroupPanel
+          id={createPanelId}
+          pending={dashboard.create.isPending}
+          onCreate={async (name, displayName) => {
+            const groupId = `group-${crypto.randomUUID()}`;
+            await dashboard.create.mutateAsync({
+              idempotencyKey: `create-${groupId}`,
+              body: {
+                group_id: groupId,
+                name,
+                owner_display_name: displayName,
+                expected_version: 0,
+              },
+            });
+            setSelectedGroupId(groupId);
+            setCreating(false);
+          }}
+        />
+      )}
+
+      {dashboard.groups.isLoading && (
+        <DashboardState text="Loading your groups…" />
+      )}
+      {dashboard.groups.isError && (
+        <DashboardState text={errorMessage(dashboard.groups.error)} error />
+      )}
+      {groups !== undefined && groups.length === 0 && (
+        <p className="empty-state">
+          No groups yet. Create one above, then add friends by wallet address to
+          start splitting expenses.
+        </p>
+      )}
 
       {selectedGroupId !== null && dashboard.overview.isLoading && (
         <DashboardState text="Refreshing the group data…" />
@@ -120,6 +136,7 @@ export function GroupsDashboard({ accessToken, actorAddress }: Props) {
       )}
       {dashboard.overview.data !== undefined && (
         <GroupWorkspace
+          key={dashboard.overview.data.group_id}
           actorAddress={actorAddress}
           group={dashboard.overview.data}
           dashboard={dashboard}
@@ -128,9 +145,6 @@ export function GroupsDashboard({ accessToken, actorAddress }: Props) {
     </div>
   );
 }
-
-type Dashboard = ReturnType<typeof useGroupsDashboard>;
-type GroupOverview = NonNullable<Dashboard["overview"]["data"]>;
 
 function GroupWorkspace({
   actorAddress,
@@ -141,57 +155,86 @@ function GroupWorkspace({
   group: GroupOverview;
   dashboard: Dashboard;
 }) {
+  const [updateOpen, setUpdateOpen] = useState(group.expenses.length === 0);
+  const totals = groupTotals(group.obligations, actorAddress);
   return (
-    <>
-      <section className="group-overview panel">
+    <section className="group-workspace" aria-labelledby="group-name">
+      <div className="dashboard-section-heading group-heading">
         <div>
-          <p className="eyebrow">Active group</p>
-          <h2>{group.name}</h2>
+          <p className="section-kicker">Active group</p>
+          <h2 id="group-name">{group.name}</h2>
           <p>{group.credit_disclaimer}</p>
         </div>
-        <dl className="group-metrics">
-          <div>
-            <dt>Members</dt>
-            <dd>
-              <MembersMenu
-                actorAddress={actorAddress}
-                ownerAddress={group.owner_address}
-                members={group.members}
-              />
-            </dd>
-          </div>
-          <div>
-            <dt>Your credits</dt>
-            <dd>
-              {formatUsd(group.credit_balances[actorAddress]?.minor_units ?? 0)}
-            </dd>
-          </div>
-        </dl>
-      </section>
-
-      <div className="group-actions-grid">
-        {group.owner_address === actorAddress && (
-          <AddMemberPanel group={group} dashboard={dashboard} />
-        )}
-        <FundCreditsPanel
-          actorAddress={actorAddress}
-          group={group}
-          dashboard={dashboard}
-        />
-        <CreateExpensePanel
-          actorAddress={actorAddress}
-          group={group}
-          dashboard={dashboard}
-        />
       </div>
 
-      <ExpensesPanel actorAddress={actorAddress} group={group} />
-      <ObligationsPanel
+      <section
+        className="summary-grid group-summary-grid"
+        aria-label="Group summary"
+      >
+        <article className="metric-card">
+          <p>Members</p>
+          <div className="metric-value">
+            <MembersMenu
+              actorAddress={actorAddress}
+              ownerAddress={group.owner_address}
+              members={group.members}
+            />
+          </div>
+          <small>Open the list to copy wallet addresses</small>
+        </article>
+        <article className="metric-card">
+          <p>Your credits</p>
+          <strong>
+            {formatUsd(group.credit_balances[actorAddress]?.minor_units ?? 0)}
+          </strong>
+          <small>Internal, non-redeemable settlement credits</small>
+        </article>
+        <article className="metric-card">
+          <p>You owe</p>
+          <strong>{formatUsd(totals.oweMinorUnits)}</strong>
+          <small>Approved obligations still outstanding</small>
+        </article>
+        <article className="metric-card">
+          <p>You are owed</p>
+          <strong>{formatUsd(totals.owedMinorUnits)}</strong>
+          <small>Approved obligations others still owe you</small>
+        </article>
+      </section>
+
+      <details
+        className="entry-accordion group-update"
+        open={updateOpen}
+        onToggle={(event) => setUpdateOpen(event.currentTarget.open)}
+      >
+        <summary>
+          <span>Update the group</span>
+          <small>
+            Every change is approved in ResWallet and confirmed by ResContract.
+          </small>
+        </summary>
+        <div className="group-entry-grid">
+          {group.owner_address === actorAddress && (
+            <AddMemberPanel group={group} dashboard={dashboard} />
+          )}
+          <FundCreditsPanel
+            actorAddress={actorAddress}
+            group={group}
+            dashboard={dashboard}
+          />
+          <CreateExpensePanel
+            actorAddress={actorAddress}
+            group={group}
+            dashboard={dashboard}
+          />
+        </div>
+      </details>
+
+      <GroupActivityTabs
         actorAddress={actorAddress}
         group={group}
         dashboard={dashboard}
       />
-      <NotificationsPanel group={group} />
+
       <footer className="provenance-footer">
         <strong>Data Freshness and Provenance</strong>
         <span>Projection v{group.provenance.projection_version}</span>
@@ -200,14 +243,16 @@ function GroupWorkspace({
         </span>
         <span>{formatTimestamp(group.provenance.as_of_utc)}</span>
       </footer>
-    </>
+    </section>
   );
 }
 
 function CreateGroupPanel({
+  id,
   pending,
   onCreate,
 }: {
+  id: string;
   pending: boolean;
   onCreate(name: string, displayName: string): Promise<void>;
 }) {
@@ -215,12 +260,15 @@ function CreateGroupPanel({
   const [displayName, setDisplayName] = useState("");
   const action = useGroupAction();
   return (
-    <section className="panel compact-form">
-      <div>
-        <p className="eyebrow">New group</p>
-        <h2>Create a shared ledger</h2>
+    <section id={id} className="panel create-group-panel">
+      <div className="section-heading compact">
+        <div>
+          <p className="section-kicker">New group</p>
+          <h2>Create a shared ledger</h2>
+        </div>
       </div>
       <form
+        className="group-form create-group-form"
         onSubmit={(event) => {
           event.preventDefault();
           void action.run(async () => {
@@ -230,23 +278,23 @@ function CreateGroupPanel({
           });
         }}
       >
-        <label>
-          Group name
+        <label className="form-field">
+          <span>Group name</span>
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
             required
           />
         </label>
-        <label>
-          Your display name
+        <label className="form-field">
+          <span>Your display name</span>
           <input
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
             required
           />
         </label>
-        <button disabled={pending || action.busy}>
+        <button className="primary-button" disabled={pending || action.busy}>
           {pending ? "Creating…" : "Create group"}
         </button>
       </form>
@@ -266,9 +314,10 @@ function AddMemberPanel({
   const [name, setName] = useState("");
   const action = useGroupAction();
   return (
-    <section className="panel compact-form">
-      <h2>Add member</h2>
+    <section className="entry-form-card member-form">
+      <h3>Add member</h3>
       <form
+        className="group-form"
         onSubmit={(event) => {
           event.preventDefault();
           void action.run(async () => {
@@ -287,28 +336,32 @@ function AddMemberPanel({
           });
         }}
       >
-        <label>
-          Wallet address
+        <label className="form-field">
+          <span>Wallet address</span>
           <input
             value={address}
             onChange={(event) => setAddress(event.target.value)}
             pattern="0x[0-9a-fA-F]{40}"
+            placeholder="0x…"
             required
           />
         </label>
-        <label>
-          Display name
+        <label className="form-field">
+          <span>Display name</span>
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
             required
           />
         </label>
-        <button disabled={isGroupWritePending(dashboard) || action.busy}>
+        <button
+          className="primary-button form-action"
+          disabled={isGroupWritePending(dashboard) || action.busy}
+        >
           Add member
         </button>
+        <ActionFeedback action={action} />
       </form>
-      <ActionFeedback action={action} />
     </section>
   );
 }
@@ -325,12 +378,10 @@ function FundCreditsPanel({
   const [amount, setAmount] = useState("");
   const action = useGroupAction();
   return (
-    <section className="panel compact-form">
-      <h2>Fund internal credits</h2>
-      <p className="form-note">
-        Non-redeemable ledger credits only; no fiat or crypto moves.
-      </p>
+    <section className="entry-form-card credits-form">
+      <h3>Fund internal credits</h3>
       <form
+        className="group-form"
         onSubmit={(event) => {
           event.preventDefault();
           void action.run(async ({ sign }) => {
@@ -356,8 +407,13 @@ function FundCreditsPanel({
           });
         }}
       >
-        <label>
-          Credit amount (USD units)
+        <p className="form-hint">
+          Non-redeemable ledger credits only; no fiat or crypto moves. Funding
+          wallet:{" "}
+          <span className="funding-wallet">{shortAddress(actorAddress)}</span>
+        </p>
+        <label className="form-field">
+          <span>Credit amount (USD units)</span>
           <input
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
@@ -366,12 +422,14 @@ function FundCreditsPanel({
             required
           />
         </label>
-        <button disabled={isGroupWritePending(dashboard) || action.busy}>
+        <button
+          className="primary-button form-action"
+          disabled={isGroupWritePending(dashboard) || action.busy}
+        >
           Approve funding in ResWallet
         </button>
+        <ActionFeedback action={action} />
       </form>
-      <p className="form-note">Funding wallet: {shortAddress(actorAddress)}</p>
-      <ActionFeedback action={action} />
     </section>
   );
 }
@@ -410,9 +468,10 @@ function CreateExpensePanel({
     memberDisplayName(group.members, actorAddress) ??
     shortAddress(actorAddress);
   return (
-    <section className="panel expense-form">
-      <h2>Add an expense</h2>
+    <section className="entry-form-card expense-form">
+      <h3>Add an expense</h3>
       <form
+        className="group-form expense-fields"
         onSubmit={(event) => {
           event.preventDefault();
           void action.run(async ({ sign }) => {
@@ -468,25 +527,26 @@ function CreateExpensePanel({
           });
         }}
       >
-        <label>
-          Description
+        <label className="form-field">
+          <span>Description</span>
           <input
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             required
           />
         </label>
-        <label>
-          Total amount
+        <label className="form-field">
+          <span>Total amount</span>
           <input
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
             inputMode="decimal"
+            placeholder="0.00"
             required
           />
         </label>
-        <label>
-          Expense date
+        <label className="form-field">
+          <span>Expense date</span>
           <input
             type="date"
             value={occurredOn}
@@ -494,8 +554,8 @@ function CreateExpensePanel({
             required
           />
         </label>
-        <label>
-          Due date
+        <label className="form-field">
+          <span>Due date</span>
           <input
             type="date"
             value={dueOn}
@@ -528,293 +588,18 @@ function CreateExpensePanel({
             setShareAmounts((current) => ({ ...current, [address]: value }))
           }
         />
-        <button disabled={isGroupWritePending(dashboard) || action.busy}>
-          Approve split in ResWallet
-        </button>
+        <div className="expense-submit wide-field">
+          <button
+            className="primary-button form-action"
+            disabled={isGroupWritePending(dashboard) || action.busy}
+          >
+            Approve split in ResWallet
+          </button>
+          <ActionFeedback action={action} />
+        </div>
       </form>
-      <ActionFeedback action={action} />
     </section>
   );
-}
-
-function ObligationsPanel({
-  actorAddress,
-  group,
-  dashboard,
-}: {
-  actorAddress: string;
-  group: GroupOverview;
-  dashboard: Dashboard;
-}) {
-  const [settlements, setSettlements] = useState<Record<string, string>>({});
-  const action = useGroupAction();
-  const yourCredits = group.credit_balances[actorAddress]?.minor_units ?? 0;
-  const expenseNames = new Map(
-    group.expenses.map((expense) => [expense.expense_id, expense.description]),
-  );
-  return (
-    <section
-      className="panel obligations-panel"
-      aria-labelledby="obligations-title"
-    >
-      <div className="panel-heading">
-        <div>
-          <p className="eyebrow">Contract state</p>
-          <h2 id="obligations-title">Obligations</h2>
-        </div>
-        <span className="provenance-chip">
-          {group.obligations.length} total
-        </span>
-      </div>
-      {group.obligations.length === 0 ? (
-        <p className="empty-copy">
-          No obligations yet. Create a shared expense to begin.
-        </p>
-      ) : (
-        <div className="obligation-list">
-          {group.obligations.map((obligation) => {
-            const isDebtor = obligation.debtor_address === actorAddress;
-            const maySettle =
-              isDebtor &&
-              ["open", "partially_settled"].includes(obligation.status);
-            return (
-              <article
-                key={obligation.obligation_id}
-                className="obligation-card"
-              >
-                <div>
-                  <span className={`status-pill ${obligation.status}`}>
-                    {obligation.status.replace("_", " ")}
-                  </span>
-                  <h3>
-                    {formatUsd(obligation.outstanding_amount.minor_units)}{" "}
-                    outstanding
-                  </h3>
-                  <p className="obligation-parties">
-                    <PersonName
-                      address={obligation.debtor_address}
-                      members={group.members}
-                      actorAddress={actorAddress}
-                    />{" "}
-                    {isDebtor ? "owe" : "owes"}{" "}
-                    <PersonName
-                      address={obligation.creditor_address}
-                      members={group.members}
-                      actorAddress={actorAddress}
-                      capitalized={false}
-                    />
-                    {expenseNames.has(obligation.expense_id) &&
-                      ` for ${expenseNames.get(obligation.expense_id)}`}
-                  </p>
-                  <p>
-                    Original {formatUsd(obligation.amount.minor_units)}
-                    {obligation.settled_amount.minor_units > 0 &&
-                      ` · ${formatUsd(obligation.settled_amount.minor_units)} settled`}
-                  </p>
-                </div>
-                {isDebtor && obligation.status === "pending" && (
-                  <div className="inline-actions">
-                    {(["approve", "reject"] as const).map((decision) => (
-                      <button
-                        key={decision}
-                        className={decision === "reject" ? "secondary" : ""}
-                        disabled={isGroupWritePending(dashboard) || action.busy}
-                        onClick={() =>
-                          void action.run((steps) =>
-                            decideObligation(
-                              dashboard,
-                              group,
-                              obligation.obligation_id,
-                              decision,
-                              steps,
-                            ),
-                          )
-                        }
-                      >
-                        {decision === "approve"
-                          ? "Approve in ResWallet"
-                          : "Reject"}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {maySettle && (
-                  <form
-                    className="inline-settlement"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      const amount =
-                        settlements[obligation.obligation_id] ?? "";
-                      void action.run((steps) =>
-                        settleObligation(
-                          dashboard,
-                          group,
-                          obligation.obligation_id,
-                          amount,
-                          steps,
-                        ),
-                      );
-                    }}
-                  >
-                    <label>
-                      Partial or full amount
-                      <input
-                        value={settlements[obligation.obligation_id] ?? ""}
-                        onChange={(event) =>
-                          setSettlements((current) => ({
-                            ...current,
-                            [obligation.obligation_id]: event.target.value,
-                          }))
-                        }
-                        placeholder={(
-                          obligation.outstanding_amount.minor_units / 100
-                        ).toFixed(2)}
-                        inputMode="decimal"
-                        required
-                      />
-                    </label>
-                    <button
-                      disabled={isGroupWritePending(dashboard) || action.busy}
-                    >
-                      Settle with credits
-                    </button>
-                    {yourCredits <
-                      obligation.outstanding_amount.minor_units && (
-                      <p className="form-note settle-hint">
-                        You have {formatUsd(yourCredits)} in credits. Fund{" "}
-                        {formatUsd(
-                          obligation.outstanding_amount.minor_units -
-                            yourCredits,
-                        )}{" "}
-                        more under Fund internal credits to settle this in full.
-                      </p>
-                    )}
-                  </form>
-                )}
-              </article>
-            );
-          })}
-        </div>
-      )}
-      <ActionFeedback action={action} />
-    </section>
-  );
-}
-
-function NotificationsPanel({ group }: { group: GroupOverview }) {
-  return (
-    <section className="panel notifications-panel">
-      <h2>Notifications</h2>
-      {group.notifications.length === 0 ? (
-        <p className="empty-copy">No new group notifications.</p>
-      ) : (
-        <ul>
-          {group.notifications.map((notice) => (
-            <li key={notice.notification_id}>
-              <strong>{notice.kind.replaceAll("_", " ")}</strong>
-              <span>{notice.message}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-async function decideObligation(
-  dashboard: Dashboard,
-  group: GroupOverview,
-  obligationId: string,
-  decision: "approve" | "reject",
-  { sign }: GroupActionSteps,
-) {
-  const parameters = {
-    group_id: group.group_id,
-    obligation_id: obligationId,
-    decision,
-    expected_version: group.provenance.projection_version,
-  };
-  const intent = await sign(
-    requestSignature("split.approve", obligationId, parameters),
-  );
-  await dashboard.decision.mutateAsync({
-    groupId: group.group_id,
-    obligationId,
-    idempotencyKey: `decision-${intent.intent_id}`,
-    body: {
-      decision,
-      expected_version: group.provenance.projection_version,
-      intent,
-    },
-  });
-}
-
-async function settleObligation(
-  dashboard: Dashboard,
-  group: GroupOverview,
-  obligationId: string,
-  amount: string,
-  { sign }: GroupActionSteps,
-) {
-  const amountMinorUnits = usdToMinorUnits(amount);
-  const parameters = {
-    group_id: group.group_id,
-    obligation_id: obligationId,
-    amount_minor_units: amountMinorUnits,
-    expected_version: group.provenance.projection_version,
-  };
-  const intent = await sign(
-    requestSignature("settlement.authorize", obligationId, parameters),
-  );
-  await dashboard.settlement.mutateAsync({
-    groupId: group.group_id,
-    obligationId,
-    idempotencyKey: `settlement-${intent.intent_id}`,
-    body: {
-      amount: { currency: "USD", minor_units: amountMinorUnits },
-      expected_version: group.provenance.projection_version,
-      intent,
-    },
-  });
-}
-
-type ContractAction = "split.approve" | "credits.fund" | "settlement.authorize";
-
-function isGroupWritePending(dashboard: Dashboard): boolean {
-  return (
-    dashboard.member.isPending ||
-    dashboard.expense.isPending ||
-    dashboard.decision.isPending ||
-    dashboard.credits.isPending ||
-    dashboard.settlement.isPending
-  );
-}
-
-async function requestSignature(
-  action: ContractAction,
-  resourceId: string,
-  parameters: Record<string, JsonValue>,
-): Promise<SignedIntent & { action: ContractAction }> {
-  const issuedAt = new Date();
-  const signed = await signIntent({
-    version: 1,
-    intent_id: crypto.randomUUID(),
-    action,
-    resource_id: resourceId,
-    parameters,
-    parameters_hash: await hashParameters(parameters),
-    nonce: crypto.randomUUID(),
-    issued_at: formatIntentTimestamp(issuedAt),
-    expires_at: formatIntentTimestamp(
-      new Date(issuedAt.getTime() + 5 * 60 * 1000),
-    ),
-    origin: window.location.origin,
-    audience: "resfinance-api",
-    network_id: "pinned-local-network",
-  });
-  if (signed.action !== action)
-    throw new Error("ResWallet signed another action");
-  return { ...signed, action };
 }
 
 function DashboardState({
@@ -826,44 +611,13 @@ function DashboardState({
 }) {
   return (
     <section
-      className={`dashboard-state ${error ? "error" : ""}`}
+      className={`dashboard-state ${error ? "error-state" : ""}`}
       aria-live="polite"
     >
       <span className="loading-orb" aria-hidden="true" />
       <h2>{text}</h2>
     </section>
   );
-}
-
-function ActionFeedback({ action }: { action: GroupAction }) {
-  if (action.status === "signing")
-    return (
-      <p className="form-status" role="status">
-        <span className="loading-orb" aria-hidden="true" />
-        Waiting for your approval in ResWallet. If no ResWallet window appeared,
-        check behind this browser window, or reload the page and try again.
-      </p>
-    );
-  if (action.status === "saving")
-    return (
-      <p className="form-status" role="status">
-        <span className="loading-orb" aria-hidden="true" />
-        Saving to the group…
-      </p>
-    );
-  return <MutationError error={action.error} />;
-}
-
-function MutationError({ error }: { error: Error | null }) {
-  return error === null ? null : (
-    <p className="form-error" role="alert">
-      {errorMessage(error)}
-    </p>
-  );
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "The group request failed.";
 }
 
 function formatTimestamp(value: string | null): string {

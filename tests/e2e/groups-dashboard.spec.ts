@@ -141,6 +141,10 @@ test("approves and settles an obligation partially and fully", async ({
       name: "Shared expenses, signed by every participant.",
     }),
   ).toBeVisible();
+  await expect(page.getByRole("tab", { name: /^Obligations/ })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
   await expect(page.getByText("$60.00 outstanding")).toBeVisible();
 
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
@@ -209,11 +213,12 @@ test("approves and settles an obligation partially and fully", async ({
     "You have $0.00 in credits. Fund $60.00 more under Fund internal credits to settle this in full.",
   );
 
+  await expect(summaryValue(page, "You owe")).toHaveText("$60.00");
   await page.getByLabel("Credit amount (USD units)").fill("60.00");
   await page
     .getByRole("button", { name: "Approve funding in ResWallet" })
     .click();
-  await expect(page.getByText("$60.00", { exact: true })).toBeVisible();
+  await expect(summaryValue(page, "Your credits")).toHaveText("$60.00");
   await expect(page.locator(".settle-hint")).toHaveCount(0);
 
   await page.getByLabel("Partial or full amount").fill("20.00");
@@ -227,10 +232,13 @@ test("approves and settles an obligation partially and fully", async ({
   await page.getByRole("button", { name: "Settle with credits" }).click();
   await expect(page.getByText("$0.00 outstanding")).toBeVisible();
   await expect(page.getByText("settled", { exact: true })).toBeVisible();
+  await expect(summaryValue(page, "You owe")).toHaveText("$0.00");
   await expect(page.getByText(/non-redeemable, non-monetary/)).toBeVisible();
   await expect(page.getByText("Data Freshness and Provenance")).toBeVisible();
   await expect(
-    page.locator(".group-overview").getByText("Projection", { exact: true }),
+    page
+      .locator(".group-summary-grid")
+      .getByText("Projection", { exact: true }),
   ).toHaveCount(0);
   await expect(page.getByText(/Projection v5/)).toBeVisible();
   await expect(page.getByText(/5 encrypted source events/)).toBeVisible();
@@ -355,9 +363,7 @@ test("shows validation and signing failures inside the affected form", async ({
     "User rejected the request in ResWallet",
   );
 
-  const creditForm = page
-    .locator("section")
-    .filter({ hasText: "Fund internal credits" });
+  const creditForm = page.locator(".credits-form");
   await creditForm.getByLabel("Credit amount (USD units)").fill("0");
   await creditForm
     .getByRole("button", { name: "Approve funding in ResWallet" })
@@ -625,8 +631,20 @@ test("lists expenses and obligations by name", async ({ page }) => {
   );
 
   await page.goto("/groups");
+  const obligationsTab = page.getByRole("tab", { name: /^Obligations/ });
+  const expensesTab = page.getByRole("tab", { name: /^Expenses/ });
+  await expect(obligationsTab).toHaveAttribute("aria-selected", "true");
+  await expect(obligationsTab.locator(".tab-count")).toHaveText("3");
+  await expect(obligationsTab.locator(".tab-badge")).toHaveText("1 to do");
+  await expect(page.locator("details.group-update")).not.toHaveAttribute(
+    "open",
+  );
+  await expect(summaryValue(page, "You owe")).toHaveText("$20.00");
+  await expect(summaryValue(page, "You are owed")).toHaveText("$20.00");
+  await expensesTab.click();
   const expenses = page.locator(".expenses-panel");
-  await expect(expenses.getByText("2 total")).toBeVisible();
+  await expect(expensesTab.locator(".tab-count")).toHaveText("2");
+  await expect(expenses.getByText("Showing 2 of 2")).toBeVisible();
   const cards = expenses.locator(".expense-card");
   await expect(cards).toHaveCount(2);
 
@@ -663,7 +681,10 @@ test("lists expenses and obligations by name", async ({ page }) => {
   await dinnerSam.hover();
   await expect(dinnerSam.getByRole("tooltip")).toBeVisible();
   await expect(dinnerSam.getByRole("tooltip")).toHaveText(debtor);
+  await page.mouse.move(0, 0);
+  await expenses.screenshot({ path: "test-results/groups-expenses.png" });
 
+  await obligationsTab.click();
   const obligations = page.locator(".obligation-card");
   await expect(obligations.locator(".obligation-parties")).toHaveText(
     [
@@ -686,16 +707,135 @@ test("lists expenses and obligations by name", async ({ page }) => {
     "You have $5.00 in credits. Fund $15.00 more under Fund internal credits to settle this in full.",
   );
   await expect(obligations.nth(0).locator(".settle-hint")).toHaveCount(0);
-  await expect(page.getByText("No new group notifications.")).toBeVisible();
-
-  await page.mouse.move(0, 0);
-  await page.locator(".expenses-panel").screenshot({
-    path: "test-results/groups-expenses.png",
-  });
   await page.locator(".obligations-panel").screenshot({
     path: "test-results/groups-obligations.png",
   });
+
+  const filters = page.getByRole("group", { name: "Filter obligations" });
+  await expect(filters.locator(".chip-count")).toHaveText(["3", "1", "3", "0"]);
+  await expect(filters.getByRole("button", { name: /^All/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await filters.getByRole("button", { name: /^Needs your action/ }).click();
+  await expect(obligations.locator(".obligation-parties")).toHaveText(
+    [words("You owe Sam for Taxi")],
+    { useInnerText: true },
+  );
+  await filters.getByRole("button", { name: /^Settled/ }).click();
+  await expect(
+    page.getByText("No obligations match this filter."),
+  ).toBeVisible();
+
+  await page.getByRole("tab", { name: /^Notifications/ }).click();
+  await expect(page.getByText("No new group notifications.")).toBeVisible();
 });
+
+test("pages long expense histories and keeps focus visible", async ({
+  page,
+}) => {
+  const usd = (minor_units: number) => ({ currency: "USD", minor_units });
+  const expenses = Array.from({ length: 14 }, (_, index) => ({
+    expense_id: `expense-${index}`,
+    payer_address: index % 2 === 0 ? creditor : debtor,
+    description: `Expense ${index + 1}`,
+    amount: usd(1000 + index),
+    occurred_on: `2026-10-${String(index + 1).padStart(2, "0")}`,
+    shares: { [creditor]: usd(500), [debtor]: usd(500 + index) },
+    obligation_ids: [],
+    source_event_id: `evt-expense-${index}`,
+    contract_receipts: [`receipt-expense-${index}`],
+  }));
+  await mockSession(page, creditor);
+  await mockGroup(
+    page,
+    [
+      { address: creditor, name: "Alex" },
+      { address: debtor, name: "Sam" },
+    ],
+    { expenses },
+  );
+
+  await page.goto("/groups");
+  const expensesTab = page.getByRole("tab", { name: /^Expenses/ });
+  await expect(expensesTab).toHaveAttribute("aria-selected", "true");
+  const panel = page.locator(".expenses-panel");
+  const cards = panel.locator(".expense-card");
+  await expect(cards).toHaveCount(6);
+  await expect(cards.first().getByRole("heading")).toHaveText("Expense 14");
+  await expect(panel.getByText("Showing 6 of 14")).toBeVisible();
+
+  await panel.getByRole("button", { name: "Show 6 more" }).click();
+  await expect(cards).toHaveCount(12);
+  await panel.getByRole("button", { name: "Show 2 more" }).click();
+  await expect(cards).toHaveCount(14);
+  await expect(
+    panel.getByRole("button", { name: /^Show \d+ more$/ }),
+  ).toHaveCount(0);
+
+  await panel.getByRole("button", { name: /^Paid by you/ }).click();
+  await expect(cards).toHaveCount(6);
+  await expect(panel.getByText("Showing 6 of 7")).toBeVisible();
+
+  await expensesTab.focus();
+  await page.keyboard.press("ArrowLeft");
+  const obligationsTab = page.getByRole("tab", { name: /^Obligations/ });
+  await expect(obligationsTab).toBeFocused();
+  await expect(obligationsTab).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByText("No obligations yet.")).toBeVisible();
+  await page.keyboard.press("End");
+  await expect(page.getByRole("tab", { name: /^Notifications/ })).toBeFocused();
+
+  const update = page.locator("details.group-update > summary");
+  await update.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("details.group-update")).toHaveAttribute(
+    "open",
+    "",
+  );
+  for (const name of [
+    "Add member",
+    "Approve funding in ResWallet",
+    "Approve split in ResWallet",
+    "New group",
+  ]) {
+    const button = page.getByRole("button", { name });
+    await button.focus();
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
+    await expect(button).toBeFocused();
+    expect(await focusOutline(button)).not.toBe("none");
+  }
+  await page.screenshot({
+    path: "test-results/groups-paged-light.png",
+    fullPage: true,
+  });
+
+  await page.evaluate(() => {
+    document.documentElement.dataset.theme = "dark";
+  });
+  await page.screenshot({
+    path: "test-results/groups-paged-dark.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectInsideViewport(page, page.locator(".activity-tabs"));
+  await page.screenshot({
+    path: "test-results/groups-paged-mobile-dark.png",
+    fullPage: true,
+  });
+});
+
+function summaryValue(page: Page, label: string): Locator {
+  return page
+    .locator(".group-summary-grid .metric-card")
+    .filter({ has: page.getByText(label, { exact: true }) })
+    .locator("strong");
+}
+
+function focusOutline(locator: Locator): Promise<string> {
+  return locator.evaluate((element) => getComputedStyle(element).outlineStyle);
+}
 
 async function mockSplitGroup(page: Page): Promise<ExpenseRequest[]> {
   const posted: ExpenseRequest[] = [];
