@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import torch
 
+from ml.data.datasets import requires_market_only_fallback
 from ml.models.mspciformer import FusionMode, LSTMForecastBaseline, ThreeAssetMSPCIFormer
 
 
@@ -43,3 +44,13 @@ def test_sequence_baseline_outputs_same_forecast_contract() -> None:
 
     assert output.expected_return.shape == (6, 5)
     assert output.quantiles.shape == (6, 5, 3)
+
+
+def test_market_only_fallback_triggers_only_for_missing_non_market_sources() -> None:
+    _, masks, _ = inputs()
+    masks[1, -1, 1, :] = False  # sentiment missing at the decision row
+    masks[2, -1, 2, :] = False  # on-chain missing at the decision row
+    masks[3, -1, 0, :] = False  # market missing does not trigger the source fallback
+    masks[4, :-1, 1, :] = False  # sentiment missing earlier in the window only
+
+    assert requires_market_only_fallback(masks).tolist() == [False, True, True, False, False, False]

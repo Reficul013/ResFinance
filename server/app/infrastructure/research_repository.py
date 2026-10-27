@@ -218,6 +218,7 @@ class ResearchRunRepository:
             "evaluated_model_artifact": manifest.get("evaluated_model_artifact"),
             "deployment_model_artifact": manifest.get("deployment_model_artifact"),
             "deployment_model_hash": _deployment_model_hash(manifest),
+            "fallback_model_artifact": manifest.get("fallback_model_artifact"),
             "checks": passed,
             "approved_by": approved_by,
             "promoted_at_utc": promoted.isoformat().replace("+00:00", "Z"),
@@ -340,6 +341,17 @@ def _validate_manifest(manifest: Mapping[str, object]) -> None:
                 raise ValueError(f"schema-v2 research manifest {field} hash is invalid")
         if not _SHA256.fullmatch(str(artifacts.get("adaptive-calibration.json", ""))):
             raise ValueError("schema-v2 adaptive calibration artifact hash is invalid")
+        calibration = manifest.get("adaptive_calibration")
+        fallback = manifest.get("fallback_model_artifact")
+        if isinstance(calibration, dict) and calibration.get("schema_version") == 2:
+            policy = calibration.get("stale_source_policy")
+            if (
+                not isinstance(fallback, str)
+                or not _SHA256.fullmatch(str(artifacts.get(fallback, "")))
+                or not isinstance(policy, dict)
+                or policy.get("fallback_model_artifact") != fallback
+            ):
+                raise ValueError("schema-v2 market-only fallback model artifact is invalid")
     for field in (
         "dataset_hash",
         "dataset_manifest_hash",

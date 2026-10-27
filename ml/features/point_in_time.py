@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from bisect import bisect_right
 from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -45,6 +46,13 @@ METRIC_TO_FEATURE = {
 }
 
 
+# Non-market sources publish on their own delay (GDELT aggregates are available two days after
+# the day they describe), so each row uses the latest observation already available at its
+# decision time instead of requiring an observation for the row's own calendar day.
+DEFAULT_MAX_SOURCE_AGE = timedelta(days=3)
+_AGE_LOOKBACK_DAYS = 400
+
+
 @dataclass(frozen=True)
 class FeatureDataset:
     dataset_hash: str
@@ -63,9 +71,12 @@ class PointInTimeFeatureBuilder:
         end: date,
         as_of_utc: datetime,
         decision_lag: timedelta = timedelta(days=1),
+        max_source_age: timedelta = DEFAULT_MAX_SOURCE_AGE,
     ) -> FeatureDataset:
         if end < start:
             raise ValueError("feature period end cannot precede start")
+        if max_source_age < timedelta(0):
+            raise ValueError("maximum source age cannot be negative")
         as_of = _utc(as_of_utc)
         parsed_assets = tuple(
             asset if isinstance(asset, CryptoAsset) else CryptoAsset.parse(asset)
@@ -98,6 +109,13 @@ class PointInTimeFeatureBuilder:
                     observation.metric,
                 )
             ].append(observation)
+        observed_days: dict[tuple[CryptoAsset, ObservationChannel, str], list[date]] = defaultdict(
+            list
+        )
+        for asset_key, day, channel_key, metric_key in sorted(
+            indexed, key=lambda key: (key[0].value, key[2].value, key[3], key[1])
+        ):
+            observed_days[(asset_key, channel_key, metric_key)].append(day)
 
         rows: list[dict[str, object]] = []
         record_ids: set[str] = set()
@@ -111,12 +129,29 @@ class PointInTimeFeatureBuilder:
             for asset in parsed_assets:
                 values: dict[str, str | None] = {name: None for name in FEATURE_SCHEMA}
                 masks = {name: False for name in FEATURE_SCHEMA}
+                ages: dict[str, float | None] = {
+                    feature: None for feature in METRIC_TO_FEATURE.values()
+                }
                 provenance: dict[str, str] = {}
                 for (channel, metric), feature in METRIC_TO_FEATURE.items():
-                    selected = _select_point_in_time(
-                        indexed.get((asset, current, channel, metric), []), decision_time
-                    )
+                    if channel is ObservationChannel.MARKET:
+                        # Prices stay strictly same-day so returns never bridge a gap.
+                        selected = _select_point_in_time(
+                            indexed.get((asset, current, channel, metric), []), decision_time
+                        )
+                    else:
+                        selected = _latest_available(
+                            indexed,
+                            observed_days.get((asset, channel, metric), []),
+                            (asset, channel, metric),
+                            current,
+                            decision_time,
+                        )
                     if selected is None:
+                        continue
+                    age = decision_time - selected.available_at_utc
+                    ages[feature] = round(age.total_seconds() / 86_400, 6)
+                    if channel is not ObservationChannel.MARKET and age > max_source_age:
                         continue
                     record_ids.add(selected.record_id)
                     provenance[feature] = selected.record_id
@@ -157,6 +192,7 @@ class PointInTimeFeatureBuilder:
                     "decision_time_utc": decision_time.isoformat().replace("+00:00", "Z"),
                     "values": values,
                     "availability_masks": masks,
+                    "feature_age_days": dict(sorted(ages.items())),
                     "source_masks": source_masks,
                     "source_record_ids": dict(sorted(provenance.items())),
                 }
@@ -177,6 +213,8 @@ class PointInTimeFeatureBuilder:
             "end_date_inclusive": end.isoformat(),
             "as_of_utc": as_of.isoformat().replace("+00:00", "Z"),
             "decision_lag_seconds": int(decision_lag.total_seconds()),
+            "source_alignment": "latest-available-observation",
+            "max_source_age_seconds": int(max_source_age.total_seconds()),
             "row_count": len(rows),
             "source_record_ids": sorted(record_ids),
             "rows_sha256": hashlib.sha256(_canonical_json(rows)).hexdigest(),
@@ -184,6 +222,26 @@ class PointInTimeFeatureBuilder:
         dataset_hash = hashlib.sha256(_canonical_json(manifest_core)).hexdigest()
         manifest = {**manifest_core, "dataset_hash": dataset_hash}
         return FeatureDataset(dataset_hash, tuple(rows), manifest)
+
+
+def _latest_available(
+    indexed: dict[tuple[CryptoAsset, date, ObservationChannel, str], list[ProviderObservation]],
+    days: Sequence[date],
+    key: tuple[CryptoAsset, ObservationChannel, str],
+    current: date,
+    cutoff: datetime,
+) -> ProviderObservation | None:
+    """Newest observation describing ``current`` or earlier that is available by ``cutoff``."""
+    asset, channel, metric = key
+    earliest = current - timedelta(days=_AGE_LOOKBACK_DAYS)
+    for position in range(bisect_right(days, current) - 1, -1, -1):
+        day = days[position]
+        if day < earliest:
+            return None
+        selected = _select_point_in_time(indexed[(asset, day, channel, metric)], cutoff)
+        if selected is not None:
+            return selected
+    return None
 
 
 def _select_point_in_time(

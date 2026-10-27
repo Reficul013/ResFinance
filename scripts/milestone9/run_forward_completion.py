@@ -161,7 +161,7 @@ def main() -> int:
         _write_evidence(args.output, evidence)
         return 2
     promotion_event_id = promotion.key.removeprefix("promotion:forecast:")
-    snapshot = make_snapshot(
+    snapshot, fallback_assets = make_snapshot(
         dataset,
         result=result,
         promotion_event_id=promotion_event_id,
@@ -179,6 +179,8 @@ def main() -> int:
             "forecast_as_of_utc": snapshot.as_of_utc.isoformat().replace("+00:00", "Z"),
             "forecast_expires_at_utc": snapshot.expires_at_utc.isoformat().replace("+00:00", "Z"),
             "forecast_horizon_days": snapshot.horizon_days,
+            "forecast_policy": result.manifest["forecast_policy"],
+            "forecast_market_only_fallback_assets": list(fallback_assets),
             "live_forecast_snapshot_published": True,
         }
     )
@@ -243,7 +245,7 @@ def make_snapshot(
     *,
     result: ForwardResearchResult,
     promotion_event_id: str,
-) -> ForecastSnapshot:
+) -> tuple[ForecastSnapshot, tuple[str, ...]]:
     manifest = result.manifest
     artifacts = result.artifacts
     model_artifact = str(manifest["deployment_model_artifact"])
@@ -252,12 +254,19 @@ def make_snapshot(
     model_hash = restore_checkpoint(model, checkpoint)
     standardizer = standardizer_from_artifact(artifacts[str(manifest["standardizer_artifact"])])
     calibration = cast(dict[str, object], manifest["adaptive_calibration"])
+    fallback_model = None
+    fallback_artifact = manifest.get("fallback_model_artifact")
+    if fallback_artifact:
+        fallback_model = ThreeAssetMSPCIFormer(fusion_mode=FusionMode.MARKET_ONLY)
+        restore_checkpoint(fallback_model, artifacts[str(fallback_artifact)])
     current = infer_current_forecast(
         dataset,
         model=model,
         standardizer=standardizer,
         calibration=calibration,
+        fallback_model=fallback_model,
     )
+    assets = (CryptoAsset.BTC, CryptoAsset.ETH, CryptoAsset.SOL)
     horizon_index = HORIZONS.index(15)
     forecasts = tuple(
         AssetForecast(
@@ -268,11 +277,11 @@ def make_snapshot(
             p50_return=_decimal(current.p50[index, horizon_index]),
             p90_return=_decimal(current.p90[index, horizon_index]),
         )
-        for index, asset in enumerate((CryptoAsset.BTC, CryptoAsset.ETH, CryptoAsset.SOL))
+        for index, asset in enumerate(assets)
     )
     price_history = _price_history(dataset, days=60)
     as_of = datetime.fromisoformat(current.decision_time_utc.replace("Z", "+00:00"))
-    return ForecastSnapshot(
+    snapshot = ForecastSnapshot(
         as_of_utc=as_of,
         expires_at_utc=as_of + timedelta(days=2),
         horizon_days=15,
@@ -284,6 +293,10 @@ def make_snapshot(
         forecasts=forecasts,
         price_history=price_history,
     )
+    fallback_assets = tuple(
+        asset.value for asset, used in zip(assets, current.fallback_used, strict=True) if used
+    )
+    return snapshot, fallback_assets
 
 
 def _price_history(dataset: FeatureDataset, *, days: int) -> tuple[PricePoint, ...]:

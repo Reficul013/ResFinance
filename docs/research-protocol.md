@@ -72,3 +72,26 @@ This protocol is frozen before retrieving or scoring the forward holdout. It is 
 - After a pass, a deployment checkpoint may be refit on all labels mature at the current cutoff using the frozen configuration. Its hash, standardizer, calibration, evaluated checkpoint, dataset, run, and promotion event must be recorded before a forecast snapshot is eligible.
 
 The completion run must report per-model forward metrics, the chosen coefficient and validation scores for every grid value, exact window boundaries, input record IDs, point-in-time cutoff checks, conformal adjustment, evaluated and deployment artifact hashes, and whether holdout labels were consumed. A failed forward run remains useful immutable evidence but cannot publish a live recommendation.
+
+## Forecast policy `no-change-centre-native-heads-v1`
+
+This policy replaces the Milestone 7 reliability-shrinkage candidate for new forward runs.
+It does not reinterpret the recorded `0.0` coefficient result, which remains evidence under
+the schema-v1 calibration.
+
+- **Point-in-time alignment.** Non-market features use the newest observation whose
+  `available_at` is at or before the decision time and whose observed day is at or before
+  the row date. Each row records `feature_age_days`. A source older than the maximum source
+  age (three days) is masked. Market prices remain strictly same-day.
+- **Centre.** The expected return is fixed at zero. No evaluated point forecast beat the
+  zero-return baseline.
+- **Ranges and P(up).** p10/p50/p90 and P(up) come from the adaptive model's native quantile
+  and direction heads. Ranges receive a symmetric split-conformal adjustment from the frozen
+  validation window.
+- **Stale-source switch.** When an asset's sentiment or on-chain source is missing or stale
+  at the decision row, that asset uses the market-only fusion model, persisted as
+  `deployment-checkpoint-market-only.json` and named by `fallback_model_artifact`.
+- **Promotion.** `forecast-promotion-v1` is unchanged. The candidate's point error equals
+  naive MAE by construction, so promotion rests on interval coverage.
+- **Before relying on the gain.** Predeclare a forward-protocol update covering seed
+  averaging, the calibration window, and horizons, and score it on new data.

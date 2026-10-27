@@ -8,12 +8,19 @@ from datetime import UTC, datetime
 import pytest
 import torch
 
-from ml.data.datasets import MaskedStandardizer, build_sequence_dataset
+from ml.data.datasets import MaskedStandardizer, build_inference_batch, build_sequence_dataset
 from ml.data.synthetic import generate_synthetic_feature_dataset
 from ml.evaluation.protocol import expanding_walk_forward
+from ml.features.point_in_time import FeatureDataset
 from ml.models.mspciformer import FusionMode, ThreeAssetMSPCIFormer
 from ml.runs.checkpoints import deterministic_checkpoint, restore_checkpoint
-from ml.runs.forward import ForwardRunConfig, run_forward_research
+from ml.runs.forward import (
+    ForwardResearchResult,
+    ForwardRunConfig,
+    infer_current_forecast,
+    run_forward_research,
+    standardizer_from_artifact,
+)
 from ml.runs.runner import MODEL_ORDER, SmokeRunConfig, run_smoke_research
 from server.app.infrastructure.blob_repository import EncryptedBlobRepository
 from server.app.infrastructure.encryption import AesGcmCipher, canonical_json_bytes
@@ -232,13 +239,53 @@ def test_fourth_asset_and_incomplete_ablation_report_are_rejected(
         repository.put_completed_run(manifest, result.artifacts)  # type: ignore[attr-defined]
 
 
-def test_forward_protocol_uses_frozen_windows_and_immutable_promotion() -> None:
+@pytest.fixture(scope="module")
+def forward_run() -> tuple[FeatureDataset, ForwardResearchResult]:
     dataset = generate_synthetic_feature_dataset(day_count=700)
     result = run_forward_research(
         dataset,
         config=ForwardRunConfig(epochs=1),
         run_id="forward-protocol-test",
     )
+    return dataset, result
+
+
+def _deployment_models(
+    result: ForwardResearchResult,
+) -> tuple[ThreeAssetMSPCIFormer, ThreeAssetMSPCIFormer, MaskedStandardizer, dict[str, object]]:
+    manifest = result.manifest
+    primary = ThreeAssetMSPCIFormer(fusion_mode=FusionMode.ADAPTIVE)
+    restore_checkpoint(primary, result.artifacts[str(manifest["deployment_model_artifact"])])
+    fallback = ThreeAssetMSPCIFormer(fusion_mode=FusionMode.MARKET_ONLY)
+    restore_checkpoint(fallback, result.artifacts[str(manifest["fallback_model_artifact"])])
+    standardizer = standardizer_from_artifact(
+        result.artifacts[str(manifest["standardizer_artifact"])]
+    )
+    calibration = manifest["adaptive_calibration"]
+    assert isinstance(calibration, dict)
+    return primary, fallback, standardizer, calibration
+
+
+def _with_latest_sentiment_removed(dataset: FeatureDataset, asset: str) -> FeatureDataset:
+    latest = max(str(row["timestamp_utc"]) for row in dataset.rows)
+    rows = []
+    for row in dataset.rows:
+        if row["asset"] == asset and row["timestamp_utc"] == latest:
+            values = {**row["values"]}  # type: ignore[dict-item]
+            masks = {**row["availability_masks"]}  # type: ignore[dict-item]
+            for name in values:
+                if name.startswith("sentiment_"):
+                    values[name] = None
+                    masks[name] = False
+            row = {**row, "values": values, "availability_masks": masks}
+        rows.append(row)
+    return FeatureDataset(dataset.dataset_hash, tuple(rows), dataset.manifest)
+
+
+def test_forward_protocol_uses_frozen_windows_and_immutable_promotion(
+    forward_run: tuple[FeatureDataset, ForwardResearchResult],
+) -> None:
+    _, result = forward_run
     manifest = result.manifest
     holdout = manifest["forward_holdout"]
     calibration = manifest["adaptive_calibration"]
@@ -250,9 +297,12 @@ def test_forward_protocol_uses_frozen_windows_and_immutable_promotion() -> None:
     assert holdout["holdout_start"] == "2025-04-02"
     assert holdout["post_holdout_tuning_permitted"] is False
     assert isinstance(calibration, dict)
-    assert calibration["grid"] == [0.0, 0.25, 0.5, 0.75, 1.0]
+    assert calibration["schema_version"] == 2
+    assert calibration["policy"] == "no-change-centre-native-heads-v1"
+    assert manifest["fallback_model_artifact"] == "deployment-checkpoint-market-only.json"
     assert isinstance(metrics, dict)
-    assert metrics["adaptive-gating"]["mae"] <= metrics["naive-zero-return"]["mae"]
+    # The no-change centre makes the candidate's point error identical to zero-return.
+    assert metrics["adaptive-gating"]["mae"] == metrics["naive-zero-return"]["mae"]
     assert metrics["adaptive-gating"]["interval_coverage"] >= 0.70
 
     store = MemoryKeyValueStore()
@@ -262,10 +312,15 @@ def test_forward_protocol_uses_frozen_windows_and_immutable_promotion() -> None:
     )
     tampered_manifest = {
         **manifest,
-        "adaptive_calibration": {**calibration, "selected_coefficient": 0.25},
+        "adaptive_calibration": {**calibration, "conformal_adjustment": [0.0] * 5},
     }
     with pytest.raises(ValueError, match="calibration artifact"):
         repository.put_completed_run(tampered_manifest, result.artifacts)
+    without_fallback = {
+        key: value for key, value in manifest.items() if key != "fallback_model_artifact"
+    }
+    with pytest.raises(ValueError, match="fallback model artifact"):
+        repository.put_completed_run(without_fallback, result.artifacts)
     repository.put_completed_run(manifest, result.artifacts)
     promotion = repository.promote_model(
         run_id=result.run_id,
@@ -276,7 +331,85 @@ def test_forward_protocol_uses_frozen_windows_and_immutable_promotion() -> None:
     )
     event = repository.promotion_event(promotion.key.removeprefix("promotion:forecast:"))
     assert event["checks"]["untouched_forward_holdout"] is True
+    assert event["fallback_model_artifact"] == "deployment-checkpoint-market-only.json"
     assert (
         event["deployment_model_hash"]
         == manifest["artifact_hashes"]["deployment-checkpoint-adaptive-gating.json"]
     )
+
+
+def test_current_forecast_has_no_change_centre_and_native_ranges(
+    forward_run: tuple[FeatureDataset, ForwardResearchResult],
+) -> None:
+    dataset, result = forward_run
+    primary, fallback, standardizer, calibration = _deployment_models(result)
+
+    current = infer_current_forecast(
+        dataset,
+        model=primary,
+        standardizer=standardizer,
+        calibration=calibration,
+        fallback_model=fallback,
+    )
+
+    assert current.fallback_used == (False, False, False)
+    assert torch.all(current.expected == 0)
+    assert torch.all((current.probability_up > 0) & (current.probability_up < 1))
+    assert not torch.all(current.probability_up == 0.5)
+    assert torch.all(current.p10 <= current.p50)
+    assert torch.all(current.p50 <= current.p90)
+    assert torch.all(current.p90 - current.p10 > 0)
+
+
+def test_stale_sources_switch_that_asset_to_the_market_only_model(
+    forward_run: tuple[FeatureDataset, ForwardResearchResult],
+) -> None:
+    dataset, result = forward_run
+    primary, fallback, standardizer, calibration = _deployment_models(result)
+    stale = _with_latest_sentiment_removed(dataset, "ETH")
+
+    switched = infer_current_forecast(
+        stale,
+        model=primary,
+        standardizer=standardizer,
+        calibration=calibration,
+        fallback_model=fallback,
+    )
+    batch = build_inference_batch(stale)
+    with torch.inference_mode():
+        normalized = standardizer.transform(batch.features, batch.masks)
+        fallback_output = fallback(normalized, batch.masks, batch.asset_indices)
+        primary_output = primary(normalized, batch.masks, batch.asset_indices)
+
+    assert switched.fallback_used == (False, True, False)
+    assert torch.equal(
+        switched.probability_up[1], torch.sigmoid(fallback_output.direction_logits[1])
+    )
+    assert torch.equal(
+        switched.probability_up[0], torch.sigmoid(primary_output.direction_logits[0])
+    )
+    assert torch.all(switched.expected == 0)
+    with pytest.raises(ValueError, match="fallback model"):
+        infer_current_forecast(
+            stale, model=primary, standardizer=standardizer, calibration=calibration
+        )
+
+
+def test_schema_v1_calibration_keeps_its_shrinkage_behaviour(
+    forward_run: tuple[FeatureDataset, ForwardResearchResult],
+) -> None:
+    dataset, result = forward_run
+    primary, _, standardizer, calibration = _deployment_models(result)
+    legacy = {
+        "schema_version": 1,
+        "selected_coefficient": 0.0,
+        "conformal_adjustment": calibration["conformal_adjustment"],
+    }
+
+    current = infer_current_forecast(
+        dataset, model=primary, standardizer=standardizer, calibration=legacy
+    )
+
+    assert torch.all(current.expected == 0)
+    assert torch.all(current.probability_up == 0.5)
+    assert current.fallback_used == (False, False, False)

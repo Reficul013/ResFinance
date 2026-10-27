@@ -147,6 +147,12 @@ Evidence:
 - Repeated deterministic CPU runs produced identical dataset and prediction
   hashes, and all 39 encrypted research artifacts restored byte-for-byte from
   the real four-replica ResilientDB stack.
+- Fixed point-in-time source alignment. The feature builder previously looked
+  up non-market observations for the row's own calendar day only, so GDELT
+  sentiment (published two days after the day it describes) never reached a
+  model. Rows now use the newest non-market observation already available at
+  decision time, record each feature's age in `feature_age_days`, and mask a
+  source once it is older than three days. Prices remain strictly same-day.
 
 Evidence:
 [`milestones/milestone5-crypto-intelligence-research.md`](milestones/milestone5-crypto-intelligence-research.md).
@@ -190,6 +196,19 @@ Evidence:
 - Verified the normal recommendation, exact-cent allocations, Finance-derived
   default amount, non-mutating scenario, fail-closed invalid inputs, restart
   persistence, and read-only Insights behavior.
+- Replaced the reliability-shrinkage forecast with the
+  `no-change-centre-native-heads-v1` policy: the expected return is fixed at
+  zero, while p10/p50/p90 and P(up) come from the model's own quantile and
+  direction heads with a split-conformal adjustment. Assets whose sentiment or
+  on-chain source is missing or stale at decision time switch to the persisted
+  market-only model. Schema-v1 calibrations keep their original behavior.
+- Known limitation: an exploratory 15/20/30-day study (five yearly folds and one
+  sealed holdout) found native ranges and P(up) about 4.7% better than
+  no-change on pinball loss. That study used three-seed averaging and a
+  full-year calibration window. In a single-seed smoke run of the unchanged
+  forward protocol (75-day calibration window), the deployable ranges were wider
+  than no-change (92.5% vs 88.1% coverage). The forward protocol therefore needs
+  a predeclared update before this policy is promoted on new evidence.
 
 Evidence:
 [`milestones/milestone7-cross-dashboard-local-handoff.md`](milestones/milestone7-cross-dashboard-local-handoff.md)

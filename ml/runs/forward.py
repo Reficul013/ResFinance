@@ -19,6 +19,7 @@ from ml.data.datasets import (
     ResearchSequenceDataset,
     build_inference_batch,
     build_sequence_dataset,
+    requires_market_only_fallback,
 )
 from ml.evaluation.protocol import conformalize, metric_bundle
 from ml.features.point_in_time import FeatureDataset
@@ -33,7 +34,8 @@ from ml.runs.checkpoints import deterministic_checkpoint
 from ml.runs.runner import MODEL_ORDER, SmokeRunConfig
 from server.app.infrastructure.encryption import canonical_json_bytes
 
-CALIBRATION_GRID = (0.0, 0.25, 0.5, 0.75, 1.0)
+FORECAST_POLICY = "no-change-centre-native-heads-v1"
+FALLBACK_MODEL_ARTIFACT = "deployment-checkpoint-market-only.json"
 
 
 @dataclass(frozen=True)
@@ -61,7 +63,7 @@ class ForwardRunConfig:
             "validation_start": self.validation_start.isoformat(),
             "validation_end": self.validation_end.isoformat(),
             "holdout_start": self.holdout_start.isoformat(),
-            "calibration_grid": list(CALIBRATION_GRID),
+            "forecast_policy": FORECAST_POLICY,
             "purpose": self.purpose,
             "owner": self.owner,
         }
@@ -84,6 +86,7 @@ class CurrentForecast:
     p10: Tensor
     p50: Tensor
     p90: Tensor
+    fallback_used: tuple[bool, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -124,7 +127,7 @@ def run_forward_research(
 
     forecasts["naive-zero-return"] = _naive(sequences, validation, holdout, config)
     forecasts["linear-ridge"] = _linear(sequences, normalized, train, validation, holdout, config)
-    adaptive_calibration: dict[str, object] | None = None
+    trained: dict[str, nn.Module] = {}
     neural_specs: list[tuple[str, nn.Module]] = [
         (
             "lstm-sequence",
@@ -162,16 +165,8 @@ def run_forward_research(
                 conformal_alpha=config.conformal_alpha,
             ),
         )
-        forecast, calibration = _neural(
-            model,
-            sequences,
-            normalized,
-            validation,
-            holdout,
-            config,
-            calibrate_reliability=name == FusionMode.ADAPTIVE.value,
-        )
-        forecasts[name] = forecast
+        forecasts[name] = _neural(model, sequences, normalized, validation, holdout, config)
+        trained[name] = model
         checkpoint = deterministic_checkpoint(
             model,
             model_config={
@@ -185,14 +180,23 @@ def run_forward_research(
         checkpoints[artifact_name] = checkpoint
         if name == FusionMode.ADAPTIVE.value:
             checkpoints["deployment-checkpoint-adaptive-gating.json"] = checkpoint
-            adaptive_calibration = calibration
-        if forecast.gate_weights is not None:
-            weights = forecast.gate_weights.mean(dim=(0, 1))
+        if name == FusionMode.MARKET_ONLY.value:
+            checkpoints[FALLBACK_MODEL_ARTIFACT] = checkpoint
+        gate_weights = forecasts[name].gate_weights
+        if gate_weights is not None:
+            weights = gate_weights.mean(dim=(0, 1))
             gate_report[name] = {
                 source: _round(weights[index]) for index, source in enumerate(SOURCE_NAMES)
             }
-    if adaptive_calibration is None:
-        raise AssertionError("adaptive calibration was not produced")
+    forecasts[FusionMode.ADAPTIVE.value], adaptive_calibration = _deployable(
+        trained[FusionMode.ADAPTIVE.value],
+        trained[FusionMode.MARKET_ONLY.value],
+        sequences,
+        normalized,
+        validation,
+        holdout,
+        config,
+    )
 
     metrics = {
         name: metric_bundle(
@@ -290,9 +294,11 @@ def run_forward_research(
             "alpha": config.conformal_alpha,
             "adaptive_adjustment": adaptive_calibration["conformal_adjustment"],
         },
+        "forecast_policy": FORECAST_POLICY,
         "adaptive_calibration": adaptive_calibration,
         "evaluated_model_artifact": "checkpoint-adaptive-gating.json",
         "deployment_model_artifact": "deployment-checkpoint-adaptive-gating.json",
+        "fallback_model_artifact": FALLBACK_MODEL_ARTIFACT,
         "standardizer_artifact": "standardizer.json",
         "model_hashes": {
             name: hashlib.sha256(content).hexdigest() for name, content in checkpoints.items()
@@ -322,19 +328,41 @@ def infer_current_forecast(
     standardizer: MaskedStandardizer,
     calibration: dict[str, object],
     lookback: int = 16,
+    fallback_model: ThreeAssetMSPCIFormer | None = None,
 ) -> CurrentForecast:
     batch = build_inference_batch(feature_dataset, lookback=lookback)
     normalized = standardizer.transform(batch.features, batch.masks)
     model.eval()
     with torch.inference_mode():
         output = cast(ModelOutput, model(normalized, batch.masks, batch.asset_indices))
-    coefficient = float(cast(float, calibration["selected_coefficient"]))
     adjustment = torch.tensor(
         cast(list[float], calibration["conformal_adjustment"]), dtype=output.quantiles.dtype
     )
-    expected = output.expected_return * coefficient
-    probability = 0.5 + coefficient * (torch.sigmoid(output.direction_logits) - 0.5)
-    quantiles = output.quantiles * coefficient
+    if calibration.get("schema_version") == 2:
+        if calibration.get("policy") != FORECAST_POLICY:
+            raise ValueError("unsupported forecast policy")
+        switch = requires_market_only_fallback(batch.masks)
+        quantiles, direction = output.quantiles, output.direction_logits
+        if bool(switch.any()):
+            if fallback_model is None:
+                raise ValueError("stale or missing sources require the market-only fallback model")
+            fallback_model.eval()
+            with torch.inference_mode():
+                fallback = cast(
+                    ModelOutput, fallback_model(normalized, batch.masks, batch.asset_indices)
+                )
+            quantiles = torch.where(switch.reshape(-1, 1, 1), fallback.quantiles, quantiles)
+            direction = torch.where(switch.reshape(-1, 1), fallback.direction_logits, direction)
+        expected = torch.zeros_like(direction)
+        probability = torch.sigmoid(direction)
+        fallback_used = tuple(bool(value) for value in switch.tolist())
+    else:
+        # Schema-v1 runs used a validation-selected reliability shrinkage coefficient.
+        coefficient = float(cast(float, calibration["selected_coefficient"]))
+        expected = output.expected_return * coefficient
+        probability = 0.5 + coefficient * (torch.sigmoid(output.direction_logits) - 0.5)
+        quantiles = output.quantiles * coefficient
+        fallback_used = (False,) * len(batch.assets)
     lower = quantiles[:, :, 0] - adjustment
     median = quantiles[:, :, 1]
     upper = quantiles[:, :, 2] + adjustment
@@ -345,6 +373,7 @@ def infer_current_forecast(
         p10=torch.minimum(lower, median),
         p50=median,
         p90=torch.maximum(upper, median),
+        fallback_used=fallback_used,
     )
 
 
@@ -365,64 +394,114 @@ def _neural(
     validation: Tensor,
     holdout: Tensor,
     config: ForwardRunConfig,
-    *,
-    calibrate_reliability: bool,
-) -> tuple[_Forecast, dict[str, object]]:
-    model.eval()
-    with torch.inference_mode():
-        validation_output = cast(
-            ModelOutput,
-            model(
-                normalized[validation],
-                dataset.masks[validation],
-                dataset.asset_indices[validation],
-            ),
-        )
-        holdout_output = cast(
-            ModelOutput,
-            model(normalized[holdout], dataset.masks[holdout], dataset.asset_indices[holdout]),
-        )
-    grid = CALIBRATION_GRID if calibrate_reliability else (1.0,)
-    scores = {
-        f"{coefficient:.2f}": _round(
-            (validation_output.expected_return * coefficient - dataset.targets[validation])
-            .abs()
-            .mean()
-        )
-        for coefficient in grid
-    }
-    coefficient = min(grid, key=lambda item: (scores[f"{item:.2f}"], item))
-    validation_quantiles = validation_output.quantiles * coefficient
-    holdout_quantiles = holdout_output.quantiles * coefficient
-    lower, upper, adjustment = conformalize(
+) -> _Forecast:
+    """Report an ablation's own outputs, with split-conformal ranges from the validation window."""
+    validation_output, holdout_output = _outputs(model, dataset, normalized, validation, holdout)
+    lower, upper, _ = conformalize(
         dataset.targets[validation],
-        validation_quantiles[:, :, 0],
-        validation_quantiles[:, :, 2],
-        holdout_quantiles[:, :, 0],
-        holdout_quantiles[:, :, 2],
+        validation_output.quantiles[:, :, 0],
+        validation_output.quantiles[:, :, 2],
+        holdout_output.quantiles[:, :, 0],
+        holdout_output.quantiles[:, :, 2],
         alpha=config.conformal_alpha,
     )
-    forecast = _Forecast(
-        expected=holdout_output.expected_return * coefficient,
-        probability_up=0.5 + coefficient * (torch.sigmoid(holdout_output.direction_logits) - 0.5),
+    return _Forecast(
+        expected=holdout_output.expected_return,
+        probability_up=torch.sigmoid(holdout_output.direction_logits),
         lower=lower,
         upper=upper,
         gate_weights=holdout_output.gate_weights,
     )
-    calibration = {
-        "schema_version": 1,
+
+
+def _deployable(
+    adaptive: nn.Module,
+    market_only: nn.Module,
+    dataset: ResearchSequenceDataset,
+    normalized: Tensor,
+    validation: Tensor,
+    holdout: Tensor,
+    config: ForwardRunConfig,
+) -> tuple[_Forecast, dict[str, object]]:
+    """No-change centre with the native range and direction heads.
+
+    The expected return is fixed at zero because no evaluated point forecast beat the
+    zero-return baseline; ranges and P(up) come from the model's own heads. Samples whose
+    sentiment or on-chain source is missing or stale use the market-only model instead.
+    """
+    primary = _outputs(adaptive, dataset, normalized, validation, holdout)
+    fallback = _outputs(market_only, dataset, normalized, validation, holdout)
+    switches = (
+        requires_market_only_fallback(dataset.masks[validation]),
+        requires_market_only_fallback(dataset.masks[holdout]),
+    )
+    quantiles = [
+        torch.where(switch.reshape(-1, 1, 1), fallback[index].quantiles, primary[index].quantiles)
+        for index, switch in enumerate(switches)
+    ]
+    direction = torch.where(
+        switches[1].reshape(-1, 1), fallback[1].direction_logits, primary[1].direction_logits
+    )
+    lower, upper, adjustment = conformalize(
+        dataset.targets[validation],
+        quantiles[0][:, :, 0],
+        quantiles[0][:, :, 2],
+        quantiles[1][:, :, 0],
+        quantiles[1][:, :, 2],
+        alpha=config.conformal_alpha,
+    )
+    median = quantiles[1][:, :, 1]
+    forecast = _Forecast(
+        expected=torch.zeros_like(median),
+        probability_up=torch.sigmoid(direction),
+        lower=torch.minimum(lower, median),
+        upper=torch.maximum(upper, median),
+        gate_weights=primary[1].gate_weights,
+    )
+    calibration: dict[str, object] = {
+        "schema_version": 2,
+        "policy": FORECAST_POLICY,
+        "centre": "no-change: the expected return is fixed at zero",
+        "range_source": "native quantile head with a split-conformal adjustment",
+        "probability_source": "native direction head",
+        "stale_source_policy": {
+            "rule": (
+                "use the market-only fusion model for an asset whose sentiment or on-chain "
+                "source is missing or older than the feature builder's maximum source age"
+            ),
+            "fallback_model_artifact": FALLBACK_MODEL_ARTIFACT,
+        },
         "selection_window": {
             "start": config.validation_start.isoformat(),
             "end": config.validation_end.isoformat(),
         },
-        "grid": list(grid),
-        "validation_mae_by_coefficient": scores,
-        "selected_coefficient": coefficient,
-        "tie_break": "smallest-coefficient",
         "conformal_alpha": config.conformal_alpha,
         "conformal_adjustment": [_round(value) for value in adjustment],
+        "validation_fallback_share": _round(switches[0].to(torch.float32).mean()),
+        "holdout_fallback_share": _round(switches[1].to(torch.float32).mean()),
     }
     return forecast, calibration
+
+
+def _outputs(
+    model: nn.Module,
+    dataset: ResearchSequenceDataset,
+    normalized: Tensor,
+    validation: Tensor,
+    holdout: Tensor,
+) -> tuple[ModelOutput, ModelOutput]:
+    model.eval()
+    with torch.inference_mode():
+        return cast(
+            tuple[ModelOutput, ModelOutput],
+            tuple(
+                cast(
+                    ModelOutput,
+                    model(normalized[index], dataset.masks[index], dataset.asset_indices[index]),
+                )
+                for index in (validation, holdout)
+            ),
+        )
 
 
 def _naive(

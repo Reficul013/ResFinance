@@ -80,6 +80,18 @@ class MaskedStandardizer:
         return ((features - self.means) / self.scales) * masks.to(features.dtype)
 
 
+def requires_market_only_fallback(masks: Tensor) -> Tensor:
+    """Per sample: True when sentiment or on-chain data is unavailable at the decision row.
+
+    The point-in-time builder masks a source once its newest value is older than the maximum
+    source age, so a masked source at the last lookback step means it is missing or stale.
+    """
+    if masks.ndim != 4 or masks.shape[2:] != (len(SOURCE_NAMES), SOURCE_WIDTH):
+        raise ValueError("masks must have shape [batch, lookback, source, width]")
+    available = masks[:, -1, :, :].any(dim=-1)
+    return ~available[:, 1:].all(dim=1)
+
+
 def build_sequence_dataset(
     dataset: FeatureDataset,
     *,

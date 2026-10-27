@@ -307,6 +307,65 @@ def test_point_in_time_join_excludes_future_revision_and_persists_masks() -> Non
         )
 
 
+def test_delayed_news_uses_the_latest_available_day_and_reports_its_age() -> None:
+    observations = [item(day=day, value=str(100 + day)) for day in range(1, 5)] + [
+        item(
+            channel=ObservationChannel.SENTIMENT,
+            metric="average_tone",
+            day=day,
+            available_day=day + 2,
+            value=str(-day),
+        )
+        for day in range(1, 4)
+    ]
+    dataset = PointInTimeFeatureBuilder().build(
+        observations,
+        assets=(CryptoAsset.BTC,),
+        providers=("synthetic-provider",),
+        start=date(2025, 1, 1),
+        end=date(2025, 1, 4),
+        as_of_utc=datetime(2025, 1, 5, tzinfo=UTC),
+    )
+    rows = {str(row["timestamp_utc"])[:10]: row for row in dataset.rows}
+
+    # Day D's decision (D+1 00:00) can use news about D-1, which is published at D+1.
+    assert rows["2025-01-01"]["values"]["sentiment_average_tone"] is None  # type: ignore[index]
+    assert rows["2025-01-03"]["values"]["sentiment_average_tone"] == "-2"  # type: ignore[index]
+    assert rows["2025-01-03"]["availability_masks"]["sentiment_average_tone"]  # type: ignore[index]
+    assert rows["2025-01-03"]["feature_age_days"]["sentiment_average_tone"] == 0  # type: ignore[index]
+    assert rows["2025-01-03"]["values"]["market_price_usd"] == "103"  # type: ignore[index]
+    assert dataset.manifest["source_alignment"] == "latest-available-observation"
+
+
+def test_stale_non_market_source_is_masked_after_the_maximum_age() -> None:
+    observations = [item(day=day, value="100") for day in range(1, 9)] + [
+        item(
+            channel=ObservationChannel.SENTIMENT,
+            metric="average_tone",
+            day=1,
+            available_day=3,
+            value="-1.5",
+        )
+    ]
+    dataset = PointInTimeFeatureBuilder().build(
+        observations,
+        assets=(CryptoAsset.BTC,),
+        providers=("synthetic-provider",),
+        start=date(2025, 1, 1),
+        end=date(2025, 1, 8),
+        as_of_utc=datetime(2025, 1, 9, tzinfo=UTC),
+    )
+    rows = {str(row["timestamp_utc"])[:10]: row for row in dataset.rows}
+    fresh, stale = rows["2025-01-05"], rows["2025-01-06"]
+
+    assert fresh["values"]["sentiment_average_tone"] == "-1.5"  # type: ignore[index]
+    assert fresh["feature_age_days"]["sentiment_average_tone"] == 3  # type: ignore[index]
+    assert stale["values"]["sentiment_average_tone"] is None  # type: ignore[index]
+    assert not stale["availability_masks"]["sentiment_average_tone"]  # type: ignore[index]
+    assert stale["feature_age_days"]["sentiment_average_tone"] == 4  # type: ignore[index]
+    assert not stale["source_masks"]["sentiment"]  # type: ignore[index]
+
+
 def test_feature_dataset_archive_round_trips_without_per_row_records() -> None:
     dataset = PointInTimeFeatureBuilder().build(
         (item(), item(day=2, value="105")),
