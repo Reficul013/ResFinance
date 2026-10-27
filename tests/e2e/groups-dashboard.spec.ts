@@ -164,6 +164,11 @@ test("approves and settles an obligation partially and fully", async ({
     .filter({ hasText: "Sam" });
   await expect(alexRow.getByText("Owner", { exact: true })).toBeVisible();
   await expect(samRow.getByText("You", { exact: true })).toBeVisible();
+  expect(
+    await alexRow
+      .locator(".member-display-name")
+      .evaluate((element) => parseFloat(getComputedStyle(element).fontSize)),
+  ).toBeLessThan(16);
   await expect(alexRow.locator("code")).toHaveText("0xaaaaaa…aaaaaa");
   await expect(alexRow.locator("code")).toHaveAttribute("title", creditor);
 
@@ -741,7 +746,17 @@ test("pages long expense histories and keeps focus visible", async ({
     description: `Expense ${index + 1}`,
     amount: usd(1000 + index),
     occurred_on: `2026-10-${String(index + 1).padStart(2, "0")}`,
-    shares: { [creditor]: usd(500), [debtor]: usd(500 + index) },
+    shares:
+      index === 13
+        ? Object.fromEntries(
+            Array.from({ length: 12 }, (_, person) => [
+              person === 0
+                ? creditor
+                : `0x${person.toString(16).padStart(40, "c")}`,
+              usd(125),
+            ]),
+          )
+        : { [creditor]: usd(500), [debtor]: usd(500 + index) },
     obligation_ids: [],
     source_event_id: `evt-expense-${index}`,
     contract_receipts: [`receipt-expense-${index}`],
@@ -764,6 +779,28 @@ test("pages long expense histories and keeps focus visible", async ({
   await expect(cards).toHaveCount(6);
   await expect(cards.first().getByRole("heading")).toHaveText("Expense 14");
   await expect(panel.getByText("Showing 6 of 14")).toBeVisible();
+  const crowded = cards.nth(0);
+  const ordinary = cards.nth(1);
+  await expect(crowded.getByRole("button", { name: "4 more" })).toBeVisible();
+  await expect(
+    crowded
+      .getByRole("list", { name: "Split for Expense 14" })
+      .getByRole("listitem"),
+  ).toHaveCount(8);
+  const ordinaryHeight = (await ordinary.boundingBox())!.height;
+  expect(
+    Math.abs((await crowded.boundingBox())!.height - ordinaryHeight),
+  ).toBeLessThan(2);
+  await crowded.getByRole("button", { name: "4 more" }).click();
+  const others = page.getByRole("dialog", {
+    name: "Other people in Expense 14",
+  });
+  await expect(others.getByRole("listitem")).toHaveCount(4);
+  expect(
+    Math.abs((await crowded.boundingBox())!.height - ordinaryHeight),
+  ).toBeLessThan(2);
+  await page.keyboard.press("Escape");
+  await expect(others).toHaveCount(0);
 
   await panel.getByRole("button", { name: "Show 6 more" }).click();
   await expect(cards).toHaveCount(12);
