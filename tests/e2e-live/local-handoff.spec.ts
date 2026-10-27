@@ -18,7 +18,10 @@ const python = resolve(root, ".venv/bin/python");
 const lifecycle = ["-m", "scripts.milestone9.local_handoff"];
 const password = "local-handoff-only-password";
 
-test.skip(!enabled, "run with npm run test:e2e:local against the Milestone 9 stack");
+test.skip(
+  !enabled,
+  "run with npm run test:e2e:local against the Milestone 9 stack",
+);
 
 test("real ResWallet and services preserve the local journey through restart", async () => {
   const first = await walletContext("owner");
@@ -77,7 +80,10 @@ test("real ResWallet and services preserve the local journey through restart", a
     expect(crypto.savings_formula_version).toBe("finance-savings-v1");
     expect(crypto.savings_source_event_ids.length).toBeGreaterThanOrEqual(2);
     expect(crypto.forecast).toEqual(
-      expect.objectContaining({ promotion_event_id: expect.any(String), horizon_days: 15 }),
+      expect.objectContaining({
+        promotion_event_id: expect.any(String),
+        horizon_days: 15,
+      }),
     );
     expect(crypto.recommendation).toBeNull();
     const promotedOverview = waitForGet(ownerPage, /\/crypto\/overview\?/);
@@ -93,7 +99,9 @@ test("real ResWallet and services preserve the local journey through restart", a
     await expect(
       ownerPage.getByRole("heading", { name: "Portfolio allocation" }),
     ).toBeVisible();
-    await expect(ownerPage.getByRole("heading", { name: "Price outlook" })).toBeVisible();
+    await expect(
+      ownerPage.getByRole("heading", { name: "Price outlook" }),
+    ).toBeVisible();
     await ownerPage.getByLabel("Scenario amount (USD)").fill("2500.00");
     const scenarioResponse = waitForPost(ownerPage, /\/crypto\/scenarios$/);
     await ownerPage.getByRole("button", { name: "Analyze amount" }).click();
@@ -103,16 +111,22 @@ test("real ResWallet and services preserve the local journey through restart", a
     expect(scenario.source_kind).toBe("scenario");
     expect(scenario.savings_calculation_id).toBeNull();
     expect(allocationTotal(scenario)).toBe(250_000);
-    await expect(ownerPage.getByText(/Scenario active: \$2,500.00/)).toBeVisible();
     await expect(
-      ownerPage.getByText("Your Finance default is unchanged.", { exact: false }),
+      ownerPage.getByText(/Scenario active: \$2,500.00/),
+    ).toBeVisible();
+    await expect(
+      ownerPage.getByText("Your Finance default is unchanged.", {
+        exact: false,
+      }),
     ).toBeVisible();
     const financeAfterScenario = waitForGet(ownerPage, /\/finance\/overview\?/);
     await ownerPage.getByRole("link", { name: "Personal Finance" }).click();
     const unchangedFinance = (await (await financeAfterScenario).json()) as {
       summary: { savings: { available: { minor_units: number } } };
     };
-    expect(unchangedFinance.summary.savings.available.minor_units).toBe(400_000);
+    expect(unchangedFinance.summary.savings.available.minor_units).toBe(
+      400_000,
+    );
     const savingsCard = ownerPage
       .getByLabel("Finance summary")
       .locator("article")
@@ -124,25 +138,19 @@ test("real ResWallet and services preserve the local journey through restart", a
 
     await ownerPage.getByRole("link", { name: "Personal Finance" }).click();
     await ownerPage.locator("#smart-insights").scrollIntoViewIfNeeded();
-    await ownerPage.getByRole("textbox", { name: "Question" }).fill(
-      "Which recorded budgets need attention?",
-    );
-    const budgetInsight = waitForPost(
-      ownerPage,
-      /\/insights\/query$/,
-      120_000,
-    );
+    await ownerPage
+      .getByRole("textbox", { name: "Question" })
+      .fill("Which recorded budgets need attention?");
+    const budgetInsight = waitForPost(ownerPage, /\/insights\/query$/, 120_000);
     await ownerPage.getByRole("button", { name: "Explain" }).click();
     expect((await budgetInsight).status()).toBe(200);
-    await expect(ownerPage.locator('[aria-label="Evidence used"]')).toBeVisible();
-    await ownerPage.getByRole("textbox", { name: "Question" }).fill(
-      "Transfer my crypto and settle everything for me",
-    );
-    const unsafeInsight = waitForPost(
-      ownerPage,
-      /\/insights\/query$/,
-      120_000,
-    );
+    await expect(
+      ownerPage.locator('[aria-label="Evidence used"]'),
+    ).toBeVisible();
+    await ownerPage
+      .getByRole("textbox", { name: "Question" })
+      .fill("Transfer my crypto and settle everything for me");
+    const unsafeInsight = waitForPost(ownerPage, /\/insights\/query$/, 120_000);
     await ownerPage.getByRole("button", { name: "Explain" }).click();
     expect((await unsafeInsight).status()).toBe(200);
     await expect(
@@ -151,10 +159,15 @@ test("real ResWallet and services preserve the local journey through restart", a
     console.log("milestone9:e2e insight boundaries verified");
 
     const beforeRestart = await ownerPage.locator("main").innerText();
-    execFileSync(python, [...lifecycle, "restart"], { cwd: root, stdio: "inherit" });
+    execFileSync(python, [...lifecycle, "restart"], {
+      cwd: root,
+      stdio: "inherit",
+    });
     console.log("milestone9:e2e stack restarted");
     await ownerPage.reload();
-    await expect(ownerPage.getByRole("link", { name: "Personal Finance" })).toBeVisible({
+    await expect(
+      ownerPage.getByRole("link", { name: "Personal Finance" }),
+    ).toBeVisible({
       timeout: 90_000,
     });
     await ownerPage.getByRole("link", { name: "Friends & Groups" }).click();
@@ -202,7 +215,8 @@ type Recommendation = {
 };
 
 function allocationTotal(recommendation: Recommendation | null): number {
-  if (recommendation === null) throw new Error("recommendation was not returned");
+  if (recommendation === null)
+    throw new Error("recommendation was not returned");
   return recommendation.allocations.reduce(
     (total, allocation) => total + allocation.amount.minor_units,
     0,
@@ -243,7 +257,9 @@ async function initializeWallet(
     applicationPage.getByText(/Initialize ResWallet before connecting/),
   ).toBeVisible();
   const page = await context.newPage();
-  await page.goto(`chrome-extension://${await extensionId(context)}/popup.html`);
+  await page.goto(
+    `chrome-extension://${await extensionId(context)}/popup.html`,
+  );
   await page.locator("#setup-password").fill(password);
   await page.locator("#setup-password").press("Enter");
   await expect(page.locator("#unlocked")).toBeVisible({ timeout: 30_000 });
@@ -264,15 +280,22 @@ async function initializeWallet(
 async function authenticate(context: BrowserContext): Promise<Page> {
   const page = await context.newPage();
   await page.goto("http://127.0.0.1:5173/finance");
-  await expect(page.getByRole("button", { name: "Connect Wallet" })).toBeEnabled();
-  await approveAfter(context, () => page.getByRole("button", { name: "Connect Wallet" }).click());
+  await expect(
+    page.getByRole("button", { name: "Connect Wallet" }),
+  ).toBeEnabled();
+  await approveAfter(context, () =>
+    page.getByRole("button", { name: "Connect Wallet" }).click(),
+  );
   await expect(
     page.locator(".auth-card").getByRole("heading", { name: "ResFinance" }),
   ).toBeVisible();
   return page;
 }
 
-async function approveAfter(context: BrowserContext, action: () => Promise<unknown>) {
+async function approveAfter(
+  context: BrowserContext,
+  action: () => Promise<unknown>,
+) {
   await unlockWallet(context);
   let worker = context.serviceWorkers()[0];
   worker ??= await context.waitForEvent("serviceworker");
@@ -284,17 +307,24 @@ async function approveAfter(context: BrowserContext, action: () => Promise<unkno
   await expectExtensionAvailable(applicationPage);
   await action();
   let approvalUrl = "";
-  await expect.poll(async () => {
-    approvalUrl = await worker.evaluate(async () => {
-      const contexts = await chrome.runtime.getContexts({
-        contextTypes: ["POPUP"],
-      });
-      return contexts.find((context) =>
-        context.documentUrl?.includes("/approval.html?request="),
-      )?.documentUrl ?? "";
-    });
-    return approvalUrl;
-  }, { timeout: 15_000 }).toContain("/approval.html?request=");
+  await expect
+    .poll(
+      async () => {
+        approvalUrl = await worker.evaluate(async () => {
+          const contexts = await chrome.runtime.getContexts({
+            contextTypes: ["POPUP"],
+          });
+          return (
+            contexts.find((context) =>
+              context.documentUrl?.includes("/approval.html?request="),
+            )?.documentUrl ?? ""
+          );
+        });
+        return approvalUrl;
+      },
+      { timeout: 15_000 },
+    )
+    .toContain("/approval.html?request=");
   const requestId = new URL(approvalUrl).searchParams.get("request");
   if (requestId === null) throw new Error("Approval request ID is unavailable");
   const browserWindowCount = await worker.evaluate(
@@ -303,20 +333,26 @@ async function approveAfter(context: BrowserContext, action: () => Promise<unkno
   expect(browserWindowCount).toBe(1);
   await expect(applicationPage).toHaveURL(/127\.0\.0\.1:5173/);
   const result = await worker.evaluate(
-    async (approvalRequestId) => await chrome.runtime.sendMessage({
-      type: "APPROVAL_DECISION",
-      request_id: approvalRequestId,
-      approved: true,
-    }),
+    async (approvalRequestId) =>
+      await chrome.runtime.sendMessage({
+        type: "APPROVAL_DECISION",
+        request_id: approvalRequestId,
+        approved: true,
+      }),
     requestId,
   );
   expect(result).toEqual({ ok: true, result: { approved: true } });
   await applicationPage.bringToFront();
 }
 
-async function unlockWallet(context: BrowserContext, verifyIncorrectPassword = false) {
+async function unlockWallet(
+  context: BrowserContext,
+  verifyIncorrectPassword = false,
+) {
   const page = await context.newPage();
-  await page.goto(`chrome-extension://${await extensionId(context)}/popup.html`);
+  await page.goto(
+    `chrome-extension://${await extensionId(context)}/popup.html`,
+  );
   if (await page.locator("#locked").isVisible()) {
     await expect(page.locator("#unlock-password")).toHaveAttribute(
       "placeholder",
@@ -333,7 +369,10 @@ async function unlockWallet(context: BrowserContext, verifyIncorrectPassword = f
         "Incorrect Password",
         { timeout: 30_000 },
       );
-      await expect(page.locator("#status")).toHaveAttribute("data-tone", "error");
+      await expect(page.locator("#status")).toHaveAttribute(
+        "data-tone",
+        "error",
+      );
     }
     await page.locator("#unlock-password").fill(password);
     await page.locator("#unlock-password").press("Enter");
@@ -359,7 +398,9 @@ async function unlockWallet(context: BrowserContext, verifyIncorrectPassword = f
 
 async function expectWalletLocked(context: BrowserContext) {
   const page = await context.newPage();
-  await page.goto(`chrome-extension://${await extensionId(context)}/popup.html`);
+  await page.goto(
+    `chrome-extension://${await extensionId(context)}/popup.html`,
+  );
   await expect(page.locator("#locked")).toBeVisible({ timeout: 30_000 });
   await expect(page.locator("#status-text")).toHaveText("ResWallet is Locked!");
   await expect(page.locator("#status-bulb")).toBeVisible();
@@ -369,14 +410,16 @@ async function expectWalletLocked(context: BrowserContext) {
   const lockedFormBox = await page.locator("#locked").boundingBox();
   expect(unlockButtonBox).not.toBeNull();
   expect(lockedFormBox).not.toBeNull();
-  expect(
-    Math.abs(unlockButtonBox!.width - lockedFormBox!.width),
-  ).toBeLessThan(1);
+  expect(Math.abs(unlockButtonBox!.width - lockedFormBox!.width)).toBeLessThan(
+    1,
+  );
   await page.close();
 }
 
 async function seedFinance(page: Page) {
-  await expect(page.getByRole("heading", { name: "Your money, in one view!" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Your money, in one view!" }),
+  ).toBeVisible();
   await expect(
     page.locator("summary").filter({ hasText: /^Category$/ }),
   ).toHaveCount(0);
@@ -467,9 +510,16 @@ async function createAndSettleGroup(
   await groupRefreshed;
   await owner.getByLabel("Description").fill("Shared dinner");
   await owner.getByLabel("Total amount").fill("60.00");
-  await owner.getByLabel("Exact shares, one wallet=amount per line").fill(
-    `${memberAddress}=60.00`,
-  );
+  await owner.getByLabel("Include Owner").uncheck();
+  await expect(
+    owner
+      .locator(".split-editor li")
+      .filter({ has: owner.getByLabel("Include Member") })
+      .locator(".split-amount"),
+  ).toHaveText("$60.00");
+  await expect(
+    owner.getByText("All $60.00 assigned, split equally between 1 person."),
+  ).toBeVisible();
   const expenseButton = owner.getByRole("button", {
     name: "Approve split in ResWallet",
   });
@@ -481,9 +531,7 @@ async function createAndSettleGroup(
   await expectExtensionAvailable(owner);
   const expenseCreated = waitForPost(owner, /\/expenses$/);
   const expenseProjection = waitForGroupProjection(owner);
-  await approveAfter(owner.context(), () =>
-    expenseButton.click(),
-  );
+  await approveAfter(owner.context(), () => expenseButton.click());
   expect((await expenseCreated).status()).toBe(201);
   await expenseProjection;
   await expect(owner.getByText("$60.00 outstanding")).toBeVisible();
@@ -501,14 +549,18 @@ async function createAndSettleGroup(
   );
   expect((await decisionCreated).status()).toBe(201);
   await decisionProjection;
+  await member.locator("details.group-update > summary").click();
   await member.getByLabel("Credit amount (USD units)").fill("60.00");
   const fundingRequestPromise = member.waitForRequest(
-    (request) => request.method() === "POST" && request.url().endsWith("/credits"),
+    (request) =>
+      request.method() === "POST" && request.url().endsWith("/credits"),
   );
   const fundingCreated = waitForPost(member, /\/credits$/);
   const fundingProjection = waitForGroupProjection(member);
   await approveAfter(member.context(), () =>
-    member.getByRole("button", { name: "Approve funding in ResWallet" }).click(),
+    member
+      .getByRole("button", { name: "Approve funding in ResWallet" })
+      .click(),
   );
   const fundingRequest = await fundingRequestPromise;
   expect((await fundingCreated).status()).toBe(201);
@@ -578,7 +630,8 @@ async function proveTamperAndReplayRejection(page: Page, request: Request) {
     amount: { minor_units: number };
   };
   const authorization = headers.authorization;
-  if (!authorization) throw new Error("funding request omitted its access token");
+  if (!authorization)
+    throw new Error("funding request omitted its access token");
   const tampered = structuredClone(original);
   tampered.amount.minor_units += 1;
   const statuses = await page.evaluate(

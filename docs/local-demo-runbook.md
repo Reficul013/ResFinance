@@ -247,16 +247,19 @@ Add the Member wallet:
 | Wallet address | Member public wallet address |
 | Display name   | Member                       |
 
-Create a signed expense:
+Add an expense:
 
-| Field        | Value                           |
-| ------------ | ------------------------------- |
-| Description  | Shared dinner                   |
-| Total amount | $60.00                          |
-| Exact shares | `<MEMBER_WALLET_ADDRESS>=60.00` |
+| Field         | Value         |
+| ------------- | ------------- |
+| Description   | Shared dinner |
+| Total amount  | $60.00        |
+| Split between | Split equally |
+| Include Owner | Unticked      |
 
-Choose **Approve split in ResWallet**, then approve the signature in the Owner
-wallet. Show the `$60.00 outstanding` obligation.
+The Member's share fills in as `$60.00`, and the split summary reads
+`All $60.00 assigned, split equally between 1 person.` Choose **Approve split
+in ResWallet**, then approve the signature in the Owner wallet. Show the
+`$60.00 outstanding` obligation.
 
 Switch to the Member profile:
 

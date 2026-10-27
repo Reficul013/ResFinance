@@ -120,6 +120,9 @@ Evidence:
   after a full ResilientDB and ResContract restart.
 - Confined Group projection version, encrypted source-event count, and update
   time to the Data Freshness and Provenance footer.
+- Reorganized the Friends & Groups dashboard around a Personal Finance-style
+  hero, summary cards, a collapsible Update the group section, and paged
+  activity tabs with filters. Signing and settlement behavior is unchanged.
 
 Evidence:
 [`milestones/milestone4-bill-split-contractual-settlement.md`](milestones/milestone4-bill-split-contractual-settlement.md).
