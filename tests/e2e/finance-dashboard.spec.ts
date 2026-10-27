@@ -305,6 +305,21 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   const githubLink = topBar.getByRole("link", {
     name: "Open ResFinance repository on GitHub",
   });
+  const mediumLink = topBar.getByRole("link", {
+    name: "Read about ResFinance on Medium",
+  });
+  await expect(mediumLink).toHaveAttribute(
+    "href",
+    "https://medium.com/@haseebshaik00/resfinance-57064e9a54ef",
+  );
+  await expect(mediumLink).toHaveAttribute("target", "_blank");
+  const mediumIcon = mediumLink.locator(".medium-icon");
+  await expect(mediumIcon).toBeVisible();
+  expect(
+    await mediumIcon.evaluate((icon) =>
+      Number.parseFloat(getComputedStyle(icon).width),
+    ),
+  ).toBeGreaterThan(19);
   await expect(githubLink).toHaveAttribute(
     "href",
     "https://github.com/haseebshaik00/ResFinance",
@@ -330,6 +345,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     "/favicon.png",
   );
   const sessionCardBox = await page.locator(".auth-card").boundingBox();
+  const mediumLinkBox = await mediumLink.boundingBox();
   const githubLinkBox = await githubLink.boundingBox();
   const logoutButtonBox = await page
     .getByRole("button", { name: "Log out" })
@@ -345,6 +361,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     .getByRole("button", { name: "Switch to Light Mode" })
     .boundingBox();
   expect(sessionCardBox).not.toBeNull();
+  expect(mediumLinkBox).not.toBeNull();
   expect(githubLinkBox).not.toBeNull();
   expect(logoutButtonBox).not.toBeNull();
   expect(notificationButtonBox).not.toBeNull();
@@ -352,6 +369,9 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   expect(dashboardNavigationBox).not.toBeNull();
   expect(themeToggleBox).not.toBeNull();
   expect(dashboardNavigationBox!.width).toBeGreaterThan(450);
+  expect(mediumLinkBox!.x + mediumLinkBox!.width).toBeLessThanOrEqual(
+    githubLinkBox!.x,
+  );
   expect(githubLinkBox!.x + githubLinkBox!.width).toBeLessThanOrEqual(
     themeToggleBox!.x,
   );
@@ -385,6 +405,13 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     "aria-pressed",
     "true",
   );
+  await expect(page.locator(".theme-slider-thumb")).toHaveCSS(
+    "background-color",
+    "rgb(207, 196, 245)",
+  );
+  await expect(
+    page.locator('.theme-toggle[data-theme="dark"] .theme-slider-icon').nth(1),
+  ).toHaveCSS("color", "rgb(23, 32, 42)");
   await page.getByRole("button", { name: "Switch to Light Mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await expect(topBar.locator(".auth-brand-logo-light")).toBeVisible();
@@ -392,6 +419,10 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(page.locator(".theme-toggle")).toHaveAttribute(
     "aria-pressed",
     "false",
+  );
+  await expect(page.locator(".theme-slider-thumb")).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
   );
   await page.screenshot({
     path: "test-results/finance-dashboard-light.png",
@@ -448,7 +479,9 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(page.getByText("Total Earned This Month")).toBeVisible();
   await expect(page.getByText("Total Spent This Month")).toBeVisible();
   await expect(page.getByLabel("Projected savings calculation")).toBeVisible();
-  await expect(page.getByText("Here Savings (Projected) is defined as:")).toBeVisible();
+  await expect(
+    page.getByText("Here Savings (Projected) is defined as:"),
+  ).toBeVisible();
   await expect(page.getByText("Near the limit")).toBeVisible();
   await expect(
     page.getByRole("progressbar", { name: "Groceries budget utilization" }),
@@ -1040,6 +1073,46 @@ test("voids transactions and deactivates recurring items and budgets through con
   expect(removeBudgetRequest).toEqual({ expected_version: 10 });
 });
 
+test("separates the wallet controls while checking the initial session", async ({
+  page,
+}) => {
+  let releaseRefresh = () => {};
+  const holdRefresh = new Promise<void>((resolve) => {
+    releaseRefresh = resolve;
+  });
+  await page.route("**/api/v1/auth/refresh", async (route) => {
+    await holdRefresh;
+    await route.fulfill({ status: 401 });
+  });
+  await page.goto("/");
+
+  const card = page.locator(".auth-card");
+  const connect = page.getByRole("button", { name: "Connect Wallet" });
+  const help = page.getByRole("button", { name: "How to connect ResWallet" });
+  await expect(card).toHaveAttribute("data-state", "checking");
+  await expect(
+    page.getByText("Checking wallet and session state…"),
+  ).toBeVisible();
+  await expect(connect).toBeDisabled();
+
+  const cardBox = await card.boundingBox();
+  const connectBox = await connect.boundingBox();
+  const helpBox = await help.boundingBox();
+  expect(cardBox).not.toBeNull();
+  expect(connectBox).not.toBeNull();
+  expect(helpBox).not.toBeNull();
+  expect(cardBox!.height).toBeGreaterThanOrEqual(168);
+  expect(connectBox!.y - (helpBox!.y + helpBox!.height)).toBeGreaterThanOrEqual(
+    8,
+  );
+  await page.screenshot({
+    path: "test-results/reswallet-checking.png",
+    fullPage: false,
+  });
+
+  releaseRefresh();
+});
+
 test("separates the wallet controls before a wallet is created", async ({
   page,
 }) => {
@@ -1229,6 +1302,7 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
   const helpButton = page.getByRole("button", {
     name: "How to connect ResWallet",
   });
+  await expect(helpButton).toHaveCSS("color", "rgb(242, 189, 90)");
   await helpButton.hover();
   await expect(page.getByRole("tooltip")).toContainText(
     "Install and enable the ResWallet extension",
@@ -1240,16 +1314,22 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
     fullPage: false,
   });
 
+  const mediumLink = page.getByRole("link", {
+    name: "Read about ResFinance on Medium",
+  });
   const githubLink = page.getByRole("link", {
     name: "Open ResFinance repository on GitHub",
   });
   const themeToggle = page.getByRole("button", {
     name: "Switch to Light Mode",
   });
+  const mediumBox = await mediumLink.boundingBox();
   const githubBox = await githubLink.boundingBox();
   const themeBox = await themeToggle.boundingBox();
+  expect(mediumBox).not.toBeNull();
   expect(githubBox).not.toBeNull();
   expect(themeBox).not.toBeNull();
+  expect(mediumBox!.x + mediumBox!.width).toBeLessThanOrEqual(githubBox!.x);
   expect(githubBox!.x + githubBox!.width).toBeLessThanOrEqual(themeBox!.x);
 
   await page.evaluate(() => {
