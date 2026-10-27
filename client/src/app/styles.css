@@ -299,9 +299,12 @@ code {
   height: 1rem;
 }
 
-.theme-toggle[data-theme="light"] .theme-slider-icon:first-child,
-.theme-toggle[data-theme="dark"] .theme-slider-icon:nth-child(2) {
+.theme-toggle[data-theme="light"] .theme-slider-icon:first-child {
   color: #17202a;
+}
+
+.theme-toggle[data-theme="dark"] .theme-slider-icon:nth-child(2) {
+  color: #fff;
 }
 
 .theme-slider-thumb {
@@ -320,7 +323,7 @@ code {
 
 .theme-toggle[data-theme="dark"] .theme-slider-thumb {
   transform: translate(2.19rem, -50%);
-  background: var(--warning);
+  background: #4e2f88;
 }
 
 .status-card {
