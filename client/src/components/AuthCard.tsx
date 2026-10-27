@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type { AuthenticationState } from "../features/auth/useAuthentication";
 import { GitHubLink } from "./GitHubLink";
+import { MediumLink } from "./MediumLink";
 import { ThemeToggle } from "./ThemeToggle";
 
 interface AuthCardProps {
@@ -84,6 +85,7 @@ export function AuthCard({
       {authenticated && children}
       {authenticated ? (
         <div className="auth-actions">
+          <MediumLink />
           <GitHubLink />
           <ThemeToggle />
           {actions}

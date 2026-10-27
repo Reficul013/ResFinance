@@ -175,10 +175,11 @@ Evidence:
   behavior, provenance presentation, and the connected Finance → Groups →
   Crypto Intelligence → Smart Insights journey.
 - The authenticated header keeps Personal Finance, Friends & Groups, and
-  Crypto Intelligence as the three primary tabs; groups repository access,
-  theme, notifications, and logout at the right; defaults new sessions to Dark
-  Mode; preserves an explicit Light Mode preference; and returns to the
-  ResWallet welcome screen after brand selection or logout.
+  Crypto Intelligence as the three primary tabs. Both the header and welcome
+  screen place Medium before the repository link and theme control; the header
+  also includes notifications and logout. New sessions default to Dark Mode,
+  explicit Light Mode preferences persist, and brand selection or logout
+  returns to the ResWallet welcome screen.
 - Added bounded preflight, start, status, restart, logs, stop, and confirmed
   reset operations; explicit ingestion and reconciliation workers; an operator
   guide; and a continuous real two-wallet Chromium journey over ResWallet,

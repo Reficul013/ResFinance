@@ -80,6 +80,7 @@ body {
 }
 
 .app-shell > .auth-card {
+  z-index: 30;
   grid-template-columns: minmax(8rem, auto) minmax(0, 1fr) auto;
   gap: 0.85rem;
   overflow: visible;
@@ -249,7 +250,8 @@ code {
   position: static;
 }
 
-.welcome-actions .github-link {
+.welcome-actions .github-link,
+.welcome-actions .medium-link {
   width: 2.65rem;
   min-height: 2.65rem;
   padding: 0;
@@ -318,7 +320,7 @@ code {
 
 .theme-toggle[data-theme="dark"] .theme-slider-thumb {
   transform: translate(2.19rem, -50%);
-  background: var(--page-accent);
+  background: var(--warning);
 }
 
 .status-card {
@@ -421,7 +423,7 @@ code {
   border: 1px solid var(--control-border);
   border-radius: 999px;
   background: var(--control-background);
-  color: var(--page-accent);
+  color: var(--warning);
   font: inherit;
   font-size: 1rem;
   cursor: help;
@@ -440,17 +442,13 @@ code {
 .auth-help-button:hover,
 .auth-help-button:focus-visible {
   background: var(--control-background-hover);
-  border-color: color-mix(
-    in srgb,
-    var(--page-accent) 45%,
-    var(--control-border)
-  );
-  color: color-mix(in srgb, var(--page-accent) 82%, white);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--page-accent) 22%, transparent);
+  border-color: color-mix(in srgb, var(--warning) 52%, var(--control-border));
+  color: color-mix(in srgb, var(--warning) 82%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 24%, transparent);
 }
 
 .auth-help-button:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--page-accent) 52%, transparent);
+  outline: 3px solid color-mix(in srgb, var(--warning) 52%, transparent);
   outline-offset: 2px;
 }
 

@@ -73,6 +73,7 @@ docs/          Product, architecture, milestone evidence, and development refere
 
 ## Documentation
 
+- [ResFinance overview on Medium](https://medium.com/@haseebshaik00/resfinance-57064e9a54ef)
 - [Product Specification](docs/project-spec.md)
 - [Architecture and Implementation Plan](docs/architecture-implementation-plan.md)
 - [Local Demo Runbook](docs/local-demo-runbook.md)

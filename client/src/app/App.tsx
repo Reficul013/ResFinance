@@ -9,6 +9,7 @@ import {
 
 import { AuthCard } from "../components/AuthCard";
 import { GitHubLink } from "../components/GitHubLink";
+import { MediumLink } from "../components/MediumLink";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useAuthentication } from "../features/auth/useAuthentication";
 import { NotificationCenter } from "../features/insights/NotificationCenter";
@@ -48,6 +49,7 @@ export function App() {
     <main className={authenticated ? "app-shell" : "shell"}>
       {!authenticated && (
         <div className="welcome-actions">
+          <MediumLink />
           <GitHubLink />
           <ThemeToggle />
         </div>

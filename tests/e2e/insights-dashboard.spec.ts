@@ -186,10 +186,26 @@ test("shows evidence-linked insights, notifications, and safe refusals", async (
   await page.getByLabel("1 in-app notifications").click();
   const notificationPopover = page.locator(".notification-popover");
   await expect(notificationPopover).toBeVisible();
+  await expect(page.locator(".app-shell > .auth-card")).toHaveCSS(
+    "z-index",
+    "30",
+  );
   await expect(notificationPopover).toHaveCSS(
     "background-color",
     "rgb(17, 24, 39)",
   );
+  const popoverBox = await notificationPopover.boundingBox();
+  expect(popoverBox).not.toBeNull();
+  const popoverOwnsForegroundPoint = await page.evaluate(
+    ({ x, y }) =>
+      document.elementFromPoint(x, y)?.closest(".notification-popover") !==
+      null,
+    {
+      x: popoverBox!.x + popoverBox!.width / 2,
+      y: popoverBox!.y + popoverBox!.height - 12,
+    },
+  );
+  expect(popoverOwnsForegroundPoint).toBe(true);
   await expect(
     notificationPopover.getByRole("link", {
       name: "Open Smart Savings Insights",

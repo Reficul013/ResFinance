@@ -305,6 +305,15 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   const githubLink = topBar.getByRole("link", {
     name: "Open ResFinance repository on GitHub",
   });
+  const mediumLink = topBar.getByRole("link", {
+    name: "Read about ResFinance on Medium",
+  });
+  await expect(mediumLink).toHaveAttribute(
+    "href",
+    "https://medium.com/@haseebshaik00/resfinance-57064e9a54ef",
+  );
+  await expect(mediumLink).toHaveAttribute("target", "_blank");
+  await expect(mediumLink.locator(".medium-icon")).toBeVisible();
   await expect(githubLink).toHaveAttribute(
     "href",
     "https://github.com/haseebshaik00/ResFinance",
@@ -330,6 +339,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     "/favicon.png",
   );
   const sessionCardBox = await page.locator(".auth-card").boundingBox();
+  const mediumLinkBox = await mediumLink.boundingBox();
   const githubLinkBox = await githubLink.boundingBox();
   const logoutButtonBox = await page
     .getByRole("button", { name: "Log out" })
@@ -345,6 +355,7 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     .getByRole("button", { name: "Switch to Light Mode" })
     .boundingBox();
   expect(sessionCardBox).not.toBeNull();
+  expect(mediumLinkBox).not.toBeNull();
   expect(githubLinkBox).not.toBeNull();
   expect(logoutButtonBox).not.toBeNull();
   expect(notificationButtonBox).not.toBeNull();
@@ -352,6 +363,9 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   expect(dashboardNavigationBox).not.toBeNull();
   expect(themeToggleBox).not.toBeNull();
   expect(dashboardNavigationBox!.width).toBeGreaterThan(450);
+  expect(mediumLinkBox!.x + mediumLinkBox!.width).toBeLessThanOrEqual(
+    githubLinkBox!.x,
+  );
   expect(githubLinkBox!.x + githubLinkBox!.width).toBeLessThanOrEqual(
     themeToggleBox!.x,
   );
@@ -385,6 +399,10 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
     "aria-pressed",
     "true",
   );
+  await expect(page.locator(".theme-slider-thumb")).toHaveCSS(
+    "background-color",
+    "rgb(242, 189, 90)",
+  );
   await page.getByRole("button", { name: "Switch to Light Mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await expect(topBar.locator(".auth-brand-logo-light")).toBeVisible();
@@ -392,6 +410,10 @@ test("renders exact balances, budget alert, savings, and provenance", async ({
   await expect(page.locator(".theme-toggle")).toHaveAttribute(
     "aria-pressed",
     "false",
+  );
+  await expect(page.locator(".theme-slider-thumb")).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
   );
   await page.screenshot({
     path: "test-results/finance-dashboard-light.png",
@@ -1271,6 +1293,7 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
   const helpButton = page.getByRole("button", {
     name: "How to connect ResWallet",
   });
+  await expect(helpButton).toHaveCSS("color", "rgb(242, 189, 90)");
   await helpButton.hover();
   await expect(page.getByRole("tooltip")).toContainText(
     "Install and enable the ResWallet extension",
@@ -1282,16 +1305,22 @@ test("updates the ResWallet login guidance after the popup changes wallet state"
     fullPage: false,
   });
 
+  const mediumLink = page.getByRole("link", {
+    name: "Read about ResFinance on Medium",
+  });
   const githubLink = page.getByRole("link", {
     name: "Open ResFinance repository on GitHub",
   });
   const themeToggle = page.getByRole("button", {
     name: "Switch to Light Mode",
   });
+  const mediumBox = await mediumLink.boundingBox();
   const githubBox = await githubLink.boundingBox();
   const themeBox = await themeToggle.boundingBox();
+  expect(mediumBox).not.toBeNull();
   expect(githubBox).not.toBeNull();
   expect(themeBox).not.toBeNull();
+  expect(mediumBox!.x + mediumBox!.width).toBeLessThanOrEqual(githubBox!.x);
   expect(githubBox!.x + githubBox!.width).toBeLessThanOrEqual(themeBox!.x);
 
   await page.evaluate(() => {
