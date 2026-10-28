@@ -213,6 +213,60 @@ coverage was `0.8804639578`. Equality satisfies the unchanged no-worse-than-
 naive rule, but it is not predictive outperformance. The immutable promotion
 and snapshot remain research-only and do not execute trades.
 
+## Prospective protocol v3: daily forecasts scored after the fact
+
+Protocol v3 (`prospective-forward-v3`, see `docs/research-protocol.md`) has no
+retrospective holdout. It freezes one run, then records one forecast a day and
+scores each forecast only once its outcome exists. Run every command with the
+local stack up.
+
+1. **Ingest.** Run once to backfill from 2020-04-10, then daily.
+   - Sources: Coin Metrics prices and on-chain data, DefiLlama Solana data, and GDELT
+     DOC 2.0 news.
+   - Each source resumes from the day after its newest stored day.
+   - A source with nothing new is reported as failed, and the others continue.
+   - GDELT outage days are dropped by the predeclared outage rule.
+
+   ```bash
+   .venv/bin/python -m scripts.milestone9.run_prospective ingest --output /private/tmp/prospective-ingest.json
+   ```
+
+2. **Freeze.** Run once. It trains the predeclared 21-model run and persists it, and
+   it prints the `run_id`. It never promotes.
+
+   ```bash
+   .venv/bin/python -m scripts.milestone9.run_prospective freeze --output /private/tmp/prospective-freeze.json
+   ```
+
+3. **Issue.** Run every day, between 00:00 and 24:00 UTC. It ingests, then records the
+   forecast for yesterday's decision date in the immutable ledger.
+   - Entries issued more than 24 hours after their decision time are rejected.
+   - Missed days are never back-filled.
+
+   ```bash
+   .venv/bin/python -m scripts.milestone9.run_prospective issue --run-id <run_id>
+   ```
+
+4. **Score.** Run every day, after the issue step. It scores matured forecasts against
+   the no-change baseline.
+   - Once each horizon has 90 scored decision dates, it stores the gate decision. This is
+     done once, from the earliest 90 dates.
+   - With the 30-day horizon, the earliest possible decision is late February 2027.
+
+   ```bash
+   .venv/bin/python -m scripts.milestone9.run_prospective score --run-id <run_id>
+   ```
+
+5. **Promote.** Run only after a passing gate decision. It writes the promotion event and
+   publishes a 15-day snapshot. It fails for a failed or missing decision.
+
+   ```bash
+   .venv/bin/python -m scripts.milestone9.run_prospective promote --run-id <run_id> --approved-by <name>
+   ```
+
+Steps 3 and 4 need a scheduler, for example a cron entry that runs `issue` and then
+`score` once a day after 00:30 UTC. The repository does not install one.
+
 ## Troubleshooting
 
 - `docker-engine: unavailable`: start Docker Desktop and rerun preflight.

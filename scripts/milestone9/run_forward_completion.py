@@ -213,13 +213,18 @@ def ingest_forward(repository: CryptoResearchRepository, *, end: date) -> list[d
     return receipts
 
 
-def build_current_dataset(repository: CryptoResearchRepository, *, end: date) -> FeatureDataset:
+def build_current_dataset(
+    repository: CryptoResearchRepository,
+    *,
+    end: date,
+    providers: tuple[str, ...] = PROVIDERS,
+) -> FeatureDataset:
     as_of = datetime.combine(end + timedelta(days=1), time.max, tzinfo=UTC)
     observations = repository.observations()
     dataset = PointInTimeFeatureBuilder().build(
         observations,
         assets=tuple(CryptoAsset),
-        providers=PROVIDERS,
+        providers=providers,
         start=START,
         end=end,
         as_of_utc=as_of,

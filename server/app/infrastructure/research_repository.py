@@ -20,6 +20,9 @@ _FORWARD_PROTOCOLS: dict[object, str] = {
     3: "untouched-forward-holdout-v2",
 }
 _FORWARD_EMBARGO_DAYS: dict[object, int] = {2: 15, 3: 30}
+_PROSPECTIVE_PROTOCOL = "prospective-forward-v3"
+PROSPECTIVE_GATE = "forecast-promotion-prospective-v1"
+PROSPECTIVE_GATE_KEY_PREFIX = "prospective-gate:"
 _REQUIRED_MODELS = {
     "naive-zero-return",
     "linear-ridge",
@@ -80,7 +83,7 @@ class ResearchRunRepository:
             raise ValueError("metrics artifact does not match the run manifest")
         if json.loads(artifacts["gate-weights.json"]) != manifest.get("gate_weights"):
             raise ValueError("gate-weight artifact does not match the run manifest")
-        if manifest.get("schema_version") in (2, 3) and json.loads(
+        if manifest.get("schema_version") in (2, 3, 4) and json.loads(
             artifacts["adaptive-calibration.json"]
         ) != manifest.get("adaptive_calibration"):
             raise ValueError("adaptive calibration artifact does not match the run manifest")
@@ -180,6 +183,8 @@ class ResearchRunRepository:
             raise ValueError("promotion requires an explicit approver")
         manifest = self.run_manifest(run_id)
         _validate_manifest(manifest)
+        if manifest.get("schema_version") == 4:
+            raise ValueError("schema-v4 runs are promoted only from a passing prospective gate")
         metrics = manifest.get("metrics")
         if not isinstance(metrics, dict):
             raise ValueError("run metrics are invalid")
@@ -226,6 +231,58 @@ class ResearchRunRepository:
             "deployment_model_hash": _deployment_model_hash(manifest),
             "fallback_model_artifact": manifest.get("fallback_model_artifact"),
             "checks": passed,
+            "approved_by": approved_by,
+            "promoted_at_utc": promoted.isoformat().replace("+00:00", "Z"),
+        }
+        event_id = hashlib.sha256(canonical_json_bytes(event_core)).hexdigest()
+        return self._put_immutable(
+            f"promotion:forecast:{event_id}", {**event_core, "event_id": event_id}
+        )
+
+    def promote_prospective(
+        self,
+        *,
+        run_id: str,
+        promoted_at_utc: datetime,
+        approved_by: str,
+    ) -> ImmutableStoreResult:
+        """Promote a protocol-v3 run whose stored prospective gate decision passed."""
+        if not approved_by:
+            raise ValueError("promotion requires an explicit approver")
+        manifest = self.run_manifest(run_id)
+        _validate_manifest(manifest)
+        if manifest.get("schema_version") != 4:
+            raise ValueError("only schema-v4 runs are promoted from a prospective gate")
+        encoded = self._store.get(f"{PROSPECTIVE_GATE_KEY_PREFIX}{_safe(run_id)}")
+        if encoded is None:
+            raise ValueError("the prospective gate has not reached a decision for this run")
+        decision = _object(encoded)
+        core = {key: value for key, value in decision.items() if key != "decision_hash"}
+        if (
+            decision.get("decision_hash") != hashlib.sha256(canonical_json_bytes(core)).hexdigest()
+            or decision.get("run_id") != run_id
+        ):
+            raise ValueError("prospective gate decision is invalid")
+        criteria = decision.get("criteria")
+        if not isinstance(criteria, dict) or criteria.get("version") != PROSPECTIVE_GATE:
+            raise ValueError("prospective gate decision uses unknown criteria")
+        if decision.get("status") != "passed":
+            raise ValueError("model does not satisfy promotion criteria: prospective gate failed")
+        promoted = promoted_at_utc.astimezone(UTC)
+        event_core: dict[str, object] = {
+            "schema_version": 1,
+            "event_type": "research.model-promoted",
+            "run_id": run_id,
+            "model_name": "adaptive-gating",
+            "criteria": criteria,
+            "evaluated_metrics": decision.get("pooled"),
+            "prospective_gate_decision_hash": decision["decision_hash"],
+            "dataset_hash": manifest.get("dataset_hash"),
+            "evaluated_model_artifact": manifest.get("evaluated_model_artifact"),
+            "deployment_model_artifact": manifest.get("deployment_model_artifact"),
+            "deployment_model_hash": _deployment_model_hash(manifest),
+            "fallback_model_artifact": manifest.get("fallback_model_artifact"),
+            "checks": decision.get("checks"),
             "approved_by": approved_by,
             "promoted_at_utc": promoted.isoformat().replace("+00:00", "Z"),
         }
@@ -299,8 +356,8 @@ class ResearchRunRepository:
 
 def _validate_manifest(manifest: Mapping[str, object]) -> None:
     schema_version = manifest.get("schema_version")
-    if schema_version not in (1, 2, 3) or manifest.get("status") != "completed":
-        raise ValueError("only completed schema-v1, v2, or v3 research runs may be persisted")
+    if schema_version not in (1, 2, 3, 4) or manifest.get("status") != "completed":
+        raise ValueError("only completed schema-v1 to v4 research runs may be persisted")
     if manifest.get("assets") != ["BTC", "ETH", "SOL"]:
         raise ValueError("research run must contain exactly BTC, ETH, and SOL")
     reported = manifest.get("reported_models")
@@ -327,7 +384,12 @@ def _validate_manifest(manifest: Mapping[str, object]) -> None:
                 f"schema-v{schema_version} research run violates the untouched-forward protocol"
             )
         if schema_version == 3:
-            _validate_forward_v2_holdout(holdout)
+            _validate_forward_settings(
+                holdout, "schema-v3 research run violates forward protocol v2"
+            )
+    if schema_version == 4:
+        _validate_prospective_window(manifest)
+    if schema_version in (2, 3, 4):
         artifacts = manifest.get("artifact_hashes")
         if not isinstance(artifacts, dict):
             raise ValueError("schema-v2 research artifact hashes are required")
@@ -353,7 +415,7 @@ def _validate_manifest(manifest: Mapping[str, object]) -> None:
             raise ValueError("schema-v2 adaptive calibration artifact hash is invalid")
         calibration = manifest.get("adaptive_calibration")
         fallback = manifest.get("fallback_model_artifact")
-        if isinstance(calibration, dict) and calibration.get("schema_version") == 2:
+        if isinstance(calibration, dict) and calibration.get("schema_version") in (2, 3):
             policy = calibration.get("stale_source_policy")
             if (
                 not isinstance(fallback, str)
@@ -379,7 +441,50 @@ def _validate_manifest(manifest: Mapping[str, object]) -> None:
             raise ValueError(f"research manifest {field} is required")
 
 
-def _validate_forward_v2_holdout(holdout: Mapping[str, object]) -> None:
+def _validate_prospective_window(manifest: Mapping[str, object]) -> None:
+    window = manifest.get("prospective")
+    message = "schema-v4 research run violates prospective forward protocol v3"
+    if (
+        manifest.get("folds")
+        or manifest.get("evaluation_protocol") != _PROSPECTIVE_PROTOCOL
+        or not isinstance(window, dict)
+        or window.get("embargo_days") != 30
+        or window.get("retrospective_holdout") is not None
+        or window.get("post_freeze_tuning_permitted") is not False
+        or window.get("news_provider") != "gdelt-doc"
+        or window.get("promotion_gate") != PROSPECTIVE_GATE
+    ):
+        raise ValueError(message)
+    _validate_forward_settings(window, message)
+    try:
+        last_validation = date.fromisoformat(str(window.get("validation_last_decision")))
+        prospective_start = date.fromisoformat(str(window.get("prospective_start")))
+    except ValueError as exc:
+        raise ValueError(message) from exc
+    if (prospective_start - last_validation).days <= 30:
+        raise ValueError(message)
+    calibration = manifest.get("adaptive_calibration")
+    paths = calibration.get("path_adjustments") if isinstance(calibration, dict) else None
+    if (
+        not isinstance(calibration, dict)
+        or calibration.get("schema_version") != 3
+        or not isinstance(paths, dict)
+        or set(paths) != {"primary", "fallback"}
+        or not all(_adjustments(paths[name]) for name in paths)
+        or not _adjustments(calibration.get("no_change_adjustment"))
+    ):
+        raise ValueError("schema-v4 research run requires per-path calibration")
+
+
+def _adjustments(value: object) -> bool:
+    return (
+        isinstance(value, list)
+        and len(value) == 3
+        and all(isinstance(item, int | float) and item >= 0 for item in value)
+    )
+
+
+def _validate_forward_settings(holdout: Mapping[str, object], message: str) -> None:
     seeds = holdout.get("seeds")
     try:
         validation_days = (
@@ -387,7 +492,7 @@ def _validate_forward_v2_holdout(holdout: Mapping[str, object]) -> None:
             - date.fromisoformat(str(holdout.get("validation_start")))
         ).days + 1
     except ValueError as exc:
-        raise ValueError("schema-v3 research run validation window is invalid") from exc
+        raise ValueError(message) from exc
     if (
         holdout.get("horizons") != [15, 20, 30]
         or not isinstance(seeds, list)
@@ -395,7 +500,7 @@ def _validate_forward_v2_holdout(holdout: Mapping[str, object]) -> None:
         or len(set(seeds)) != 3
         or validation_days < 365
     ):
-        raise ValueError("schema-v3 research run violates forward protocol v2")
+        raise ValueError(message)
 
 
 def _required_text(value: Mapping[str, object], field: str) -> str:

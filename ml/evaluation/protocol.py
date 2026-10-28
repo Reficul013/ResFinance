@@ -116,9 +116,10 @@ def metric_bundle(
     sharpe = 0.0
     if float(standard_deviation) > 0:
         sharpe = float(flattened_strategy.mean() / standard_deviation * math.sqrt(252.0))
-    wealth = torch.cumprod((1.0 + flattened_strategy).clamp_min(0.01), dim=0)
-    running_peak = torch.cummax(wealth, dim=0).values
-    maximum_drawdown = float(((wealth - running_peak) / running_peak).min())
+    # Log wealth avoids overflow when a long window compounds to infinity.
+    log_wealth = torch.cumsum(torch.log((1.0 + flattened_strategy).clamp_min(0.01)), dim=0)
+    running_peak = torch.cummax(log_wealth, dim=0).values
+    maximum_drawdown = float(torch.expm1(log_wealth - running_peak).min())
     return {
         "sample_count": targets.shape[0],
         "mae": _round(errors.abs().mean()),

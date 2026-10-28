@@ -20,6 +20,7 @@ from ml.data.datasets import (
     build_sequence_dataset,
     requires_market_only_fallback,
 )
+from ml.evaluation.prospective import PROSPECTIVE_GATE
 from ml.evaluation.protocol import conformalize, metric_bundle
 from ml.features.point_in_time import FeatureDataset
 from ml.models.mspciformer import (
@@ -36,6 +37,10 @@ from server.app.infrastructure.encryption import canonical_json_bytes
 FORECAST_POLICY = "no-change-centre-native-heads-v1"
 FALLBACK_MODEL_ARTIFACT = "deployment-checkpoint-market-only.json"
 FORWARD_PROTOCOL = "untouched-forward-holdout-v2"
+PROSPECTIVE_PROTOCOL = "prospective-forward-v3"
+# v3 uses one news definition throughout: the DOC timeline API, never the one-time GKG export.
+PROSPECTIVE_NEWS_PROVIDER = "gdelt-doc"
+EXCLUDED_NEWS_PROVIDER = "gdelt"
 # The exploratory 15-30 day study scored the period from 2025-04-01 once on 2026-10-26.
 EXPLORATORY_HOLDOUT_SCORED = date(2026, 10, 26)
 
@@ -84,6 +89,40 @@ class ForwardRunConfig:
 
 
 @dataclass(frozen=True)
+class ProspectiveRunConfig(ForwardRunConfig):
+    """Forward protocol v3, predeclared 2026-10-28 in docs/research-protocol.md.
+
+    There is no retrospective holdout: ``holdout_start`` is the first prospective decision
+    date, and evidence comes only from forecasts recorded before their outcomes exist.
+    """
+
+    training_end: date = date(2025, 8, 21)
+    validation_start: date = date(2025, 9, 21)
+    validation_end: date = date(2026, 9, 20)
+    holdout_start: date = date(2026, 10, 28)
+    predeclared_at_utc: str = "2026-10-28T00:00:00Z"
+    protocol: str = PROSPECTIVE_PROTOCOL
+    purpose: str = "forward-protocol-v3-prospective-freeze"
+    minimum_primary_calibration_samples: int = 100
+
+    @property
+    def prospective_start(self) -> date:
+        return self.holdout_start
+
+    def to_dict(self) -> dict[str, object]:
+        value = super().to_dict()
+        del value["holdout_start"]
+        return {
+            **value,
+            "prospective_start": self.prospective_start.isoformat(),
+            "calibration_method": "per-path-split-conformal",
+            "minimum_primary_calibration_samples": self.minimum_primary_calibration_samples,
+            "news_provider": PROSPECTIVE_NEWS_PROVIDER,
+            "promotion_gate": PROSPECTIVE_GATE,
+        }
+
+
+@dataclass(frozen=True)
 class ForwardResearchResult:
     run_id: str
     dataset_hash: str
@@ -128,16 +167,30 @@ def run_forward_research(
     base_runner._configure_determinism(config.seed)
     if not config.seeds or len(set(config.seeds)) != len(config.seeds):
         raise ValueError("forward protocol seeds must be a non-empty unique sequence")
+    prospective = isinstance(config, ProspectiveRunConfig)
+    if prospective:
+        _verify_prospective_sources(feature_dataset)
     sequences = build_sequence_dataset(
         feature_dataset, lookback=config.lookback, horizons=config.horizons
     )
     train = _indices_through(sequences, config.training_end)
     validation = _indices_between(sequences, config.validation_start, config.validation_end)
-    holdout = _indices_from(sequences, config.holdout_start)
-    if not train.numel() or not validation.numel() or not holdout.numel():
-        raise ValueError("forward protocol windows must all contain samples")
-    _verify_disjoint(train, validation, holdout)
-    _verify_targets_mature(sequences, (train, validation, holdout), max(config.horizons))
+    if prospective:
+        # Validation-window diagnostics stand in for holdout metrics; they are not evidence.
+        if not train.numel() or not validation.numel():
+            raise ValueError("forward protocol windows must all contain samples")
+        _verify_disjoint(train, validation)
+        _verify_targets_mature(sequences, (train, validation), max(config.horizons))
+        last_validation = _date(sequences.decision_dates[int(validation[-1])])
+        if last_validation + timedelta(days=config.embargo_days) >= config.holdout_start:
+            raise ValueError("forward protocol targets overlap the next window")
+        holdout = validation
+    else:
+        holdout = _indices_from(sequences, config.holdout_start)
+        if not train.numel() or not validation.numel() or not holdout.numel():
+            raise ValueError("forward protocol windows must all contain samples")
+        _verify_disjoint(train, validation, holdout)
+        _verify_targets_mature(sequences, (train, validation, holdout), max(config.horizons))
     standardizer = MaskedStandardizer.fit(sequences.features[train], sequences.masks[train])
     normalized = standardizer.transform(sequences.features, sequences.masks)
     forecasts: dict[str, _Forecast] = {}
@@ -212,6 +265,7 @@ def run_forward_research(
         validation,
         holdout,
         config,
+        per_path=prospective,
     )
 
     metrics = {
@@ -224,7 +278,7 @@ def run_forward_research(
         )
         for name in MODEL_ORDER
     }
-    prediction_rows = _prediction_rows(sequences, holdout, forecasts)
+    prediction_rows = _prediction_rows(sequences, holdout, forecasts, config.protocol)
     prediction_bytes = canonical_json_bytes(prediction_rows)
     prediction_hash = hashlib.sha256(prediction_bytes).hexdigest()
     calibration_bytes = canonical_json_bytes(adaptive_calibration)
@@ -249,9 +303,16 @@ def run_forward_research(
     config_document = config.to_dict()
     provenance = base_runner._provenance(root)
     completed = now().astimezone(UTC)
-    holdout_previously_observed = config.holdout_start <= EXPLORATORY_HOLDOUT_SCORED
+    window_key, window = (
+        ("prospective", _prospective_window(config, sequences, train, validation))
+        if prospective
+        else (
+            "forward_holdout",
+            _holdout_window(config, sequences, train, validation, holdout),
+        )
+    )
     manifest: dict[str, object] = {
-        "schema_version": 3,
+        "schema_version": 4 if prospective else 3,
         "run_id": identifier,
         "purpose": config.purpose,
         "owner": config.owner,
@@ -291,36 +352,19 @@ def run_forward_research(
             "known_nondeterministic_operations": [],
         },
         "evaluation_protocol": config.protocol,
-        "forward_holdout": {
-            "predeclared_at_utc": config.predeclared_at_utc,
-            "training_end": config.training_end.isoformat(),
-            "validation_start": config.validation_start.isoformat(),
-            "validation_end": config.validation_end.isoformat(),
-            "holdout_start": config.holdout_start.isoformat(),
-            "holdout_end": _sample_date(sequences, int(holdout[-1])),
-            "train_sample_count": int(train.numel()),
-            "validation_sample_count": int(validation.numel()),
-            "holdout_sample_count": int(holdout.numel()),
-            "embargo_days": config.embargo_days,
-            "horizons": list(config.horizons),
-            "seeds": list(config.seeds),
-            "holdout_labels_consumed_once": True,
-            "post_holdout_tuning_permitted": False,
-            "holdout_previously_observed": holdout_previously_observed,
-            "holdout_note": (
-                "scored once by the exploratory 15-30 day study on "
-                f"{EXPLORATORY_HOLDOUT_SCORED.isoformat()}; this result confirms the "
-                "implementation and is not new untouched evidence"
-                if holdout_previously_observed
-                else "untouched at predeclaration"
-            ),
-        },
+        window_key: window,
         "folds": [],
         "preprocessing": "masked z-score fit only through the frozen training cutoff",
         "conformal": {
-            "method": "split conformal on the frozen validation window",
+            "method": (
+                "per-path split conformal on the frozen validation window"
+                if prospective
+                else "split conformal on the frozen validation window"
+            ),
             "alpha": config.conformal_alpha,
-            "adaptive_adjustment": adaptive_calibration["conformal_adjustment"],
+            "adaptive_adjustment": adaptive_calibration.get(
+                "path_adjustments", adaptive_calibration.get("conformal_adjustment")
+            ),
         },
         "forecast_policy": FORECAST_POLICY,
         "adaptive_calibration": adaptive_calibration,
@@ -349,6 +393,76 @@ def run_forward_research(
     )
 
 
+def _holdout_window(
+    config: ForwardRunConfig,
+    sequences: ResearchSequenceDataset,
+    train: Tensor,
+    validation: Tensor,
+    holdout: Tensor,
+) -> dict[str, object]:
+    holdout_previously_observed = config.holdout_start <= EXPLORATORY_HOLDOUT_SCORED
+    return {
+        "predeclared_at_utc": config.predeclared_at_utc,
+        "training_end": config.training_end.isoformat(),
+        "validation_start": config.validation_start.isoformat(),
+        "validation_end": config.validation_end.isoformat(),
+        "holdout_start": config.holdout_start.isoformat(),
+        "holdout_end": _sample_date(sequences, int(holdout[-1])),
+        "train_sample_count": int(train.numel()),
+        "validation_sample_count": int(validation.numel()),
+        "holdout_sample_count": int(holdout.numel()),
+        "embargo_days": config.embargo_days,
+        "horizons": list(config.horizons),
+        "seeds": list(config.seeds),
+        "holdout_labels_consumed_once": True,
+        "post_holdout_tuning_permitted": False,
+        "holdout_previously_observed": holdout_previously_observed,
+        "holdout_note": (
+            "scored once by the exploratory 15-30 day study on "
+            f"{EXPLORATORY_HOLDOUT_SCORED.isoformat()}; this result confirms the "
+            "implementation and is not new untouched evidence"
+            if holdout_previously_observed
+            else "untouched at predeclaration"
+        ),
+    }
+
+
+def _prospective_window(
+    config: ForwardRunConfig,
+    sequences: ResearchSequenceDataset,
+    train: Tensor,
+    validation: Tensor,
+) -> dict[str, object]:
+    return {
+        "predeclared_at_utc": config.predeclared_at_utc,
+        "training_end": config.training_end.isoformat(),
+        "validation_start": config.validation_start.isoformat(),
+        "validation_end": config.validation_end.isoformat(),
+        "validation_last_decision": _sample_date(sequences, int(validation[-1])),
+        "prospective_start": config.holdout_start.isoformat(),
+        "train_sample_count": int(train.numel()),
+        "validation_sample_count": int(validation.numel()),
+        "embargo_days": config.embargo_days,
+        "horizons": list(config.horizons),
+        "seeds": list(config.seeds),
+        "news_provider": PROSPECTIVE_NEWS_PROVIDER,
+        "retrospective_holdout": None,
+        "metrics_window": "validation (calibration fit window): diagnostics, not evidence",
+        "post_freeze_tuning_permitted": False,
+        "promotion_gate": PROSPECTIVE_GATE,
+    }
+
+
+def _verify_prospective_sources(dataset: FeatureDataset) -> None:
+    providers = dataset.manifest.get("providers")
+    if (
+        not isinstance(providers, list)
+        or PROSPECTIVE_NEWS_PROVIDER not in providers
+        or EXCLUDED_NEWS_PROVIDER in providers
+    ):
+        raise ValueError("protocol v3 features must use the GDELT DOC news provider only")
+
+
 def infer_current_forecast(
     feature_dataset: FeatureDataset,
     *,
@@ -362,10 +476,8 @@ def infer_current_forecast(
     batch = build_inference_batch(feature_dataset, lookback=lookback)
     normalized = standardizer.transform(batch.features, batch.masks)
     output = _ensemble(_members(model), normalized, batch.masks, batch.asset_indices)
-    adjustment = torch.tensor(
-        cast(list[float], calibration["conformal_adjustment"]), dtype=output.quantiles.dtype
-    )
-    if calibration.get("schema_version") == 2:
+    dtype = output.quantiles.dtype
+    if calibration.get("schema_version") in (2, 3):
         if calibration.get("policy") != FORECAST_POLICY:
             raise ValueError("unsupported forecast policy")
         switch = requires_market_only_fallback(batch.masks)
@@ -380,6 +492,17 @@ def infer_current_forecast(
             probability = torch.where(switch.reshape(-1, 1), fallback.probability, probability)
         expected = torch.zeros_like(probability)
         fallback_used = tuple(bool(value) for value in switch.tolist())
+        if calibration.get("schema_version") == 3:
+            paths = cast(dict[str, list[float]], calibration["path_adjustments"])
+            adjustment = torch.where(
+                switch.reshape(-1, 1),
+                torch.tensor(paths["fallback"], dtype=dtype),
+                torch.tensor(paths["primary"], dtype=dtype),
+            )
+        else:
+            adjustment = torch.tensor(
+                cast(list[float], calibration["conformal_adjustment"]), dtype=dtype
+            )
     else:
         # Schema-v1 runs used a validation-selected reliability shrinkage coefficient.
         coefficient = float(cast(float, calibration["selected_coefficient"]))
@@ -387,6 +510,9 @@ def infer_current_forecast(
         probability = 0.5 + coefficient * (output.probability - 0.5)
         quantiles = output.quantiles * coefficient
         fallback_used = (False,) * len(batch.assets)
+        adjustment = torch.tensor(
+            cast(list[float], calibration["conformal_adjustment"]), dtype=dtype
+        )
     lower = quantiles[:, :, 0] - adjustment
     median = quantiles[:, :, 1]
     upper = quantiles[:, :, 2] + adjustment
@@ -446,12 +572,15 @@ def _deployable(
     validation: Tensor,
     holdout: Tensor,
     config: ForwardRunConfig,
+    *,
+    per_path: bool = False,
 ) -> tuple[_Forecast, dict[str, object]]:
     """No-change centre with the native range and direction heads.
 
     The expected return is fixed at zero because no evaluated point forecast beat the
     zero-return baseline; ranges and P(up) come from the seed-averaged native heads. Samples
     whose sentiment or on-chain source is missing or stale use the market-only model instead.
+    With ``per_path`` each model's range is calibrated only on the samples it can serve.
     """
     primary = _outputs(adaptive, dataset, normalized, validation, holdout)
     fallback = _outputs(market_only, dataset, normalized, validation, holdout)
@@ -466,14 +595,54 @@ def _deployable(
     probability = torch.where(
         switches[1].reshape(-1, 1), fallback[1].probability, primary[1].probability
     )
-    lower, upper, adjustment = conformalize(
-        dataset.targets[validation],
-        quantiles[0][:, :, 0],
-        quantiles[0][:, :, 2],
-        quantiles[1][:, :, 0],
-        quantiles[1][:, :, 2],
-        alpha=config.conformal_alpha,
-    )
+    targets = dataset.targets[validation]
+    path_calibration: dict[str, object] = {}
+    if per_path:
+        fresh = ~switches[0]
+        minimum = cast(ProspectiveRunConfig, config).minimum_primary_calibration_samples
+        if int(fresh.sum()) < minimum:
+            raise ValueError(
+                "too few fresh-source validation samples to calibrate the primary path"
+            )
+        primary_adjustment = _adjustment(targets[fresh], primary[0].quantiles[fresh], config)
+        fallback_adjustment = _adjustment(targets, fallback[0].quantiles, config)
+        adjustment = torch.where(
+            switches[1].reshape(-1, 1), fallback_adjustment, primary_adjustment
+        )
+        lower = quantiles[1][:, :, 0] - adjustment
+        upper = quantiles[1][:, :, 2] + adjustment
+        path_calibration = {
+            "schema_version": 3,
+            "calibration_method": "per-path split conformal",
+            "range_source": (
+                "seed-averaged native quantile head with a split-conformal adjustment fitted "
+                "separately for the primary and market-only fallback paths"
+            ),
+            "path_adjustments": {
+                "primary": [_round(value) for value in primary_adjustment],
+                "fallback": [_round(value) for value in fallback_adjustment],
+            },
+            "path_calibration_sample_counts": {
+                "primary": int(fresh.sum()),
+                "fallback": int(targets.shape[0]),
+            },
+            "no_change_adjustment": [
+                _round(value)
+                for value in _adjustment(
+                    targets, torch.zeros((*targets.shape, 3), dtype=targets.dtype), config
+                )
+            ],
+        }
+    else:
+        lower, upper, adjustment = conformalize(
+            targets,
+            quantiles[0][:, :, 0],
+            quantiles[0][:, :, 2],
+            quantiles[1][:, :, 0],
+            quantiles[1][:, :, 2],
+            alpha=config.conformal_alpha,
+        )
+        path_calibration = {"conformal_adjustment": [_round(value) for value in adjustment]}
     median = quantiles[1][:, :, 1]
     forecast = _Forecast(
         expected=torch.zeros_like(median),
@@ -502,11 +671,25 @@ def _deployable(
             "end": config.validation_end.isoformat(),
         },
         "conformal_alpha": config.conformal_alpha,
-        "conformal_adjustment": [_round(value) for value in adjustment],
         "validation_fallback_share": _round(switches[0].to(torch.float32).mean()),
-        "holdout_fallback_share": _round(switches[1].to(torch.float32).mean()),
+        **path_calibration,
     }
+    if not per_path:
+        calibration["holdout_fallback_share"] = _round(switches[1].to(torch.float32).mean())
     return forecast, calibration
+
+
+def _adjustment(targets: Tensor, quantiles: Tensor, config: ForwardRunConfig) -> Tensor:
+    """Split-conformal widening per horizon for one path's p10/p90 outputs."""
+    _, _, adjustment = conformalize(
+        targets,
+        quantiles[:, :, 0],
+        quantiles[:, :, 2],
+        quantiles[:, :, 0],
+        quantiles[:, :, 2],
+        alpha=config.conformal_alpha,
+    )
+    return adjustment
 
 
 @dataclass(frozen=True)
@@ -607,6 +790,7 @@ def _prediction_rows(
     sequences: ResearchSequenceDataset,
     indices: Tensor,
     forecasts: dict[str, _Forecast],
+    protocol: str,
 ) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for name in MODEL_ORDER:
@@ -616,7 +800,7 @@ def _prediction_rows(
                 rows.append(
                     {
                         "model": name,
-                        "protocol": "untouched-forward-holdout-v1",
+                        "protocol": protocol,
                         "decision_time_utc": sequences.decision_dates[sample_index],
                         "asset": sequences.assets[sample_index],
                         "horizon_days": horizon,

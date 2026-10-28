@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
+import urllib.parse
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -11,8 +12,10 @@ from server.app.infrastructure.provider_adapters import (
     CoinGeckoCurrentQuoteAdapter,
     CoinMetricsMarketAdapter,
     DefiLlamaSolanaAdapter,
+    GdeltDocTimelineAdapter,
     GdeltGkgCsvAdapter,
     JsonResponse,
+    fetch_gdelt_doc_json,
 )
 
 
@@ -181,3 +184,81 @@ def test_gdelt_adapter_rejects_an_incomplete_requested_grid(tmp_path: Path) -> N
             start_utc=datetime(2025, 1, 1, tzinfo=UTC),
             end_utc=datetime(2025, 1, 2, tzinfo=UTC),
         )
+
+
+def _doc_timeline(first: datetime, totals: list[int], *, tone: bool = False) -> dict[str, object]:
+    return {
+        "timeline": [
+            {
+                "series": "Average Tone" if tone else "Article Count",
+                "data": [
+                    {
+                        "date": (first + timedelta(days=offset)).strftime("%Y%m%dT%H%M%SZ"),
+                        "value": f"-0.{offset + 1}" if tone else str(10 + offset),
+                        **({} if tone else {"norm": str(total)}),
+                    }
+                    for offset, total in enumerate(totals)
+                ],
+            }
+        ]
+    }
+
+
+def test_gdelt_doc_adapter_emits_daily_volume_and_tone_with_two_day_availability() -> None:
+    first = datetime(2026, 9, 1, tzinfo=UTC)
+    totals = [150_000] * 42
+    totals[35] = 4_000  # an outage day: under half the same weekday's recent median
+    calls: list[dict[str, list[str]]] = []
+
+    def fetch(url: str) -> JsonResponse:
+        query = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
+        calls.append(query)
+        payload = _doc_timeline(first, totals, tone=query["mode"] == ["timelinetone"])
+        return JsonResponse(url, datetime(2026, 10, 12, 6, tzinfo=UTC), payload, "a" * 64)
+
+    items = GdeltDocTimelineAdapter(fetcher=fetch).observations(
+        assets=(CryptoAsset.SOL,),
+        start_utc=datetime(2026, 10, 5, tzinfo=UTC),
+        end_utc=datetime(2026, 10, 12, tzinfo=UTC),
+    )
+
+    assert [call["mode"] for call in calls] == [["timelinevolraw"], ["timelinetone"]]
+    assert calls[0]["startdatetime"] == ["20260907000000"]
+    assert "crypto OR cryptocurrency" in calls[0]["query"][0]
+    days = sorted({item.observed_at_utc.date().isoformat() for item in items})
+    # 10-06 is the outage day; 10-11 and 10-12 are not available two days after they end.
+    assert days == ["2026-10-05", "2026-10-07", "2026-10-08", "2026-10-09", "2026-10-10"]
+    assert {item.metric for item in items} == {"document_count", "average_tone"}
+    assert {item.provider for item in items} == {"gdelt-doc"}
+    assert all(item.available_at_utc - item.observed_at_utc == timedelta(days=2) for item in items)
+    volume = [item for item in items if item.metric == "document_count"]
+    assert volume[0].decimal_value == "44"
+
+
+def test_gdelt_doc_adapter_rejects_sub_daily_points() -> None:
+    def fetch(url: str) -> JsonResponse:
+        payload = {"timeline": [{"data": [{"date": "20261010T001500Z", "value": "3"}]}]}
+        return JsonResponse(url, datetime(2026, 10, 14, tzinfo=UTC), payload, "b" * 64)
+
+    with pytest.raises(ValueError, match="daily resolution"):
+        GdeltDocTimelineAdapter(fetcher=fetch).observations(
+            assets=(CryptoAsset.BTC,),
+            start_utc=datetime(2026, 10, 10, tzinfo=UTC),
+            end_utc=datetime(2026, 10, 10, tzinfo=UTC),
+        )
+
+
+def test_gdelt_doc_fetch_backs_off_after_rate_limit_replies() -> None:
+    pauses: list[float] = []
+    attempts: list[str] = []
+
+    def fetch(url: str) -> JsonResponse:
+        attempts.append(url)
+        if len(attempts) < 3:
+            raise ValueError("Please limit requests to one every 5 seconds")
+        return response(url, {"timeline": []})
+
+    result = fetch_gdelt_doc_json("https://example.test/doc", fetch=fetch, sleep=pauses.append)
+
+    assert result.payload == {"timeline": []}
+    assert pauses == [6.0, 15.0, 6.0, 30.0, 6.0]

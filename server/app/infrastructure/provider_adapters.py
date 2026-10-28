@@ -4,9 +4,10 @@ import csv
 import hashlib
 import io
 import json
+import time as clock
 import urllib.parse
 import urllib.request
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
@@ -23,6 +24,12 @@ COIN_METRICS_TERMS = "https://github.com/coinmetrics/data"
 COINGECKO_TERMS = "https://www.coingecko.com/en/api_terms"
 DEFILLAMA_TERMS = "https://enterprise.defillama.com/terms"
 GDELT_TERMS = "https://www.gdeltproject.org/about.html#termsofuse"
+GDELT_DOC_QUERIES = {
+    CryptoAsset.BTC: "bitcoin",
+    CryptoAsset.ETH: "ethereum",
+    # "solana" alone also matches Javier Solana and Solana Beach, so SOL needs crypto context.
+    CryptoAsset.SOL: "solana (crypto OR cryptocurrency OR blockchain OR token OR defi)",
+}
 
 
 @dataclass(frozen=True)
@@ -406,6 +413,156 @@ class GdeltGkgCsvAdapter:
         if missing:
             raise ValueError(f"GDELT CSV is missing {len(missing)} requested day/asset rows")
         return result
+
+
+def fetch_gdelt_doc_json(
+    url: str,
+    *,
+    fetch: JsonFetcher = fetch_json,
+    sleep: Callable[[float], None] = clock.sleep,
+    attempts: int = 8,
+) -> JsonResponse:
+    """Fetch one DOC API response, pausing first and backing off on rate-limit replies.
+
+    GDELT asks for at most one request every five seconds and answers faster callers with a
+    plain-text message instead of JSON, which surfaces here as a decoding error.
+    """
+    delay = 15.0
+    for attempt in range(attempts):
+        sleep(6.0)
+        try:
+            return fetch(url)
+        except (OSError, ValueError):
+            if attempt == attempts - 1:
+                raise
+            sleep(delay)
+            delay = min(delay * 2, 600.0)
+    raise ValueError("GDELT DOC fetch needs at least one attempt")
+
+
+class GdeltDocTimelineAdapter:
+    """Daily matching-article volume and average tone from the GDELT DOC 2.0 timeline API.
+
+    A day is available two days after it ends, so days not yet available at retrieval are
+    dropped. GDELT outages leave days with only a fraction of the usual monitored articles and
+    are never back-filled; a day whose monitored total is below half the median of the same
+    weekday in the four preceding weeks is dropped, so an outage reads as missing news rather
+    than a collapse in coverage. Each request therefore starts 28 days early.
+    """
+
+    provider = "gdelt-doc"
+    adapter_id = "gdelt-doc-timeline"
+    provider_revision = "doc-2.0-timeline-v1"
+    supported_assets: frozenset[CryptoAsset] = frozenset(GDELT_DOC_QUERIES)
+    publication_lag = timedelta(days=2)
+    outage_ratio = Decimal("0.5")
+    _modes = (("timelinevolraw", "document_count"), ("timelinetone", "average_tone"))
+
+    def __init__(self, *, fetcher: JsonFetcher = fetch_gdelt_doc_json) -> None:
+        self._fetcher = fetcher
+
+    def observations(
+        self,
+        *,
+        assets: Sequence[CryptoAsset],
+        start_utc: datetime,
+        end_utc: datetime,
+    ) -> Sequence[ProviderObservation]:
+        first, last = start_utc.date(), end_utc.date()
+        if last < first:
+            raise ValueError("GDELT DOC request end cannot precede start")
+        query_start = first - timedelta(days=28)
+        result: list[ProviderObservation] = []
+        for asset in assets:
+            if asset not in GDELT_DOC_QUERIES:
+                raise ValueError("GDELT DOC adapter supports BTC, ETH, and SOL only")
+            # The volume request runs first and decides which days both metrics may use.
+            complete: set[datetime] = set()
+            for mode, metric in self._modes:
+                query = urllib.parse.urlencode(
+                    {
+                        "query": GDELT_DOC_QUERIES[asset],
+                        "mode": mode,
+                        "startdatetime": query_start.strftime("%Y%m%d") + "000000",
+                        "enddatetime": last.strftime("%Y%m%d") + "235959",
+                        "format": "json",
+                    }
+                )
+                response = self._fetcher(f"https://api.gdeltproject.org/api/v2/doc/doc?{query}")
+                points = _gdelt_doc_daily_points(response.payload)
+                if mode == "timelinevolraw":
+                    complete = self._complete_days(points)
+                for observed, (value, _) in sorted(points.items()):
+                    available = observed + self.publication_lag
+                    if (
+                        not first <= observed.date() <= last
+                        or available > response.retrieved_at_utc
+                        or observed not in complete
+                    ):
+                        continue
+                    result.append(
+                        ProviderObservation(
+                            asset=asset,
+                            channel=ObservationChannel.SENTIMENT,
+                            metric=metric,
+                            interval="1d",
+                            observed_at_utc=observed,
+                            available_at_utc=available,
+                            retrieved_at_utc=response.retrieved_at_utc,
+                            decimal_value=value,
+                            missing=False,
+                            provider=self.provider,
+                            source_reference=response.url,
+                            provider_revision=self.provider_revision,
+                            response_sha256=response.sha256,
+                            terms_reference=GDELT_TERMS,
+                            license_status="use-and-redistribution-with-attribution",
+                        )
+                    )
+        return result
+
+    def _complete_days(self, points: Mapping[datetime, tuple[str, str | None]]) -> set[datetime]:
+        totals = {day: Decimal(total) for day, (_, total) in points.items() if total is not None}
+        complete: set[datetime] = set()
+        for day, total in totals.items():
+            prior = sorted(
+                totals[earlier]
+                for weeks in range(1, 5)
+                if (earlier := day - timedelta(days=7 * weeks)) in totals
+            )
+            if len(prior) < 2:
+                continue
+            middle = len(prior) // 2
+            median = prior[middle] if len(prior) % 2 else (prior[middle - 1] + prior[middle]) / 2
+            if total >= median * self.outage_ratio:
+                complete.add(day)
+        return complete
+
+
+def _gdelt_doc_daily_points(payload: object) -> dict[datetime, tuple[str, str | None]]:
+    """Daily values with the monitored-article total (``norm``) when the mode reports it."""
+    timeline = _object(payload, "GDELT DOC response").get("timeline")
+    if not isinstance(timeline, list):
+        raise ValueError("GDELT DOC response timeline must be a list")
+    if not timeline:
+        return {}
+    data = _object(timeline[0], "GDELT DOC series").get("data")
+    if not isinstance(data, list):
+        raise ValueError("GDELT DOC series data must be a list")
+    points: dict[datetime, tuple[str, str | None]] = {}
+    for raw in data:
+        point = _object(raw, "GDELT DOC point")
+        observed = datetime.strptime(str(point["date"]), "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC)
+        if observed.time() != time.min:
+            raise ValueError("GDELT DOC timeline must have daily resolution")
+        if observed in points:
+            raise ValueError("GDELT DOC timeline repeats a day")
+        total = point.get("norm")
+        points[observed] = (
+            _decimal(str(point["value"])),
+            None if total is None else _decimal(str(total)),
+        )
+    return points
 
 
 def _parse_provider_time(value: str) -> datetime:
