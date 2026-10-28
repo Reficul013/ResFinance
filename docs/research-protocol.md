@@ -134,3 +134,117 @@ stale-source switch above.
   untouched evidence. New evidence must come from prospective snapshots published after this
   predeclaration. Holdout labels may be read only by the immutable evaluation, and no
   post-holdout tuning is permitted.
+
+## Forward protocol `prospective-forward-v3`
+
+Predeclared 2026-10-28, before any v3 run on provider data. It fixes the two causes found in
+the v2 real-data run: every holdout forecast used the market-only fallback because the news
+input stopped on 2025-01-01, and one conformal adjustment, fitted mostly on adaptive-gating
+outputs, was applied to fallback outputs. v3 evidence is prospective only: each forecast is
+recorded before its outcome exists.
+
+Unchanged from v2:
+- forecast policy `no-change-centre-native-heads-v1`;
+- the stale-source switch (maximum source age 3 days);
+- horizons 15, 20 and 30 days, and seeds 11, 23 and 37;
+- lookback 16, 100 epochs at learning rate 0.001, alpha 0.2, and 30-day embargoes;
+- all nine models trained and reported.
+
+### News source and ongoing ingestion
+
+- **Source.** GDELT DOC 2.0 timeline API, provider `gdelt-doc`, revision
+  `doc-2.0-timeline-v1`.
+  - Queries: BTC `bitcoin`; ETH `ethereum`; SOL
+    `solana (crypto OR cryptocurrency OR blockchain OR token OR defi)`.
+  - `document_count` is the daily matching-article count (`timelinevolraw`), and
+    `average_tone` is the daily average tone (`timelinetone`).
+  - A day's values become available two days after the day they describe, as for GKG.
+    Days that are not yet available at retrieval time are dropped.
+  - **Outage rule.** GDELT outages leave days with a small fraction of the usual monitored
+    articles, and these days are never back-filled. A day is dropped, for both metrics,
+    when its monitored-article total (`norm`) is below half the median of the same weekday
+    in the four preceding weeks, with at least two of those weeks present.
+    - Each request therefore starts 28 days before the first requested day.
+    - On the 2017–2026 history, this drops 28 of 3,524 days (0.8%): every outage, a few
+      Christmas days and part of late 2020.
+    - A dropped day reads as missing news, so the stale-source switch applies when no valid
+      day is recent enough.
+- **One news definition.** v3 feature datasets use providers `coin-metrics`, `defillama`
+  and `gdelt-doc` only. The one-time GKG BigQuery export (provider `gdelt`) is excluded, so
+  training, calibration and live forecasts share one news definition.
+- **Ingestion.** One backfill from 2020-04-10, then a daily job ingests from the last stored
+  day: GDELT DOC news, Coin Metrics prices and on-chain data, and DefiLlama Solana data.
+  Responses are stored in ResilientDB as checksum-addressed archives.
+
+### Per-path calibration
+
+Calibration schema 3. Each adjustment is a split-conformal adjustment per horizon at alpha
+0.2, with non-negative scores as before.
+
+| Path | Model outputs | Validation samples used |
+|---|---|---|
+| Primary | adaptive-gating seed ensemble | samples whose sentiment and on-chain sources are fresh (at least 100, or the run fails) |
+| Fallback | market-only seed ensemble | all samples |
+| No-change baseline | zero forecast | all samples |
+
+Each path's adjustment is applied only to forecasts from that path.
+
+### Windows (decision dates)
+
+| Window | Dates |
+|---|---|
+| Training | first eligible date through 2025-08-21 |
+| Embargo | 30 days |
+| Validation / calibration | 2025-09-21 through 2026-09-20 (365 days) |
+| Embargo | at least 30 days |
+| Prospective | decision dates from 2026-10-28, or from the freeze if later |
+
+There is no retrospective holdout. The run's reported metrics come from the validation window,
+where the calibration was fitted. They are diagnostics, not evidence.
+
+### Freeze
+
+- The run's model, standardizer and calibration artifact hashes are stored in ResilientDB
+  before the first prospective forecast.
+- During the prospective window there is no refit, no recalibration and no other change.
+- Any change requires a new protocol version and a new prospective window.
+
+### Prospective ledger
+
+- **What is recorded.** For each decision date D (decision time D+1 00:00 UTC), the daily
+  job records two forecasts for BTC, ETH and SOL at 15, 20 and 30 days:
+  - the deployable forecast: no-change centre, stale-source switch, per-path range and
+    native P(up);
+  - the no-change baseline: zero centre, the no-change conformal range and P(up) 0.5.
+- **Provenance.** Each entry also stores the decision and issue times, the run id, and the
+  model, calibration and dataset hashes. It records which assets used the fallback.
+- **Validity.** Entries are immutable. An entry counts only if it was issued after the freeze
+  and no later than 24 hours after its decision time. Missed days are never back-filled.
+
+### Scoring and gate `forecast-promotion-prospective-v1`
+
+- **Outcome.** The Coin Metrics close on D+h divided by the close on D, minus one. It is scored
+  once both prices are stored.
+- **Reported metrics.** Reported per horizon (pooled over assets) and per asset-horizon cell,
+  for both forecasts:
+  - p10–p90 coverage, plus lower and upper tail rates;
+  - mean width and Winkler score (alpha 0.2);
+  - mean pinball loss at 0.1/0.5/0.9;
+  - Brier score of P(up).
+- **Gate sample.** For each horizon, the gate uses the earliest 90 on-time decision dates
+  whose three outcomes are all scored. The decision is therefore a fixed function of the
+  ledger, so repeated looks cannot change it. With the 30-day horizon, the earliest possible
+  decision is late February 2027.
+- **Pass rules.** Pass requires all of:
+  1. p10–p90 coverage within [0.70, 0.90] for each horizon;
+  2. Winkler score no higher than the no-change baseline (pooled over assets and horizons);
+  3. mean pinball loss no higher than the no-change baseline (same pooling);
+  4. Brier score no higher than the no-change baseline's 0.25 (same pooling).
+- **Recording.** The decision is stored once per run, with the hashes of the entries it
+  scored. No significance claim is made.
+
+### Promotion
+
+- A v3 run can be promoted only from a passing gate decision.
+- The `forecast-promotion-v1` manifest-metric gate does not apply to v3 runs.
+- Until a v3 run passes, the dashboard keeps its current promoted snapshot.
