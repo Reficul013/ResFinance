@@ -228,6 +228,52 @@ Evidence:
   - **Fix needs a new protocol:** calibrating each path separately and restoring
     ongoing news ingestion require a newly predeclared protocol scored on
     prospective data. The holdout from 2025-04-01 has already been observed.
+- Predeclared (2026-10-28) and implemented prospective protocol v3
+  (`prospective-forward-v3`), which addresses both causes:
+  - **News:** a GDELT DOC 2.0 adapter (provider `gdelt-doc`) for backfill and daily
+    ingestion. It drops GDELT outage days with a same-weekday volume rule, and v3 runs
+    refuse the one-time GKG export.
+  - **Calibration:** separate split-conformal adjustments for the adaptive model (on
+    fresh-source validation samples), the market-only fallback and the no-change
+    baseline. Each path's adjustment is applied only to its own forecasts.
+  - **Evaluation:** no retrospective holdout.
+    - The schema-v4 run is frozen once. Each day, an immutable ResilientDB ledger entry
+      records the deployable and no-change forecasts. It is accepted only if issued
+      within 24 hours of its decision time.
+    - The `forecast-promotion-prospective-v1` gate scores the earliest 90 decision dates
+      per horizon. With the 30-day horizon, the earliest decision is late February 2027.
+  - **Operator steps:** `scripts/milestone9/run_prospective.py` (`ingest`, `freeze`,
+    `issue`, `score`, `promote`).
+  - **Not yet started on the local stack:** no v3 run has been frozen in ResilientDB,
+    and no daily scheduler is installed. The prospective window starts at the first
+    decision date after the freeze.
+  - **Provider-data smoke freeze (2026-10-28).** The full 100-epoch v3 run (954 s) was
+    run on cached provider data through 2026-10-24, outside ResilientDB:
+    - **News is back.** Sentiment is available on 96% of 2025 rows and 95% of 2026
+      rows; under v2, news ended on 2025-01-01. Of 2,389 days per asset, GDELT
+      returned no point for 39, and the outage rule dropped 32. October 2026 alone had
+      five outage days and three missing days, so the fallback path will be used.
+    - **Fallback use is small.** The validation fallback share fell to 1.4%, against
+      14.8% under v2 (and 100% on the v2 holdout).
+    - **The paths need different widening.** Adjustments at 15/20/30 days:
+
+      | Path | 15 days | 20 days | 30 days |
+      |---|---|---|---|
+      | Primary | 0.039 | 0.067 | 0.115 |
+      | Fallback | 0.000 | 0.014 | 0.077 |
+
+      The single v2 adjustment therefore over-widened fallback ranges.
+    - **Warning, not evidence.** Calibration was fitted on the validation window, so
+      both forecasts cover about 80% there. At that coverage, the primary path's
+      ranges were still wider than no-change's:
+
+      | Horizon | Primary path | No-change |
+      |---|---|---|
+      | 15 days | 0.297 | 0.286 |
+      | 20 days | 0.387 | 0.343 |
+      | 30 days | 0.492 | 0.453 |
+
+      The prospective gate may therefore fail. Only the gate decides.
 
 Evidence:
 [`milestones/milestone7-cross-dashboard-local-handoff.md`](milestones/milestone7-cross-dashboard-local-handoff.md)
